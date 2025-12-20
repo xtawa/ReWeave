@@ -25,6 +25,26 @@ async function build() {
     // Ensure dist exists
     await fs.mkdir(distDir, { recursive: true });
 
+    // Copy public directory if it exists
+    const publicDir = path.join(process.cwd(), 'public');
+    try {
+        const publicExists = await fs.access(publicDir).then(() => true).catch(() => false);
+        if (publicExists) {
+            const files = await fs.readdir(publicDir);
+            await Promise.all(files.map(async (file) => {
+                const srcPath = path.join(publicDir, file);
+                const destPath = path.join(distDir, file);
+                const stat = await fs.stat(srcPath);
+                if (stat.isFile()) {
+                    await fs.copyFile(srcPath, destPath);
+                }
+            }));
+            console.log("Copied public assets.");
+        }
+    } catch (e) {
+        // Public directory doesn't exist, skip
+    }
+
     // 1. Get Posts (Parallel)
     const allPosts = await getPosts(contentDir);
 
@@ -115,6 +135,15 @@ async function build() {
                                 <h1 class="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
                                     {post.title}
                                 </h1>
+                                {post.tags && post.tags.length > 0 && (
+                                    <div class="mt-4 flex flex-wrap gap-2">
+                                        {post.tags.map(tag => (
+                                            <a href={`/tags/${tag}.html`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
+                                                #{tag}
+                                            </a>
+                                        ))}
+                                    </div>
+                                )}
                             </header>
                             <div class="mt-8 prose prose-zinc dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content }} />
                         </article>
@@ -221,10 +250,138 @@ async function build() {
         return fs.writeFile(path.join(tagsDir, `${tag}.html`), createHtml(tagContent));
     });
 
-    // Wait for all tasks
-    await Promise.all([indexBuild, ...postBuilds, ...categoryBuilds, ...tagBuilds, cssBuild]);
+    // 6. Build Archive Page
+    const archiveContent = (
+        <Layout title={t('archive', config.language)}>
+            <Header />
+            <main>
+                <h1 class="text-4xl font-bold mb-8">{t('archive', config.language)}</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <a href="/categories.html" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
+                        <h2 class="text-2xl font-semibold mb-2">{t('categories', config.language)}</h2>
+                        <p class="text-gray-600 dark:text-gray-400">{categories.size} {t('categories', config.language).toLowerCase()}</p>
+                    </a>
+                    <a href="/tags.html" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
+                        <h2 class="text-2xl font-semibold mb-2">{t('tags', config.language)}</h2>
+                        <p class="text-gray-600 dark:text-gray-400">{tags.size} {t('tags', config.language).toLowerCase()}</p>
+                    </a>
+                </div>
+            </main>
+        </Layout>
+    );
+    const archiveBuild = fs.writeFile(path.join(distDir, 'archive.html'), createHtml(archiveContent));
 
-    console.log(`Build complete! Generated ${posts.length + 1 + categories.size + tags.size} pages.`);
+    // 7. Build Categories List Page
+    const categoriesListContent = (
+        <Layout title={t('categories', config.language)}>
+            <Header />
+            <main>
+                <h1 class="text-4xl font-bold mb-8">{t('categories', config.language)}</h1>
+                <div class="flex flex-wrap gap-4">
+                    {Array.from(categories.entries()).map(([category, categoryPosts]) => (
+                        <a href={`/categories/${category}.html`} class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
+                            <span class="font-medium">{category}</span>
+                            <span class="ml-2 text-sm text-gray-500">({categoryPosts.length})</span>
+                        </a>
+                    ))}
+                </div>
+            </main>
+        </Layout>
+    );
+    const categoriesListBuild = fs.writeFile(path.join(distDir, 'categories.html'), createHtml(categoriesListContent));
+
+    // 8. Build Tags List Page
+    const tagsListContent = (
+        <Layout title={t('tags', config.language)}>
+            <Header />
+            <main>
+                <h1 class="text-4xl font-bold mb-8">{t('tags', config.language)}</h1>
+                <div class="flex flex-wrap gap-3">
+                    {Array.from(tags.entries()).map(([tag, tagPosts]) => (
+                        <a href={`/tags/${tag}.html`} class="inline-flex items-center px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 rounded-full hover:bg-teal-200 dark:hover:bg-teal-800 transition text-sm">
+                            #{tag}
+                            <span class="ml-1 text-xs">({tagPosts.length})</span>
+                        </a>
+                    ))}
+                </div>
+            </main>
+        </Layout>
+    );
+    const tagsListBuild = fs.writeFile(path.join(distDir, 'tags.html'), createHtml(tagsListContent));
+
+    // 9. Build About Page
+    let aboutBuild: Promise<void> | null = null;
+    if (config.about) {
+        const { unified } = await import('unified');
+        const remarkParse = (await import('remark-parse')).default;
+        const remarkRehype = (await import('remark-rehype')).default;
+        const rehypeStringify = (await import('rehype-stringify')).default;
+
+        const processedAbout = await unified()
+            .use(remarkParse)
+            .use(remarkRehype)
+            .use(rehypeStringify)
+            .process(config.about.content);
+
+        const aboutContent = (
+            <Layout title={config.about.title || t('about', config.language)}>
+                <Header />
+                <main>
+                    <h1 class="text-4xl font-bold mb-8">{config.about.title || t('about', config.language)}</h1>
+                    <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedAbout.toString() }} />
+                </main>
+            </Layout>
+        );
+        aboutBuild = fs.writeFile(path.join(distDir, 'about.html'), createHtml(aboutContent));
+    }
+
+    // 10. Build Projects Page
+    let projectsBuild: Promise<void> | null = null;
+    if (config.projects) {
+        const projectsContent = (
+            <Layout title={config.projects.title || t('projects', config.language)}>
+                <Header />
+                <main>
+                    <h1 class="text-4xl font-bold mb-8">{config.projects.title || t('projects', config.language)}</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {config.projects.items.map(project => (
+                            <div class="p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
+                                <h2 class="text-2xl font-semibold mb-2">
+                                    {project.url ? (
+                                        <a href={project.url} class="text-teal-600 dark:text-teal-400 hover:underline" target="_blank" rel="noopener noreferrer">
+                                            {project.name}
+                                        </a>
+                                    ) : (
+                                        project.name
+                                    )}
+                                </h2>
+                                <p class="text-gray-600 dark:text-gray-400 mb-4">{project.description}</p>
+                                {project.tags && project.tags.length > 0 && (
+                                    <div class="flex flex-wrap gap-2">
+                                        {project.tags.map(tag => (
+                                            <span class="px-2 py-1 text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded">
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </main>
+            </Layout>
+        );
+        projectsBuild = fs.writeFile(path.join(distDir, 'projects.html'), createHtml(projectsContent));
+    }
+
+    // Wait for all tasks
+    const allBuilds = [indexBuild, ...postBuilds, ...categoryBuilds, ...tagBuilds, archiveBuild, categoriesListBuild, tagsListBuild, cssBuild];
+    if (aboutBuild) allBuilds.push(aboutBuild);
+    if (projectsBuild) allBuilds.push(projectsBuild);
+    await Promise.all(allBuilds);
+
+    const pageCount = posts.length + 1 + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0);
+    console.log(`Build complete! Generated ${pageCount} pages.`);
 }
 
 build().catch(console.error);

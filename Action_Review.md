@@ -52,6 +52,23 @@
     -   Moved theme toggle from Header to Footer.
     -   Implemented functional dark/light mode switching with localStorage.
     -   Fixed icon alignment and added proper SVG icons.
+    -   Enabled `darkMode: 'class'` in Tailwind config.
+12. **Archive Menu & Pages**:
+    -   Added Archive dropdown menu to Header with Categories/Tags submenus.
+    -   Generated archive.html, categories.html, and tags.html pages.
+    -   Added tag display on article pages.
+    -   Added i18n translations for archive, categories, tags.
+13. **About & Projects Pages**:
+    -   Added configurable About page with Markdown support.
+    -   Added configurable Projects page with project cards.
+    -   Configuration in `config.ts` for easy customization.
+    -   Automatic page generation from config.
+14. **Logo Configuration**:
+    -   Added logo configuration in `config.ts`.
+    -   Support for local files (from `public/` directory) and external URLs.
+    -   Automatic copy of `public/` directory to `dist/` during build.
+    -   Created `LOGO_GUIDE.md` with bilingual instructions.
+    -   Fallback to gradient placeholder if no logo configured.
 6.  **Verification**:
     -   Successfully built the project (`npm run build`).
     -   Verified generated HTML structure.

@@ -13,6 +13,9 @@ export interface I18nConfig {
             home: string;
             about: string;
             projects: string;
+            archive: string;
+            categories: string;
+            tags: string;
             allRightsReserved: string;
         };
     };
@@ -31,6 +34,9 @@ export const i18n: I18nConfig = {
             home: 'Home',
             about: 'About',
             projects: 'Projects',
+            archive: 'Archive',
+            categories: 'Categories',
+            tags: 'Tags',
             allRightsReserved: 'All rights reserved',
         },
         zh: {
@@ -43,6 +49,9 @@ export const i18n: I18nConfig = {
             home: '首页',
             about: '关于',
             projects: '项目',
+            archive: '归档',
+            categories: '分类',
+            tags: '标签',
             allRightsReserved: '保留所有权利',
         },
     },
