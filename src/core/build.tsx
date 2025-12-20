@@ -618,10 +618,10 @@ async function build() {
                 const html = await response.text();
 
                 // Parse Telegram web preview HTML
-                const messages: Array<{ text: string, date: string, id: string }> = [];
+                const messages: Array<{ text: string, date: string, id: string, image?: string }> = [];
 
-                // Match message text and datetime separately
-                const messageBlocks = html.match(/<div class="tgme_widget_message_wrap[^>]*>[\s\S]*?<\/div><\/div>/g) || [];
+                // Match entire message wrapper blocks
+                const messageBlocks = html.match(/<div class="tgme_widget_message_wrap[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g) || [];
 
                 for (const block of messageBlocks) {
                     // Skip service messages (like "Channel created")
@@ -631,26 +631,36 @@ async function build() {
                     const textMatch = block.match(/<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/);
                     // Extract datetime
                     const dateMatch = block.match(/<time[^>]*datetime="([^"]*)"[^>]*>/);
+                    // Extract image URL from background-image style
+                    const imageMatch = block.match(/background-image:url\('([^']+)'\)/);
 
-                    if (textMatch && dateMatch) {
-                        // Clean HTML tags and entities
-                        let text = textMatch[1]
-                            .replace(/<br\s*\/?>/gi, '\n')
-                            .replace(/<a[^>]*>([^<]*)<\/a>/g, '$1')  // Keep link text
-                            .replace(/<i class="emoji"[^>]*><b>([^<]*)<\/b><\/i>/g, '$1')  // Keep emoji
-                            .replace(/<[^>]*>/g, '')  // Remove remaining tags
-                            .replace(/&nbsp;/g, ' ')
-                            .replace(/&amp;/g, '&')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>')
-                            .replace(/&quot;/g, '"')
-                            .trim();
+                    if (dateMatch) {
+                        // Clean HTML tags and entities for text
+                        let text = '';
+                        if (textMatch) {
+                            text = textMatch[1]
+                                .replace(/<br\s*\/?>/gi, '\n')
+                                .replace(/<a[^>]*>([^<]*)<\/a>/g, '$1')  // Keep link text
+                                .replace(/<i class="emoji"[^>]*><b>([^<]*)<\/b><\/i>/g, '$1')  // Keep emoji
+                                .replace(/<[^>]*>/g, '')  // Remove remaining tags
+                                .replace(/&nbsp;/g, ' ')
+                                .replace(/&amp;/g, '&')
+                                .replace(/&lt;/g, '<')
+                                .replace(/&gt;/g, '>')
+                                .replace(/&quot;/g, '"')
+                                .trim();
+                        }
 
-                        if (text && text !== 'Channel created') {
+                        // Skip "Channel created" messages
+                        if (text === 'Channel created') continue;
+
+                        // Only add if there's text or image
+                        if (text || imageMatch) {
                             messages.push({
                                 text,
                                 date: dateMatch[1],
-                                id: Math.random().toString(36).substr(2, 9)
+                                id: Math.random().toString(36).substr(2, 9),
+                                image: imageMatch ? imageMatch[1] : undefined
                             });
                         }
                     }
@@ -669,124 +679,92 @@ async function build() {
         const momentsContent = (
             <Layout title={t('moments', config.language)}>
                 <Header />
-                <main class="max-w-4xl mx-auto px-4 py-8">
-                    {/* Page Header */}
-                    <div class="text-center mb-12">
-                        <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-                            {t('moments', config.language)}
-                        </h1>
-                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">
-                            分享生活的点点滴滴 ✨
-                        </p>
-                    </div>
+                <main>
+                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('moments', config.language)}</h1>
 
                     {messages.length > 0 ? (
-                        <div class="space-y-6">
-                            {messages.map((msg, idx) => (
-                                <article
-                                    key={msg.id}
-                                    class="group relative bg-gradient-to-br from-white to-zinc-50 dark:from-zinc-900 dark:to-zinc-800/50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-zinc-200/50 dark:border-zinc-700/50 hover:scale-[1.02] animate-fade-in-up"
-                                    style={{ animationDelay: `${idx * 0.1}s` }}
-                                >
-                                    {/* Decorative gradient overlay */}
-                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 via-blue-400 to-purple-400 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                                    {/* Time badge */}
-                                    <div class="flex items-center gap-2 mb-4">
-                                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-500 shadow-md">
-                                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-                                                <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                                            </svg>
+                        <div class="space-y-8">
+                            {messages.map((msg) => (
+                                <article key={msg.id} class="group pb-8 border-b border-zinc-200 dark:border-zinc-700 last:border-b-0">
+                                    <time datetime={msg.date} class="text-sm text-zinc-500 dark:text-zinc-400 mb-3 block">
+                                        {new Date(msg.date).toLocaleDateString('zh-CN', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </time>
+                                    {msg.image && (
+                                        <div class="mb-4 moment-image-wrapper" data-collapsed="true">
+                                            <div class="relative cursor-pointer">
+                                                <img src={msg.image} alt="说说配图" class="w-full max-w-2xl rounded-lg object-cover shadow-sm moment-img transition-all duration-300" loading="lazy" />
+                                                <div class="moment-overlay absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg transition-opacity duration-300">
+                                                    <span class="px-4 py-2 bg-white/90 dark:bg-zinc-800/90 rounded-full text-sm text-zinc-700 dark:text-zinc-200 shadow-lg">
+                                                        点击查看图片
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <time class="text-sm font-semibold text-transparent bg-gradient-to-r from-teal-600 to-blue-600 dark:from-teal-400 dark:to-blue-400 bg-clip-text">
-                                            {new Date(msg.date).toLocaleDateString('zh-CN', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
-                                        </time>
-                                    </div>
-
-                                    {/* Content */}
-                                    <div class="relative">
+                                    )}
+                                    {msg.text && (
                                         <div class="text-base leading-relaxed text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap break-words">
                                             {msg.text}
                                         </div>
-
-                                        {/* Decorative quote mark */}
-                                        <div class="absolute -left-2 -top-2 text-6xl text-teal-200 dark:text-teal-900/30 font-serif leading-none select-none pointer-events-none">
-                                            "
-                                        </div>
-                                    </div>
-
-                                    {/* Interaction hint */}
-                                    <div class="mt-4 pt-4 border-t border-zinc-200/50 dark:border-zinc-700/50 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        <div class="flex items-center gap-4 text-xs text-zinc-400 dark:text-zinc-500">
-                                            <span class="flex items-center gap-1">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                                </svg>
-                                            </span>
-                                            <span class="flex items-center gap-1">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                                </svg>
-                                            </span>
-                                        </div>
-                                        <div class="text-xs text-zinc-400 dark:text-zinc-500">
-                                            #{idx + 1}
-                                        </div>
-                                    </div>
+                                    )}
                                 </article>
                             ))}
                         </div>
                     ) : (
-                        <div class="text-center py-20">
-                            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-teal-100 to-blue-100 dark:from-teal-900/20 dark:to-blue-900/20 mb-6">
-                                <svg class="w-12 h-12 text-teal-500 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                </svg>
-                            </div>
-                            <h3 class="text-2xl font-bold text-zinc-800 dark:text-zinc-200 mb-2">暂无说说内容</h3>
-                            <p class="text-zinc-500 dark:text-zinc-400 mb-1">还没有发布任何动态</p>
-                            <p class="text-sm text-zinc-400 dark:text-zinc-500">请检查 Telegram 频道 ID 是否正确且频道为公开状态</p>
+                        <div class="text-center py-16 text-zinc-500 dark:text-zinc-400">
+                            <p class="text-lg mb-2">暂无说说内容</p>
+                            <p class="text-sm">请检查 Telegram 频道 ID 是否正确且频道为公开状态</p>
                         </div>
                     )}
 
-                    {/* Animations */}
                     <style dangerouslySetInnerHTML={{
                         __html: `
-                        @keyframes fade-in-up {
-                            from {
-                                opacity: 0;
-                                transform: translateY(20px);
-                            }
-                            to {
-                                opacity: 1;
-                                transform: translateY(0);
-                            }
+                        .moment-image-wrapper {
+                            position: relative;
                         }
-                        .animate-fade-in-up {
-                            animation: fade-in-up 0.6s ease-out forwards;
+                        .moment-image-wrapper > div {
+                            position: relative;
+                            display: block;
+                        }
+                        .moment-image-wrapper[data-collapsed="true"] .moment-img {
+                            max-height: 200px;
+                            object-fit: cover;
+                        }
+                        .moment-image-wrapper[data-collapsed="false"] .moment-img {
+                            max-height: none;
+                        }
+                        .moment-image-wrapper[data-collapsed="false"] .moment-overlay {
                             opacity: 0;
+                            pointer-events: none;
+                        }
+                        .moment-overlay {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
                         }
                         `
                     }} />
 
-                    {/* Client-side Script */}
                     <script dangerouslySetInnerHTML={{
                         __html: `
-                        (function() {
-                            console.log("Moments page loaded with enhanced design ✨");
-                            
-                            // Add smooth scroll behavior
-                            document.querySelectorAll('article').forEach((article, index) => {
-                                article.style.setProperty('--delay', index * 0.1 + 's');
+                        document.addEventListener('DOMContentLoaded', function() {
+                            document.querySelectorAll('.moment-image-wrapper > div').forEach(function(el) {
+                                el.addEventListener('click', function() {
+                                    var wrapper = this.parentElement;
+                                    wrapper.dataset.collapsed = wrapper.dataset.collapsed === 'true' ? 'false' : 'true';
+                                });
                             });
-                        })();
+                        });
                         `
                     }} />
                 </main>

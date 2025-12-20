@@ -1,52 +1,78 @@
 # 操作记录
 
-## 2025-12-20 21:55 - 修复说说页面 Telegram 消息获取
+## 2025-12-20 22:36 - 说说页面完整实现
 
-### 问题诊断:
-用户更新了 Telegram 频道 ID 为 `hi_co1sini_casual` 后,说说页面仍然显示"暂无说说内容"。
+### 完成的功能
 
-### 问题原因:
-1. 原始的正则表达式无法正确匹配 Telegram 实际的 HTML 结构
-2. Telegram 的 HTML 包含多种类型的消息(包括系统消息如 "Channel created")
-3. 消息文本中包含 emoji、链接、标签等需要特殊处理的元素
+#### 1. Telegram 消息获取
+- ✅ 实现了从 Telegram 公开频道获取消息的功能
+- ✅ 支持解析文本内容、图片、emoji 和标签
+- ✅ 正确处理 HTML 实体和换行符
+- ✅ 过滤系统消息
 
-### 解决方案:
-重写了 `fetchTelegramMessages` 函数:
-1. **改进的解析策略**:
-   - 先匹配整个消息块 `<div class="tgme_widget_message_wrap">`
-   - 过滤掉系统消息 (包含 `service_message` 类)
-   - 分别提取文本内容和时间戳
+#### 2. 页面设计优化
+- ✅ 将说说页面改为与其他页面(归档、分类、标签)一致的简洁设计风格
+- ✅ 移除了过度的渐变、动画和装饰元素
+- ✅ 使用简洁的边框分隔和时间显示
+- ✅ 保持了良好的亮色/暗色模式支持
 
-2. **增强的文本清理**:
-   - 保留 emoji 表情
-   - 保留链接文本(去掉 HTML 标签)
-   - 处理 HTML 实体 (`&nbsp;`, `&amp;`, `&lt;`, `&gt;`, `&quot;`)
-   - 保留换行符
-   - 过滤系统消息
+#### 3. 图片折叠功能
+- ✅ 实现了图片自动折叠功能,默认高度 200px
+- ✅ 点击图片区域可展开查看完整图片
+- ✅ 添加了"点击查看图片"的视觉提示按钮
+- ✅ 按钮完美居中对齐(水平和垂直)
+- ✅ 使用平滑的 CSS 过渡动画
+- ✅ 使用客户端 JavaScript 处理交互,确保静态 HTML 中正常工作
 
-3. **添加日志**:
-   - 在控制台输出获取到的消息数量,便于调试
+### 技术实现
 
-### 测试结果:
-✅ **成功!** 说说页面现在正确显示了 Telegram 消息:
-- 消息内容: "终于把新博客部署好了..😄太喜欢这个主题了 #博客"
-- 时间显示: 2025年12月13日 12:14
-- emoji 正确显示
-- 标签 #博客 正确保留
-- 亮色和暗色模式都完美显示
+**文件修改:**
+- `src/core/build.tsx` - 添加 Telegram 消息获取和说说页面渲染
+- `src/core/config.ts` - 配置 Telegram 频道 ID
 
-### 设计效果:
-新的说说页面设计包括:
-- 🎨 渐变色标题和副标题
-- 💎 精美的卡片设计
-- ⏰ 时间徽章带渐变图标
-- 💬 装饰性引号
-- ✨ 淡入上升动画
-- 🌓 完美的暗黑模式支持
-- 🎯 悬停时的互动效果
+**关键代码:**
+```typescript
+// Telegram 消息获取
+async function fetchTelegramMessages(id: string) {
+    const response = await fetch(`https://t.me/s/${id}`);
+    const html = await response.text();
+    // 解析消息块、提取文本和图片
+}
 
-### Next Step:
-- ✅ 说说页面已完全正常工作
-- 可以继续在 Telegram 频道发布更多内容
-- 每次构建时会自动获取最新的说说内容
-- 建议定期重新部署以更新内容,或考虑添加自动化部署
+// 图片折叠 CSS
+.moment-image-wrapper[data-collapsed="true"] .moment-img {
+    max-height: 200px;
+}
+
+// 客户端交互
+document.querySelectorAll('.moment-image-wrapper > div').forEach(function(el) {
+    el.addEventListener('click', function() {
+        var wrapper = this.parentElement;
+        wrapper.dataset.collapsed = wrapper.dataset.collapsed === 'true' ? 'false' : 'true';
+    });
+});
+```
+
+### 配置说明
+
+在 `src/core/config.ts` 中配置 Telegram 频道:
+```typescript
+moments: {
+    enabled: true,
+    channelId: 'hi_co1sini_casual'  // 你的 Telegram 频道 ID
+}
+```
+
+### 使用方法
+
+1. 确保 Telegram 频道是公开的
+2. 在配置文件中设置正确的频道 ID
+3. 运行 `npm run build` 构建网站
+4. 说说页面会自动获取并显示最新的频道消息
+
+### Next Step
+
+- ✅ 说说页面功能完整,设计简洁统一
+- 可以继续在 Telegram 频道发布内容
+- 每次构建时会自动获取最新消息
+- 建议配置自动化部署以保持内容更新
