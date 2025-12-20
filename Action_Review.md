@@ -48,6 +48,10 @@
 10. **Documentation**:
     -   Created `CHECKLIST.md` with comprehensive testing guide.
     -   Covers all features, edge cases, and performance benchmarks.
+11. **Dark Mode Toggle**:
+    -   Moved theme toggle from Header to Footer.
+    -   Implemented functional dark/light mode switching with localStorage.
+    -   Fixed icon alignment and added proper SVG icons.
 6.  **Verification**:
     -   Successfully built the project (`npm run build`).
     -   Verified generated HTML structure.
