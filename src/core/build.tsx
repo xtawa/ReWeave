@@ -75,6 +75,13 @@ async function build() {
     const { Hero } = await import(`${themePath}/components/Hero`);
     const { Pagination } = await import(`${themePath}/components/Pagination`);
     const { Comments } = await import(`${themePath}/components/Comments`);
+    // Try to import templates if they exist
+    const { PostList } = await import(`${themePath}/templates/PostList`).catch(() => ({ PostList: null }));
+    const { Archive } = await import(`${themePath}/templates/Archive`).catch(() => ({ Archive: null }));
+    const { Post } = await import(`${themePath}/templates/Post`).catch(() => ({ Post: null }));
+    const { CategoryList } = await import(`${themePath}/templates/CategoryList`).catch(() => ({ CategoryList: null }));
+    const { TagList } = await import(`${themePath}/templates/TagList`).catch(() => ({ TagList: null }));
+    const { Page } = await import(`${themePath}/templates/Page`).catch(() => ({ Page: null }));
 
     // Ensure dist exists
     await fs.mkdir(distDir, { recursive: true });
@@ -138,6 +145,11 @@ async function build() {
         const start = (page - 1) * pageSize;
         const end = start + pageSize;
         const pagePosts = posts.slice(start, end);
+
+        // Use template if available
+        if (PostList) {
+            return <PostList posts={pagePosts} currentPage={page} totalPages={totalPages} baseUrl="/articles" />;
+        }
 
         return (
             <Layout contentWidth="normal" title={page === 1 && config.homePage === 'hero' ? t('articles', config.language) : (page === 1 ? undefined : `${t('articles', config.language)} - Page ${page}`)}>
@@ -330,7 +342,7 @@ async function build() {
         );
     };
 
-    const postBuilds = posts.map(post => {
+    const postBuilds = posts.map((post, index) => {
         const postUrl = safeSlug(post.abbrlink || post.slug);
 
         const tocEnabled = config.toc?.enabled ?? false;
@@ -339,17 +351,69 @@ async function build() {
         const tocCollapsible = config.toc?.collapsible ?? false;
         const headings = tocEnabled ? extractHeadings(post.content, maxDepth) : [];
 
-        const postContent = (
-            <Layout title={post.title} description={post.excerpt} image={post.image}>
-                <Header />
-                <div class="xl:relative">
-                    {tocEnabled && headings.length > 0 && (tocPosition === 'left' || tocPosition === 'right') ? (
-                        <div class={`flex gap-8 ${tocPosition === 'left' ? 'flex-row' : 'flex-row-reverse'}`}>
-                            <aside class="hidden lg:block w-64 flex-shrink-0">
-                                {renderToc(headings, tocPosition, tocCollapsible)}
-                            </aside>
-                            <div class="flex-1 mx-auto max-w-2xl">
-                                <a href="/" class="group mb-8 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20">
+        let postContent;
+        if (Post) {
+            const prevPost = index < posts.length - 1 ? { title: posts[index + 1].title, url: `/posts/${safeSlug(posts[index + 1].abbrlink || posts[index + 1].slug)}` } : undefined;
+            const nextPost = index > 0 ? { title: posts[index - 1].title, url: `/posts/${safeSlug(posts[index - 1].abbrlink || posts[index - 1].slug)}` } : undefined;
+
+            const tocNode = headings.length > 0 ? renderToc(headings, 'left', false) : null;
+            const tocHtml = tocNode ? render(tocNode) : '';
+
+            postContent = (
+                <Post
+                    post={{ ...post, toc: tocHtml }}
+                    prevPost={prevPost}
+                    nextPost={nextPost}
+                />
+            );
+        } else {
+            postContent = (
+                <Layout title={post.title} description={post.excerpt} image={post.image}>
+                    <Header />
+                    <div class="xl:relative">
+                        {tocEnabled && headings.length > 0 && (tocPosition === 'left' || tocPosition === 'right') ? (
+                            <div class={`flex gap-8 ${tocPosition === 'left' ? 'flex-row' : 'flex-row-reverse'}`}>
+                                <aside class="hidden lg:block w-64 flex-shrink-0">
+                                    {renderToc(headings, tocPosition, tocCollapsible)}
+                                </aside>
+                                <div class="flex-1 mx-auto max-w-2xl">
+                                    <a href="/" class="group mb-8 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20">
+                                        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" class="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400">
+                                            <path d="M7.25 11.25 3.75 8m0 0 3.5-3.25M3.75 8h8.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        </svg>
+                                    </a>
+                                    <article>
+                                        <header class="flex flex-col">
+                                            <time datetime={post.date} class="order-first flex items-center text-base text-zinc-400 dark:text-zinc-500">
+                                                <span class="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500"></span>
+                                                <span class="ml-3">{new Date(post.date).toLocaleDateString()}</span>
+                                            </time>
+                                            <h1 class="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
+                                                {post.title}
+                                            </h1>
+                                            {post.tags && post.tags.length > 0 && (
+                                                <div class="mt-4 flex flex-wrap gap-2">
+                                                    {post.tags.map(tag => (
+                                                        <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
+                                                            #{tag}
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </header>
+                                        {tocEnabled && headings.length > 0 && tocPosition === 'top' && (
+                                            <div class="mt-8">
+                                                {renderToc(headings, tocPosition, tocCollapsible)}
+                                            </div>
+                                        )}
+                                        <div class="mt-8 prose prose-zinc dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content }} />
+                                        <Comments path={`/posts/${postUrl}`} />
+                                    </article>
+                                </div>
+                            </div>
+                        ) : (
+                            <div class="mx-auto max-w-2xl">
+                                <a href="/" class="group mb-8 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20 lg:absolute lg:-left-5 lg:-mt-2 lg:mb-0 xl:-top-1.5 xl:left-0 xl:mt-0">
                                     <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" class="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400">
                                         <path d="M7.25 11.25 3.75 8m0 0 3.5-3.25M3.75 8h8.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                                     </svg>
@@ -382,46 +446,11 @@ async function build() {
                                     <Comments path={`/posts/${postUrl}`} />
                                 </article>
                             </div>
-                        </div>
-                    ) : (
-                        <div class="mx-auto max-w-2xl">
-                            <a href="/" class="group mb-8 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20 lg:absolute lg:-left-5 lg:-mt-2 lg:mb-0 xl:-top-1.5 xl:left-0 xl:mt-0">
-                                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" class="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400">
-                                    <path d="M7.25 11.25 3.75 8m0 0 3.5-3.25M3.75 8h8.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                            </a>
-                            <article>
-                                <header class="flex flex-col">
-                                    <time datetime={post.date} class="order-first flex items-center text-base text-zinc-400 dark:text-zinc-500">
-                                        <span class="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500"></span>
-                                        <span class="ml-3">{new Date(post.date).toLocaleDateString()}</span>
-                                    </time>
-                                    <h1 class="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
-                                        {post.title}
-                                    </h1>
-                                    {post.tags && post.tags.length > 0 && (
-                                        <div class="mt-4 flex flex-wrap gap-2">
-                                            {post.tags.map(tag => (
-                                                <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
-                                                    #{tag}
-                                                </a>
-                                            ))}
-                                        </div>
-                                    )}
-                                </header>
-                                {tocEnabled && headings.length > 0 && tocPosition === 'top' && (
-                                    <div class="mt-8">
-                                        {renderToc(headings, tocPosition, tocCollapsible)}
-                                    </div>
-                                )}
-                                <div class="mt-8 prose prose-zinc dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content }} />
-                                <Comments path={`/posts/${postUrl}`} />
-                            </article>
-                        </div>
-                    )}
-                </div>
-            </Layout>
-        );
+                        )}
+                    </div>
+                </Layout>
+            );
+        }
         return writeHtml(path.join(postsDir, `${postUrl}.html`), createHtml(postContent));
     });
 
@@ -439,36 +468,50 @@ async function build() {
     const categoriesDir = path.join(distDir, 'categories');
 
     const categoryBuilds = Array.from(categories.entries()).map(([category, categoryPosts]) => {
-        const categoryContent = (
-            <Layout title={`${t('category', config.language)}: ${category}`}>
-                <Header />
-                <main>
-                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('category', config.language)}: {category}</h1>
-                    <div class="space-y-10">
-                        {categoryPosts.map((post) => {
-                            const postUrl = safeSlug(post.abbrlink || post.slug);
-                            return (
-                                <article key={post.slug} class="group relative flex flex-col items-start">
-                                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
-                                        <a href={`/posts/${postUrl}`}>
-                                            <span class="absolute inset-0" />
-                                            {post.title}
-                                        </a>
-                                    </h2>
-                                    <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
-                                        <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
-                                            <span class="h-4 w-0.5 rounded-full bg-gray-200 dark:bg-zinc-700" />
-                                        </span>
-                                        {new Date(post.date).toLocaleDateString()}
-                                    </time>
-                                    <p class="relative z-10 mt-2 text-sm text-gray-600 dark:text-zinc-300">{post.excerpt}</p>
-                                </article>
-                            );
-                        })}
-                    </div>
-                </main>
-            </Layout>
-        );
+        let categoryContent;
+        if (PostList) {
+            categoryContent = (
+                <PostList
+                    posts={categoryPosts}
+                    currentPage={1}
+                    totalPages={1}
+                    baseUrl={`/categories/${safeSlug(category)}`}
+                    title={`${t('category', config.language)}: ${category}`}
+                    subtitle={`${categoryPosts.length} articles`}
+                />
+            );
+        } else {
+            categoryContent = (
+                <Layout title={`${t('category', config.language)}: ${category}`}>
+                    <Header />
+                    <main>
+                        <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('category', config.language)}: {category}</h1>
+                        <div class="space-y-10">
+                            {categoryPosts.map((post) => {
+                                const postUrl = safeSlug(post.abbrlink || post.slug);
+                                return (
+                                    <article key={post.slug} class="group relative flex flex-col items-start">
+                                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
+                                            <a href={`/posts/${postUrl}`}>
+                                                <span class="absolute inset-0" />
+                                                {post.title}
+                                            </a>
+                                        </h2>
+                                        <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
+                                            <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
+                                                <span class="h-4 w-0.5 rounded-full bg-gray-200 dark:bg-zinc-700" />
+                                            </span>
+                                            {new Date(post.date).toLocaleDateString()}
+                                        </time>
+                                        <p class="relative z-10 mt-2 text-sm text-gray-600 dark:text-zinc-300">{post.excerpt}</p>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    </main>
+                </Layout>
+            );
+        }
         return writeHtml(path.join(categoriesDir, `${safeSlug(category)}.html`), createHtml(categoryContent));
     });
 
@@ -486,36 +529,50 @@ async function build() {
     const tagsDir = path.join(distDir, 'tags');
 
     const tagBuilds = Array.from(tags.entries()).map(([tag, tagPosts]) => {
-        const tagContent = (
-            <Layout title={`${t('tag', config.language)}: ${tag}`}>
-                <Header />
-                <main>
-                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tag', config.language)}: {tag}</h1>
-                    <div class="space-y-10">
-                        {tagPosts.map((post) => {
-                            const postUrl = safeSlug(post.abbrlink || post.slug);
-                            return (
-                                <article key={post.slug} class="group relative flex flex-col items-start">
-                                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
-                                        <a href={`/posts/${postUrl}`}>
-                                            <span class="absolute inset-0" />
-                                            {post.title}
-                                        </a>
-                                    </h2>
-                                    <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
-                                        <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
-                                            <span class="h-4 w-0.5 rounded-full bg-gray-200 dark:bg-zinc-700" />
-                                        </span>
-                                        {new Date(post.date).toLocaleDateString()}
-                                    </time>
-                                    <p class="relative z-10 mt-2 text-sm text-gray-600 dark:text-zinc-300">{post.excerpt}</p>
-                                </article>
-                            );
-                        })}
-                    </div>
-                </main>
-            </Layout>
-        );
+        let tagContent;
+        if (PostList) {
+            tagContent = (
+                <PostList
+                    posts={tagPosts}
+                    currentPage={1}
+                    totalPages={1}
+                    baseUrl={`/tags/${safeSlug(tag)}`}
+                    title={`${t('tag', config.language)}: ${tag}`}
+                    subtitle={`${tagPosts.length} articles`}
+                />
+            );
+        } else {
+            tagContent = (
+                <Layout title={`${t('tag', config.language)}: ${tag}`}>
+                    <Header />
+                    <main>
+                        <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tag', config.language)}: {tag}</h1>
+                        <div class="space-y-10">
+                            {tagPosts.map((post) => {
+                                const postUrl = safeSlug(post.abbrlink || post.slug);
+                                return (
+                                    <article key={post.slug} class="group relative flex flex-col items-start">
+                                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
+                                            <a href={`/posts/${postUrl}`}>
+                                                <span class="absolute inset-0" />
+                                                {post.title}
+                                            </a>
+                                        </h2>
+                                        <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
+                                            <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
+                                                <span class="h-4 w-0.5 rounded-full bg-gray-200 dark:bg-zinc-700" />
+                                            </span>
+                                            {new Date(post.date).toLocaleDateString()}
+                                        </time>
+                                        <p class="relative z-10 mt-2 text-sm text-gray-600 dark:text-zinc-300">{post.excerpt}</p>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    </main>
+                </Layout>
+            );
+        }
         return writeHtml(path.join(tagsDir, `${safeSlug(tag)}.html`), createHtml(tagContent));
     });
 
@@ -530,84 +587,99 @@ async function build() {
     });
     const years = Array.from(postsByYear.keys()).sort((a, b) => b - a);
 
-    const archiveContent = (
-        <Layout title={t('archive', config.language)}>
-            <Header />
-            <main>
-                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('archive', config.language)}</h1>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-                    <a href="/categories" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
-                        <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:!text-white">{t('categories', config.language)}</h2>
-                        <p class="text-gray-600 dark:text-zinc-300">{categories.size} {t('categories', config.language).toLowerCase()}</p>
-                    </a>
-                    <a href="/tags" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
-                        <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:!text-white">{t('tags', config.language)}</h2>
-                        <p class="text-gray-600 dark:text-zinc-300">{tags.size} {t('tags', config.language).toLowerCase()}</p>
-                    </a>
-                </div>
+    let archiveContent;
+    if (Archive) {
+        archiveContent = <Archive posts={posts} categoriesCount={categories.size} tagsCount={tags.size} />;
+    } else {
+        archiveContent = (
+            <Layout title={t('archive', config.language)}>
+                <Header />
+                <main>
+                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('archive', config.language)}</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                        <a href="/categories" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
+                            <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:!text-white">{t('categories', config.language)}</h2>
+                            <p class="text-gray-600 dark:text-zinc-300">{categories.size} {t('categories', config.language).toLowerCase()}</p>
+                        </a>
+                        <a href="/tags" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
+                            <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:!text-white">{t('tags', config.language)}</h2>
+                            <p class="text-gray-600 dark:text-zinc-300">{tags.size} {t('tags', config.language).toLowerCase()}</p>
+                        </a>
+                    </div>
 
-                <div class="space-y-12">
-                    {years.map(year => (
-                        <section key={year}>
-                            <h2 class="text-3xl font-bold mb-6 text-zinc-900 dark:!text-white border-b border-zinc-200 dark:border-zinc-700 pb-2">{year}</h2>
-                            <div class="space-y-6">
-                                {postsByYear.get(year)!.map(post => (
-                                    <article key={post.slug} class="flex items-baseline gap-4 group">
-                                        <time datetime={post.date} class="text-sm text-zinc-500 dark:text-zinc-400 w-24 flex-shrink-0 text-right">
-                                            {new Date(post.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                        </time>
-                                        <h3 class="text-lg font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
-                                            <a href={`/posts/${safeSlug(post.abbrlink || post.slug)}`}>
-                                                {post.title}
-                                            </a>
-                                        </h3>
-                                    </article>
-                                ))}
-                            </div>
-                        </section>
-                    ))}
-                </div>
-            </main>
-        </Layout>
-    );
+                    <div class="space-y-12">
+                        {years.map(year => (
+                            <section key={year}>
+                                <h2 class="text-3xl font-bold mb-6 text-zinc-900 dark:!text-white border-b border-zinc-200 dark:border-zinc-700 pb-2">{year}</h2>
+                                <div class="space-y-6">
+                                    {postsByYear.get(year)!.map(post => (
+                                        <article key={post.slug} class="flex items-baseline gap-4 group">
+                                            <time datetime={post.date} class="text-sm text-zinc-500 dark:text-zinc-400 w-24 flex-shrink-0 text-right">
+                                                {new Date(post.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                            </time>
+                                            <h3 class="text-lg font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
+                                                <a href={`/posts/${safeSlug(post.abbrlink || post.slug)}`}>
+                                                    {post.title}
+                                                </a>
+                                            </h3>
+                                        </article>
+                                    ))}
+                                </div>
+                            </section>
+                        ))}
+                    </div>
+                </main>
+            </Layout>
+        );
+    }
     const archiveBuild = writeHtml(path.join(distDir, 'archive.html'), createHtml(archiveContent));
 
     // 7. Build Categories List Page
-    const categoriesListContent = (
-        <Layout title={t('categories', config.language)}>
-            <Header />
-            <main>
-                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('categories', config.language)}</h1>
-                <div class="flex flex-wrap gap-4">
-                    {Array.from(categories.entries()).map(([category, categoryPosts]) => (
-                        <a href={`/categories/${safeSlug(category)}`} class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition group border border-transparent dark:border-zinc-700/50">
-                            <span class="font-medium text-zinc-700 dark:text-zinc-200">{category}</span>
-                            <span class="ml-2 text-sm text-gray-500 dark:text-zinc-400">({categoryPosts.length})</span>
-                        </a>
-                    ))}
-                </div>
-            </main>
-        </Layout>
-    );
+    let categoriesListContent;
+    if (CategoryList) {
+        categoriesListContent = <CategoryList categories={categories} />;
+    } else {
+        categoriesListContent = (
+            <Layout title={t('categories', config.language)}>
+                <Header />
+                <main>
+                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('categories', config.language)}</h1>
+                    <div class="flex flex-wrap gap-4">
+                        {Array.from(categories.entries()).map(([category, categoryPosts]) => (
+                            <a href={`/categories/${safeSlug(category)}`} class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition group border border-transparent dark:border-zinc-700/50">
+                                <span class="font-medium text-zinc-700 dark:text-zinc-200">{category}</span>
+                                <span class="ml-2 text-sm text-gray-500 dark:text-zinc-400">({categoryPosts.length})</span>
+                            </a>
+                        ))}
+                    </div>
+                </main>
+            </Layout>
+        );
+    }
     const categoriesListBuild = writeHtml(path.join(distDir, 'categories.html'), createHtml(categoriesListContent));
 
     // 8. Build Tags List Page
-    const tagsListContent = (
-        <Layout title={t('tags', config.language)}>
-            <Header />
-            <main>
-                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tags', config.language)}</h1>
-                <div class="flex flex-wrap gap-3">
-                    {Array.from(tags.entries()).map(([tag, tagPosts]) => (
-                        <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center px-3 py-1 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 rounded-full hover:bg-teal-100 dark:hover:bg-teal-900/50 transition text-sm border border-teal-100 dark:border-teal-800/50">
-                            #{tag}
-                            <span class="ml-1 text-xs opacity-70">({tagPosts.length})</span>
-                        </a>
-                    ))}
-                </div>
-            </main>
-        </Layout>
-    );
+    let tagsListContent;
+    if (TagList) {
+        tagsListContent = <TagList tags={tags} />;
+    } else {
+        tagsListContent = (
+            <Layout title={t('tags', config.language)}>
+                <Header />
+                <main>
+                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tags', config.language)}</h1>
+                    <div class="flex flex-wrap gap-3">
+                        {Array.from(tags.entries()).map(([tag, tagPosts]) => (
+                            <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center px-3 py-1 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 rounded-full hover:bg-teal-100 dark:hover:bg-teal-900/50 transition text-sm border border-teal-100 dark:border-teal-800/50">
+                                #{tag}
+                                <span class="ml-1 text-xs opacity-70">({tagPosts.length})</span>
+                            </a>
+                        ))}
+                    </div>
+                </main>
+            </Layout>
+        );
+    }
     const tagsListBuild = writeHtml(path.join(distDir, 'tags.html'), createHtml(tagsListContent));
 
     // 9. Build About Page
@@ -628,14 +700,19 @@ async function build() {
             .use(rehypeStringify)
             .process(aboutMarkdown);
 
-        const aboutContent = (
-            <Layout title={config.about.title || t('about', config.language)}>
-                <Header />
-                <main>
-                    <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedAbout.toString() }} />
-                </main>
-            </Layout>
-        );
+        let aboutContent;
+        if (Page) {
+            aboutContent = <Page title={config.about.title || t('about', config.language)} content={processedAbout.toString()} slug="about" />;
+        } else {
+            aboutContent = (
+                <Layout title={config.about.title || t('about', config.language)}>
+                    <Header />
+                    <main>
+                        <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedAbout.toString() }} />
+                    </main>
+                </Layout>
+            );
+        }
         aboutBuild = writeHtml(path.join(distDir, 'about.html'), createHtml(aboutContent));
     }
 
@@ -657,14 +734,19 @@ async function build() {
             .use(rehypeStringify)
             .process(projectsMarkdown);
 
-        const projectsContent = (
-            <Layout title={config.projects.title || t('projects', config.language)}>
-                <Header />
-                <main>
-                    <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedProjects.toString() }} />
-                </main>
-            </Layout>
-        );
+        let projectsContent;
+        if (Page) {
+            projectsContent = <Page title={config.projects.title || t('projects', config.language)} content={processedProjects.toString()} slug="projects" />;
+        } else {
+            projectsContent = (
+                <Layout title={config.projects.title || t('projects', config.language)}>
+                    <Header />
+                    <main>
+                        <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedProjects.toString() }} />
+                    </main>
+                </Layout>
+            );
+        }
         projectsBuild = writeHtml(path.join(distDir, 'projects.html'), createHtml(projectsContent));
     }
 
