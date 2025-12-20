@@ -24,3 +24,18 @@ npm run dev
 - **Core**: Node.js + TypeScript SSG Engine.
 - **Rendering**: Preact (Server-Side Rendering).
 - **Styling**: TailwindCSS.
+
+## Performance Benchmarks / 性能测试
+
+Build time performance on a standard machine:
+标准机器上的构建时间性能：
+
+| Posts (文章数) | Build Time (构建时间) |
+|---|---|
+| 50 | 5.67s |
+| 100 | 6.62s |
+| 250 | 6.52s |
+| 500 | 7.27s |
+
+*Tested with parallel processing enabled.*
+*已启用并行处理测试。*

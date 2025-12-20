@@ -16,6 +16,11 @@
     -   Designed a responsive and aesthetic Post layout.
 5.  **Optimization**:
     -   Implemented automated SEO meta tags (Description, OpenGraph).
+7.  **Benchmarking**:
+    -   Tested build performance with up to 500 posts.
+    -   Result: ~7.3s for 500 posts.
+    -   Updated README with results.
+    -   **Created Blog Post**: Added `src/content/performance-report.md` with detailed analysis.
 6.  **Verification**:
     -   Successfully built the project (`npm run build`).
     -   Verified generated HTML structure.
