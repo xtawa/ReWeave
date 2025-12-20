@@ -9,20 +9,37 @@ export default {
             fontFamily: {
                 sans: ['Outfit', 'sans-serif'],
             },
-            typography: {
+            typography: (theme) => ({
                 DEFAULT: {
                     css: {
                         maxWidth: '65ch',
-                        color: '#333',
+                        color: theme('colors.zinc.700'),
                         a: {
-                            color: '#3182ce',
+                            color: theme('colors.teal.600'),
                             '&:hover': {
-                                color: '#2c5282',
+                                color: theme('colors.teal.700'),
                             },
                         },
                     },
                 },
-            },
+                invert: {
+                    css: {
+                        color: theme('colors.zinc.300'),
+                        a: {
+                            color: theme('colors.teal.400'),
+                            '&:hover': {
+                                color: theme('colors.teal.300'),
+                            },
+                        },
+                        h1: { color: theme('colors.zinc.100') },
+                        h2: { color: theme('colors.zinc.100') },
+                        h3: { color: theme('colors.zinc.100') },
+                        h4: { color: theme('colors.zinc.100') },
+                        code: { color: theme('colors.zinc.100') },
+                        strong: { color: theme('colors.zinc.100') },
+                    },
+                },
+            }),
         },
     },
     plugins: [

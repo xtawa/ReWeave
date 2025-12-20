@@ -84,22 +84,19 @@ async function build() {
                         const postUrl = post.abbrlink || post.slug;
                         return (
                             <article key={post.slug} class="group relative flex flex-col items-start">
-                                <h2 class="text-xl font-semibold text-gray-900 group-hover:text-gray-600">
+                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-gray-600 dark:group-hover:text-gray-400">
                                     <a href={`/posts/${postUrl}.html`}>
-                                        <span class="absolute inset-0" />
+                                        <span class="absolute inset-0 z-0" />
                                         {post.title}
                                     </a>
                                 </h2>
                                 <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
                                     <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
-                                        <span class="h-4 w-0.5 rounded-full bg-gray-200" />
+                                        <span class="h-4 w-0.5 rounded-full bg-gray-200 dark:bg-gray-700" />
                                     </span>
                                     {new Date(post.date).toLocaleDateString()}
                                 </time>
-                                <p class="relative z-10 mt-2 text-sm text-gray-600">{post.excerpt}</p>
-                                <div class="relative z-10 mt-4 flex items-center text-sm font-medium text-teal-500">
-                                    {t('readMore', config.language)}
-                                </div>
+                                <p class="relative z-10 mt-2 text-sm text-gray-600 dark:text-gray-300">{post.excerpt}</p>
                             </article>
                         );
                     })}
@@ -317,17 +314,21 @@ async function build() {
         const remarkRehype = (await import('remark-rehype')).default;
         const rehypeStringify = (await import('rehype-stringify')).default;
 
+        // Read about.md file from pages directory
+        const pagesDir = path.join(process.cwd(), 'src', 'pages');
+        const aboutFilePath = path.join(pagesDir, config.about.file);
+        const aboutMarkdown = await fs.readFile(aboutFilePath, 'utf-8');
+
         const processedAbout = await unified()
             .use(remarkParse)
             .use(remarkRehype)
             .use(rehypeStringify)
-            .process(config.about.content);
+            .process(aboutMarkdown);
 
         const aboutContent = (
             <Layout title={config.about.title || t('about', config.language)}>
                 <Header />
                 <main>
-                    <h1 class="text-4xl font-bold mb-8">{config.about.title || t('about', config.language)}</h1>
                     <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedAbout.toString() }} />
                 </main>
             </Layout>
@@ -338,36 +339,27 @@ async function build() {
     // 10. Build Projects Page
     let projectsBuild: Promise<void> | null = null;
     if (config.projects) {
+        const { unified } = await import('unified');
+        const remarkParse = (await import('remark-parse')).default;
+        const remarkRehype = (await import('remark-rehype')).default;
+        const rehypeStringify = (await import('rehype-stringify')).default;
+
+        // Read projects.md file from pages directory
+        const pagesDir = path.join(process.cwd(), 'src', 'pages');
+        const projectsFilePath = path.join(pagesDir, config.projects.file);
+        const projectsMarkdown = await fs.readFile(projectsFilePath, 'utf-8');
+
+        const processedProjects = await unified()
+            .use(remarkParse)
+            .use(remarkRehype)
+            .use(rehypeStringify)
+            .process(projectsMarkdown);
+
         const projectsContent = (
             <Layout title={config.projects.title || t('projects', config.language)}>
                 <Header />
                 <main>
-                    <h1 class="text-4xl font-bold mb-8">{config.projects.title || t('projects', config.language)}</h1>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {config.projects.items.map(project => (
-                            <div class="p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
-                                <h2 class="text-2xl font-semibold mb-2">
-                                    {project.url ? (
-                                        <a href={project.url} class="text-teal-600 dark:text-teal-400 hover:underline" target="_blank" rel="noopener noreferrer">
-                                            {project.name}
-                                        </a>
-                                    ) : (
-                                        project.name
-                                    )}
-                                </h2>
-                                <p class="text-gray-600 dark:text-gray-400 mb-4">{project.description}</p>
-                                {project.tags && project.tags.length > 0 && (
-                                    <div class="flex flex-wrap gap-2">
-                                        {project.tags.map(tag => (
-                                            <span class="px-2 py-1 text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded">
-                                                {tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                    <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedProjects.toString() }} />
                 </main>
             </Layout>
         );

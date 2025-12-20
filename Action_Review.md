@@ -69,6 +69,23 @@
     -   Automatic copy of `public/` directory to `dist/` during build.
     -   Created `LOGO_GUIDE.md` with bilingual instructions.
     -   Fallback to gradient placeholder if no logo configured.
+15. **About & Projects as Markdown Files**:
+    -   Changed About and Projects to use separate `.md` files in `src/pages/`.
+    -   Created `src/pages/about.md` and `src/pages/projects.md`.
+    -   Configuration now uses file paths instead of inline content.
+    -   Easier to edit and maintain content.
+    -   Fixed logo positioning and styling in Header.
+16. **Header Menu & Button Fixes**:
+    -   Moved navigation menu to top-right corner.
+    -   Logo stays in top-left corner.
+    -   Fixed "阅读文章" button clickability on index page.
+    -   Added arrow icon to read more button.
+    -   Added dark mode styles to all text elements.
+17. **Layout & Style Refinements**:
+    -   Adjusted Header padding and margins to prevent overlap with content.
+    -   Removed "Read More" button as requested.
+    -   Fixed dark mode text readability by configuring Tailwind typography plugin.
+    -   Verified logo existence and configuration.
 6.  **Verification**:
     -   Successfully built the project (`npm run build`).
     -   Verified generated HTML structure.

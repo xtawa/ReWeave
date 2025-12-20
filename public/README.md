@@ -24,15 +24,8 @@ logo: {
     alt: "Your Site Logo",
 },
 ```
+//support eternal links like https://...
 
-Or use an external URL:
-
-```typescript
-logo: {
-    path: "https://example.com/logo.png",
-    alt: "Your Site Logo",
-},
-```
 
 ## Build Process
 

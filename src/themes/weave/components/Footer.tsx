@@ -5,20 +5,20 @@ import { t } from '../../../core/i18n';
 
 export function Footer() {
     return (
-        <footer class="mt-20 border-t border-gray-100 py-10">
+        <footer class="mt-20 border-t border-gray-100 dark:border-zinc-800 py-10">
             <div class="flex flex-col items-center justify-between gap-6 sm:flex-row">
                 <div class="flex flex-col items-center sm:items-start">
-                    <p class="text-sm text-gray-400">
+                    <p class="text-sm text-gray-400 dark:text-zinc-500">
                         &copy; {new Date().getFullYear()} {config.footer?.copyright || config.title}. {t('allRightsReserved', config.language)}.
                     </p>
                     {config.footer?.icp && (
-                        <p class="text-xs text-gray-400 mt-1">
+                        <p class="text-xs text-gray-400 dark:text-zinc-500 mt-1">
                             {config.footer.icp}
                         </p>
                     )}
                 </div>
                 <div class="flex items-center gap-6">
-                    <div class="flex gap-6 text-sm font-medium text-gray-800">
+                    <div class="flex gap-6 text-sm font-medium text-gray-800 dark:text-zinc-200">
                         <a href="/" class="transition hover:text-teal-500">{t('home', config.language)}</a>
                         {config.social?.twitter && (
                             <a href={config.social.twitter} class="transition hover:text-teal-500">Twitter</a>

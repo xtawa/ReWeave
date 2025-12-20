@@ -98,15 +98,15 @@ export interface SiteConfig {
          */
         title?: string;
         /**
-         * Main content (supports Markdown).
-         * 主要内容（支持 Markdown）。
+         * Path to Markdown file (relative to src/pages/).
+         * Markdown 文件路径（相对于 src/pages/）。
          */
-        content: string;
+        file: string;
     };
 
     /**
-     * Projects page configuration.
-     * 项目页面配置。
+     * Projects page content.
+     * 项目页面内容。
      */
     projects?: {
         /**
@@ -115,15 +115,10 @@ export interface SiteConfig {
          */
         title?: string;
         /**
-         * List of projects.
-         * 项目列表。
+         * Path to Markdown file (relative to src/pages/).
+         * Markdown 文件路径（相对于 src/pages/）。
          */
-        items: Array<{
-            name: string;
-            description: string;
-            url?: string;
-            tags?: string[];
-        }>;
+        file: string;
     };
 }
 
@@ -131,7 +126,7 @@ export const config: SiteConfig = {
     // Basic Info / 基本信息
     title: "ReWeave Blog",
     description: "A high-performance static blog built with ReWeave.",
-    language: "en",
+    language: "zh",
 
     // Theme Selection / 主题选择
     themeName: "weave",
@@ -139,10 +134,10 @@ export const config: SiteConfig = {
     // Logo / 网站 Logo
     // Uncomment and configure to use a custom logo
     // 取消注释并配置以使用自定义 logo
-    // logo: {
-    //     path: "logo.png",  // Place your logo in public/logo.png
-    //     alt: "ReWeave Blog Logo",
-    // },
+    logo: {
+        path: "logo.png",  // Place your logo in public/logo.png
+        alt: "ReWeave Blog Logo",
+    },
 
     // Social Links / 社交链接
     social: {
@@ -163,52 +158,13 @@ export const config: SiteConfig = {
 
     // About Page / 关于页面
     about: {
-        title: "About Me",
-        content: `
-# About Me
-
-Hi! I'm a developer passionate about building fast, beautiful, and accessible web experiences.
-
-## What I Do
-
-- Build high-performance static sites
-- Write about web development and technology
-- Contribute to open-source projects
-
-## Skills
-
-- TypeScript, JavaScript
-- React, Preact
-- Node.js
-- Static Site Generators
-
-## Contact
-
-Feel free to reach out via [Twitter](https://twitter.com) or [GitHub](https://github.com).
-        `.trim(),
+        title: "关于我",
+        file: "about.md",
     },
 
     // Projects Page / 项目页面
     projects: {
-        title: "My Projects",
-        items: [
-            {
-                name: "ReWeave",
-                description: "A high-performance static blog framework built with Preact and TypeScript.",
-                url: "https://github.com/yourusername/reweave",
-                tags: ["TypeScript", "Preact", "SSG"],
-            },
-            {
-                name: "Project Alpha",
-                description: "An innovative web application for productivity.",
-                url: "https://example.com/alpha",
-                tags: ["React", "Node.js"],
-            },
-            {
-                name: "Project Beta",
-                description: "Open-source tool for developers.",
-                tags: ["JavaScript", "CLI"],
-            },
-        ],
+        title: "我的项目",
+        file: "projects.md",
     },
 };
