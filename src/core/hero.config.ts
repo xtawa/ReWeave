@@ -22,8 +22,8 @@ export interface HeroConfig {
 
 export const heroConfig: HeroConfig = {
     enabled: true,
-    name: "Christina Ivan",
-    role: "UI/UX Designer & Frontend Developer",
+    name: "Co1sini",
+    role: "UI/UX Designer & Frontend",
     description: "An independent developer coding with love.",
     avatar: "logo.png", // Default to logo.png
     social: {
