@@ -450,7 +450,7 @@ async function build() {
             <Layout title={`${t('category', config.language)}: ${category}`}>
                 <Header />
                 <main>
-                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('category', config.language)}: {category}</h1>
+                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('category', config.language)}: {category}</h1>
                     <div class="space-y-10">
                         {categoryPosts.map((post) => {
                             const postUrl = safeSlug(post.abbrlink || post.slug);
@@ -498,7 +498,7 @@ async function build() {
             <Layout title={`${t('tag', config.language)}: ${tag}`}>
                 <Header />
                 <main>
-                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('tag', config.language)}: {tag}</h1>
+                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tag', config.language)}: {tag}</h1>
                     <div class="space-y-10">
                         {tagPosts.map((post) => {
                             const postUrl = safeSlug(post.abbrlink || post.slug);
@@ -542,29 +542,29 @@ async function build() {
         <Layout title={t('archive', config.language)}>
             <Header />
             <main>
-                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('archive', config.language)}</h1>
+                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('archive', config.language)}</h1>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
                     <a href="/categories" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
-                        <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:text-white">{t('categories', config.language)}</h2>
-                        <p class="text-gray-600 dark:text-white">{categories.size} {t('categories', config.language).toLowerCase()}</p>
+                        <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:!text-white">{t('categories', config.language)}</h2>
+                        <p class="text-gray-600 dark:text-zinc-300">{categories.size} {t('categories', config.language).toLowerCase()}</p>
                     </a>
                     <a href="/tags" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
-                        <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:text-white">{t('tags', config.language)}</h2>
-                        <p class="text-gray-600 dark:text-white">{tags.size} {t('tags', config.language).toLowerCase()}</p>
+                        <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:!text-white">{t('tags', config.language)}</h2>
+                        <p class="text-gray-600 dark:text-zinc-300">{tags.size} {t('tags', config.language).toLowerCase()}</p>
                     </a>
                 </div>
 
                 <div class="space-y-12">
                     {years.map(year => (
                         <section key={year}>
-                            <h2 class="text-3xl font-bold mb-6 text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-2">{year}</h2>
+                            <h2 class="text-3xl font-bold mb-6 text-zinc-900 dark:!text-white border-b border-zinc-200 dark:border-zinc-700 pb-2">{year}</h2>
                             <div class="space-y-6">
                                 {postsByYear.get(year)!.map(post => (
                                     <article key={post.slug} class="flex items-baseline gap-4 group">
-                                        <time datetime={post.date} class="text-sm text-zinc-500 dark:text-white w-24 flex-shrink-0 text-right">
+                                        <time datetime={post.date} class="text-sm text-zinc-500 dark:text-zinc-400 w-24 flex-shrink-0 text-right">
                                             {new Date(post.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                         </time>
-                                        <h3 class="text-lg font-medium text-zinc-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
+                                        <h3 class="text-lg font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
                                             <a href={`/posts/${safeSlug(post.abbrlink || post.slug)}`}>
                                                 {post.title}
                                             </a>
@@ -585,12 +585,12 @@ async function build() {
         <Layout title={t('categories', config.language)}>
             <Header />
             <main>
-                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('categories', config.language)}</h1>
+                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('categories', config.language)}</h1>
                 <div class="flex flex-wrap gap-4">
                     {Array.from(categories.entries()).map(([category, categoryPosts]) => (
-                        <a href={`/categories/${safeSlug(category)}`} class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition group">
-                            <span class="font-medium text-zinc-700 dark:text-white">{category}</span>
-                            <span class="ml-2 text-sm text-gray-500 dark:text-white">({categoryPosts.length})</span>
+                        <a href={`/categories/${safeSlug(category)}`} class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition group border border-transparent dark:border-zinc-700/50">
+                            <span class="font-medium text-zinc-700 dark:text-zinc-200">{category}</span>
+                            <span class="ml-2 text-sm text-gray-500 dark:text-zinc-400">({categoryPosts.length})</span>
                         </a>
                     ))}
                 </div>
@@ -604,12 +604,12 @@ async function build() {
         <Layout title={t('tags', config.language)}>
             <Header />
             <main>
-                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('tags', config.language)}</h1>
+                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tags', config.language)}</h1>
                 <div class="flex flex-wrap gap-3">
                     {Array.from(tags.entries()).map(([tag, tagPosts]) => (
-                        <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-white rounded-full hover:bg-teal-200 dark:hover:bg-teal-800 transition text-sm">
+                        <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center px-3 py-1 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 rounded-full hover:bg-teal-100 dark:hover:bg-teal-900/50 transition text-sm border border-teal-100 dark:border-teal-800/50">
                             #{tag}
-                            <span class="ml-1 text-xs opacity-80">({tagPosts.length})</span>
+                            <span class="ml-1 text-xs opacity-70">({tagPosts.length})</span>
                         </a>
                     ))}
                 </div>
@@ -714,7 +714,7 @@ async function build() {
         <Layout title={t('stats', config.language)}>
             <Header />
             <main class="max-w-4xl mx-auto">
-                <h1 class="text-4xl font-bold text-zinc-800 dark:text-zinc-100 mb-8">{t('stats', config.language)}</h1>
+                <h1 class="text-4xl font-bold text-zinc-800 dark:!text-white mb-8">{t('stats', config.language)}</h1>
 
                 {/* Stats Cards */}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">

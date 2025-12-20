@@ -119,7 +119,7 @@ export const config: SiteConfig = {
     // Visual Customization / 视觉自定义
     theme: {
         primaryColor: "#000000",
-        contentWidth: 'full', // 'normal', 'wide', 'full'
+        contentWidth: 'normal', // 'normal', 'wide', 'full'
     },
 
     // Table of Contents / 目录

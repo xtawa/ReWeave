@@ -2,58 +2,47 @@
 
 ## 2025-12-20
 
-### Mobile Menu Implementation
-- **Action**: Modified `src/themes/weave/components/Header.tsx` to add a responsive mobile menu.
-- **Details**:
-    - Added a hamburger menu button visible only on mobile (`md:hidden`).
-    - Added a full-screen overlay menu (`#mobile-menu`) containing the navigation links.
-    - Added inline JavaScript to handle the menu toggle logic (show/hide with fade transition).
-- **Reason**: The user reported that the menu was not visible on mobile devices.
+### Fix Dark Mode Text Color on Archive, Categories, and Tags Pages
+- **Issue**: Text on Archive, Categories, and Tags pages was dark on a dark background in dark mode, making it unreadable.
+- **Action**: Updated `src/core/build.tsx` to use `dark:!text-white` instead of `dark:text-white` (or relying on inheritance) for:
+    - Archive page title and card content (Categories/Tags counts).
+    - Archive page list items (Years, Dates, Post Titles).
+    - Categories page title and list items.
+    - Tags page title and list items.
+- **Reason**: To ensure high contrast and readability in dark mode, overriding any conflicting styles.
 
-### Clean URLs Implementation
-- **Action**: Modified `src/core/config.ts`, `src/themes/weave/components/Pagination.tsx`, and `src/core/build.tsx`.
-- **Details**:
-    - Updated `config.ts` to remove `.html` extensions from navbar links.
-    - Updated `Pagination.tsx` to generate clean URLs for pagination links (e.g., `/articles/2` instead of `/articles/2.html`).
-    - Updated `build.tsx` to:
-        - Use a helper function `writeHtml` to write files to `folder/index.html` structure instead of `folder.html`.
-        - Remove `.html` extensions from all generated links in HTML, RSS, and Sitemap.
-- **Reason**: The user requested that links should not end with `.html` (e.g., `/posts` instead of `/posts.html`).
+### Change Global Content Width to Normal
+- **Issue**: User requested all pages to be non-full-width (非全贴合).
+- **Action**: Updated `src/core/config.ts` to set `theme.contentWidth` to `'normal'`.
+- **Reason**: This global setting ensures that all pages using the `Layout` component default to a constrained width (max-w-7xl) instead of full width, unless explicitly overridden.
 
-### Chinese Path Fix
-- **Action**: Modified `src/core/build.tsx`.
-- **Details**:
-    - Applied `safeSlug` function to all post URLs (including RSS and Sitemap).
-    - `safeSlug` converts non-ASCII strings to hex encoding to ensure safe filenames and URLs.
-- **Reason**: The user requested to fix issues with Chinese paths.
+### Implement Sticky Footer
+- **Issue**: User requested the footer on Archive and its sub-pages to be at the bottom of the screen (sticky footer).
+- **Action**: Updated `src/themes/weave/layouts/Layout.tsx`:
+    - Calculated `minHeightClass` based on `isFullWidth` and `verticalMargin` (accounting for top margins).
+    - Changed the inner content container to `flex flex-col ${minHeightClass}`.
+    - Wrapped `{children}` in a `div` with `flex-1` to push the footer down when content is short.
+- **Reason**: To ensure the footer stays at the bottom of the viewport on pages with little content, improving visual balance.
 
-### Pinned Posts Implementation
-- **Action**: Modified `src/core/markdown.ts` and `src/core/build.tsx`.
-- **Details**:
-    - Updated `Post` interface and `getPosts` in `markdown.ts` to support `pin` frontmatter.
-    - Updated sorting logic in `markdown.ts` to prioritize pinned posts (newest first).
-    - Updated `build.tsx` to display a pin icon next to the title of pinned posts.
-- **Reason**: The user requested a feature to pin posts to the top.
+### Revise Sticky Footer Logic
+- **Issue**: User reported the previous sticky footer fix was ineffective ("还是不变").
+- **Action**: Updated `src/themes/weave/layouts/Layout.tsx` to increase the subtracted height in `min-h` calculation:
+    - Changed from `min-h-[calc(100vh-2rem)]` to `min-h-[calc(100vh-6rem)]`.
+    - Changed from `sm:min-h-[calc(100vh-4rem)]` to `sm:min-h-[calc(100vh-8rem)]`.
+- **Reason**: The previous calculation likely didn't account for all vertical spacing (e.g., header height, footer padding, or other margins). Increasing the offset ensures the container fits within the viewport while still pushing the footer down.
 
-### Full Width Layout Fix & Home Page Width Override
-- **Action**: Modified `src/themes/weave/layouts/Layout.tsx` and `src/core/build.tsx`.
-- **Details**:
-    - Updated `Layout.tsx` to allow overriding `contentWidth` via props.
-    - In `build.tsx`, passed `contentWidth="normal"` to the home page and articles list page.
-    - This ensures that while the site default can be `full`, the home page remains centered and non-flush with the screen edges as requested.
-- **Reason**: The user requested that the home page be non-full width while other pages follow the config.
+### Final Sticky Footer Fix (Flexbox)
+- **Issue**: Previous `min-h` calculation was still not perfectly positioning the footer at the bottom.
+- **Action**: Updated `src/themes/weave/layouts/Layout.tsx` to use a full flexbox chain:
+    - Added `min-h-screen` to the main wrapper.
+    - Added `flex-1 flex flex-col` to all nested containers down to the content area.
+    - Removed manual `min-h` calculations.
+- **Reason**: This is a more robust way to implement a sticky footer that automatically adapts to varying header heights and margins without manual offsets.
 
-### Dark Mode Rendering Fix (Consistency & Contrast)
-- **Action**: Modified `src/themes/weave/layouts/Layout.tsx` and `src/core/build.tsx`.
-- **Details**:
-    - Updated `Layout.tsx` dark mode detection script to use `localStorage.getItem('color-theme')` to match the theme toggle logic in `Footer.tsx`.
-    - Added `text-zinc-900 dark:text-zinc-100` to the `body` in `Layout.tsx` for global dark mode text support.
-    - In `build.tsx`, updated Category, Tag, and Archive pages to use `dark:text-white` for titles and `dark:text-zinc-100` for post titles.
-    - **Added Timeline to Archive Page**: Added a list of posts grouped by year to the Archive page, as users expect to see articles there.
-    - **Improved Contrast**: Brightened dark mode text colors for excerpts (`zinc-300`) and category list items (`zinc-100`).
-    - **Forced White Text**: Updated Category and Tag list buttons to use `dark:text-white` explicitly for maximum visibility in dark mode.
-    - **Pure White Enforcement**: Updated all text elements (including counts and dates) in Archive, Category, and Tag pages to use `dark:text-white` as requested by the user.
-- **Reason**: The user reported that titles and posts in Archive, Category, and Tag pages were not white in dark mode, and articles were hard to see (or missing in Archive).
-
-## Next Step
-- Verify the dark mode rendering and home page layout.
+### Improve Dark Mode Visibility for Tags and Titles
+- **Issue**: Tags and titles on Archive, Categories, and Tags pages were hard to read in dark mode (poor contrast).
+- **Action**: Updated `src/core/build.tsx`:
+    - Replaced `dark:!text-white` with `dark:text-zinc-100` for main titles and headings.
+    - Adjusted tag styling: used `bg-teal-50 dark:bg-teal-900/30` and `text-teal-700 dark:text-teal-200` with subtle borders.
+    - Adjusted category styling: used `dark:bg-zinc-800/50` and `dark:text-zinc-200`.
+- **Reason**: Standard Tailwind gray and teal scales provide better readability and a more polished look than pure white on black, especially when combined with semi-transparent backgrounds.
