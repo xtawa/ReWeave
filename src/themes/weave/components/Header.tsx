@@ -29,10 +29,10 @@ export function Header() {
                         <nav class="pointer-events-auto hidden md:block">
                             <ul class="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
                                 <li>
-                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400" href="/">{t('home', config.language)}</a>
+                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-500/10 rounded-full hover:shadow-[0_0_15px_rgba(20,184,166,0.3)] dark:hover:shadow-[0_0_15px_rgba(45,212,191,0.2)]" href="/">{t('home', config.language)}</a>
                                 </li>
                                 <li class="relative group">
-                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 cursor-pointer" href="/archive.html">
+                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 cursor-pointer hover:bg-teal-50/50 dark:hover:bg-teal-500/10 rounded-full hover:shadow-[0_0_15px_rgba(20,184,166,0.3)] dark:hover:shadow-[0_0_15px_rgba(45,212,191,0.2)]" href="/archive.html">
                                         {t('archive', config.language)}
                                         <svg class="inline-block ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -52,10 +52,10 @@ export function Header() {
                                     </ul>
                                 </li>
                                 <li>
-                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400" href="/about.html">{t('about', config.language)}</a>
+                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-500/10 rounded-full hover:shadow-[0_0_15px_rgba(20,184,166,0.3)] dark:hover:shadow-[0_0_15px_rgba(45,212,191,0.2)]" href="/about.html">{t('about', config.language)}</a>
                                 </li>
                                 <li>
-                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400" href="/projects.html">{t('projects', config.language)}</a>
+                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-500/10 rounded-full hover:shadow-[0_0_15px_rgba(20,184,166,0.3)] dark:hover:shadow-[0_0_15px_rgba(45,212,191,0.2)]" href="/projects.html">{t('projects', config.language)}</a>
                                 </li>
                             </ul>
                         </nav>

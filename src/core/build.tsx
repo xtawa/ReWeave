@@ -2,7 +2,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { render } from 'preact-render-to-string';
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
 import { getPosts } from './markdown';
 import { config } from './config';
 import { t } from './i18n';
@@ -111,40 +111,171 @@ async function build() {
     const postsDir = path.join(distDir, 'posts');
     await fs.mkdir(postsDir, { recursive: true });
 
+    // Helper function to extract headings from HTML content
+    const extractHeadings = (html: string, maxDepth: number = 3): Array<{ level: number; text: string; id: string }> => {
+        const headings: Array<{ level: number; text: string; id: string }> = [];
+        const regex = /<h([1-6])[^>]*id="([^"]*)"[^>]*>([^<]*)<\/h[1-6]>/gi;
+        let match;
+        while ((match = regex.exec(html)) !== null) {
+            const level = parseInt(match[1]);
+            if (level <= maxDepth) {
+                headings.push({
+                    level,
+                    text: match[3].trim(),
+                    id: match[2]
+                });
+            }
+        }
+        // If no IDs found, try without ID requirement
+        if (headings.length === 0) {
+            const simpleRegex = /<h([1-6])[^>]*>([^<]+)<\/h[1-6]>/gi;
+            let simpleMatch;
+            while ((simpleMatch = simpleRegex.exec(html)) !== null) {
+                const level = parseInt(simpleMatch[1]);
+                if (level <= maxDepth) {
+                    const text = simpleMatch[2].trim();
+                    const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+                    headings.push({ level, text, id });
+                }
+            }
+        }
+        return headings;
+    };
+
+    // Helper function to render TOC
+    const renderToc = (headings: Array<{ level: number; text: string; id: string }>, position: string = 'top', collapsible: boolean = false) => {
+        if (headings.length === 0) return null;
+        const minLevel = Math.min(...headings.map(h => h.level));
+
+        const tocId = 'toc-' + Math.random().toString(36).substr(2, 9);
+        const contentId = 'toc-content-' + Math.random().toString(36).substr(2, 9);
+
+        // Position-specific classes
+        const positionClasses: Record<string, string> = {
+            'top': 'mb-8 w-full',
+            'left': 'sticky top-6 max-h-[calc(100vh-3rem)] overflow-auto',
+            'right': 'sticky top-6 max-h-[calc(100vh-3rem)] overflow-auto'
+        };
+
+        return (
+            <nav id={tocId} class={`toc p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg ${positionClasses[position] || positionClasses['top']}`}>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{t('toc', config.language)}</h2>
+                    {collapsible && (
+                        <>
+                            <button
+                                class="toc-toggle p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition"
+                                dangerouslySetInnerHTML={{ __html: `<svg class="w-4 h-4 text-zinc-600 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>` }}
+                                aria-label="Toggle TOC"
+                            ></button>
+                            <script dangerouslySetInnerHTML={{
+                                __html: `
+                                document.querySelector('#${tocId} .toc-toggle').addEventListener('click', function() {
+                                    document.getElementById('${contentId}').classList.toggle('hidden');
+                                });
+                            ` }}></script>
+                        </>
+                    )}
+                </div>
+                <ul id={contentId} class="space-y-1 text-sm">
+                    {headings.map(heading => (
+                        <li style={{ paddingLeft: `${(heading.level - minLevel) * 12}px` }}>
+                            <a
+                                href={`#${heading.id}`}
+                                class="text-zinc-600 dark:text-zinc-400 hover:text-teal-500 dark:hover:text-teal-400 transition block py-0.5"
+                            >
+                                {heading.text}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </nav>
+        );
+    };
+
     const postBuilds = posts.map(post => {
         const postUrl = post.abbrlink || post.slug;
+
+        // Extract headings for TOC
+        const tocEnabled = config.toc?.enabled ?? false;
+        const maxDepth = config.toc?.maxDepth ?? 3;
+        const tocPosition = config.toc?.position ?? 'top';
+        const tocCollapsible = config.toc?.collapsible ?? false;
+        const headings = tocEnabled ? extractHeadings(post.content, maxDepth) : [];
+
         const postContent = (
             <Layout title={post.title} description={post.excerpt} image={post.image}>
                 <Header />
                 <div class="xl:relative">
-                    <div class="mx-auto max-w-2xl">
-                        <a href="/" class="group mb-8 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20 lg:absolute lg:-left-5 lg:-mt-2 lg:mb-0 xl:-top-1.5 xl:left-0 xl:mt-0">
-                            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" class="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400">
-                                <path d="M7.25 11.25 3.75 8m0 0 3.5-3.25M3.75 8h8.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                        </a>
-                        <article>
-                            <header class="flex flex-col">
-                                <time datetime={post.date} class="order-first flex items-center text-base text-zinc-400 dark:text-zinc-500">
-                                    <span class="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500"></span>
-                                    <span class="ml-3">{new Date(post.date).toLocaleDateString()}</span>
-                                </time>
-                                <h1 class="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
-                                    {post.title}
-                                </h1>
-                                {post.tags && post.tags.length > 0 && (
-                                    <div class="mt-4 flex flex-wrap gap-2">
-                                        {post.tags.map(tag => (
-                                            <a href={`/tags/${tag}.html`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
-                                                #{tag}
-                                            </a>
-                                        ))}
+                    {tocEnabled && headings.length > 0 && (tocPosition === 'left' || tocPosition === 'right') ? (
+                        <div class={`flex gap-8 ${tocPosition === 'left' ? 'flex-row' : 'flex-row-reverse'}`}>
+                            <aside class="hidden lg:block w-64 flex-shrink-0">
+                                {renderToc(headings, tocPosition, tocCollapsible)}
+                            </aside>
+                            <div class="flex-1 mx-auto max-w-2xl">
+                                <a href="/" class="group mb-8 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20">
+                                    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" class="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400">
+                                        <path d="M7.25 11.25 3.75 8m0 0 3.5-3.25M3.75 8h8.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </a>
+                                <article>
+                                    <header class="flex flex-col">
+                                        <time datetime={post.date} class="order-first flex items-center text-base text-zinc-400 dark:text-zinc-500">
+                                            <span class="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500"></span>
+                                            <span class="ml-3">{new Date(post.date).toLocaleDateString()}</span>
+                                        </time>
+                                        <h1 class="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
+                                            {post.title}
+                                        </h1>
+                                        {post.tags && post.tags.length > 0 && (
+                                            <div class="mt-4 flex flex-wrap gap-2">
+                                                {post.tags.map(tag => (
+                                                    <a href={`/tags/${tag}.html`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
+                                                        #{tag}
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </header>
+                                    <div class="mt-8 prose prose-zinc dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content }} />
+                                </article>
+                            </div>
+                        </div>
+                    ) : (
+                        <div class="mx-auto max-w-2xl">
+                            <a href="/" class="group mb-8 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 transition dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0 dark:ring-white/10 dark:hover:border-zinc-700 dark:hover:ring-white/20 lg:absolute lg:-left-5 lg:-mt-2 lg:mb-0 xl:-top-1.5 xl:left-0 xl:mt-0">
+                                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" class="h-4 w-4 stroke-zinc-500 transition group-hover:stroke-zinc-700 dark:stroke-zinc-500 dark:group-hover:stroke-zinc-400">
+                                    <path d="M7.25 11.25 3.75 8m0 0 3.5-3.25M3.75 8h8.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </a>
+                            <article>
+                                <header class="flex flex-col">
+                                    <time datetime={post.date} class="order-first flex items-center text-base text-zinc-400 dark:text-zinc-500">
+                                        <span class="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500"></span>
+                                        <span class="ml-3">{new Date(post.date).toLocaleDateString()}</span>
+                                    </time>
+                                    <h1 class="mt-6 text-4xl font-bold tracking-tight text-zinc-800 dark:text-zinc-100 sm:text-5xl">
+                                        {post.title}
+                                    </h1>
+                                    {post.tags && post.tags.length > 0 && (
+                                        <div class="mt-4 flex flex-wrap gap-2">
+                                            {post.tags.map(tag => (
+                                                <a href={`/tags/${tag}.html`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
+                                                    #{tag}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    )}
+                                </header>
+                                {tocEnabled && headings.length > 0 && tocPosition === 'top' && (
+                                    <div class="mt-8">
+                                        {renderToc(headings, tocPosition, tocCollapsible)}
                                     </div>
                                 )}
-                            </header>
-                            <div class="mt-8 prose prose-zinc dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content }} />
-                        </article>
-                    </div>
+                                <div class="mt-8 prose prose-zinc dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content }} />
+                            </article>
+                        </div>
+                    )}
                 </div>
             </Layout>
         );

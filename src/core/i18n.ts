@@ -17,6 +17,7 @@ export interface I18nConfig {
             categories: string;
             tags: string;
             allRightsReserved: string;
+            toc: string;
         };
     };
 }
@@ -38,6 +39,7 @@ export const i18n: I18nConfig = {
             categories: 'Categories',
             tags: 'Tags',
             allRightsReserved: 'All rights reserved',
+            toc: 'Table of Contents',
         },
         zh: {
             readMore: '阅读文章',
@@ -53,6 +55,7 @@ export const i18n: I18nConfig = {
             categories: '分类',
             tags: '标签',
             allRightsReserved: '保留所有权利',
+            toc: '目录',
         },
     },
 };

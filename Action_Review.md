@@ -86,6 +86,27 @@
     -   Removed "Read More" button as requested.
     -   Fixed dark mode text readability by configuring Tailwind typography plugin.
     -   Verified logo existence and configuration.
+    -   Fixed Footer dark mode colors.
+18. **Header Branding**:
+    -   Added site title next to logo in oval container.
+    -   Logo and title aligned with content.
+19. **Table of Contents (TOC)**:
+    -   Added TOC functionality for article pages.
+    -   Configurable in `config.ts` with `toc.enabled` and `toc.maxDepth`.
+    -   Extracts headings from article content.
+    -   Displays as a navigation box with indented hierarchy.
+    -   Added i18n support for TOC title.
+    -   **Position Configuration**: TOC can be positioned at 'top', 'left', or 'right'.
+    -   **Collapsible**: Optional toggle button to collapse/expand TOC.
+    -   **Sticky Sidebar**: Left/right positioned TOC stays visible while scrolling.
+20. **Theme Transition Animation**:
+    -   Added smooth transition (300ms) for theme switching.
+    -   Implemented via `.theme-transition` class in CSS.
+    -   Dynamically applied during toggle to ensure performance.
+21. **Header Menu Glow Effect**:
+    -   Added hover glow effect to navigation menu items.
+    -   Uses `box-shadow` with blur for a neon/halo look.
+    -   Adapted for both light and dark modes.
 6.  **Verification**:
     -   Successfully built the project (`npm run build`).
     -   Verified generated HTML structure.

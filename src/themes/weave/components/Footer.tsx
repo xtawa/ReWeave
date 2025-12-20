@@ -57,6 +57,9 @@ export function Footer() {
                     }
                     
                     themeToggleBtn.addEventListener('click', function() {
+                        // Add transition class
+                        document.documentElement.classList.add('theme-transition');
+
                         themeToggleDarkIcon.classList.toggle('hidden');
                         themeToggleLightIcon.classList.toggle('hidden');
                         
@@ -77,6 +80,11 @@ export function Footer() {
                                 localStorage.setItem('color-theme', 'dark');
                             }
                         }
+
+                        // Remove transition class after animation
+                        setTimeout(() => {
+                            document.documentElement.classList.remove('theme-transition');
+                        }, 300);
                     });
                 })();
             ` }}></script>

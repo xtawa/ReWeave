@@ -88,6 +88,33 @@ export interface SiteConfig {
     };
 
     /**
+     * Table of Contents configuration for article pages.
+     * 文章页面目录配置。
+     */
+    toc?: {
+        /**
+         * Enable table of contents.
+         * 启用目录。
+         */
+        enabled: boolean;
+        /**
+         * Maximum heading depth to include (e.g., 3 = h1, h2, h3).
+         * 包含的最大标题深度（例如，3 = h1, h2, h3）。
+         */
+        maxDepth?: number;
+        /**
+         * Position of TOC: 'top' (above content), 'left' (sidebar), 'right' (sidebar).
+         * 目录位置：'top'（内容上方）、'left'（左侧栏）、'right'（右侧栏）。
+         */
+        position?: 'top' | 'left' | 'right';
+        /**
+         * Allow TOC to be collapsible.
+         * 允许折叠目录。
+         */
+        collapsible?: boolean;
+    };
+
+    /**
      * About page content.
      * 关于页面内容。
      */
@@ -154,6 +181,14 @@ export const config: SiteConfig = {
     // Visual Customization / 视觉自定义
     theme: {
         primaryColor: "#000000",
+    },
+
+    // Table of Contents / 目录
+    toc: {
+        enabled: true,
+        maxDepth: 3,
+        position: 'right',      // 'top' | 'left' | 'right'
+        collapsible: true,
     },
 
     // About Page / 关于页面
