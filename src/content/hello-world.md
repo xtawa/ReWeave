@@ -4,6 +4,7 @@ date: 2025-12-20
 excerpt: 欢迎使用你的全新高性能静态博客框架。
 category: 教程
 tags: [入门, ReWeave]
+pin: true
 ---
 
 # 你好，世界
