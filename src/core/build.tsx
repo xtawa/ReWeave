@@ -74,6 +74,7 @@ async function build() {
     const { Header } = await import(`${themePath}/components/Header`);
     const { Hero } = await import(`${themePath}/components/Hero`);
     const { Pagination } = await import(`${themePath}/components/Pagination`);
+    const { Comments } = await import(`${themePath}/components/Comments`);
 
     // Ensure dist exists
     await fs.mkdir(distDir, { recursive: true });
@@ -378,6 +379,7 @@ async function build() {
                                         </div>
                                     )}
                                     <div class="mt-8 prose prose-zinc dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content }} />
+                                    <Comments path={`/posts/${postUrl}`} />
                                 </article>
                             </div>
                         </div>
@@ -413,6 +415,7 @@ async function build() {
                                     </div>
                                 )}
                                 <div class="mt-8 prose prose-zinc dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content }} />
+                                <Comments path={`/posts/${postUrl}`} />
                             </article>
                         </div>
                     )}
@@ -606,172 +609,6 @@ async function build() {
         </Layout>
     );
     const tagsListBuild = writeHtml(path.join(distDir, 'tags.html'), createHtml(tagsListContent));
-
-    // 8.1 Build Moments Page
-    let momentsBuild: Promise<void> | null = null;
-    if (config.moments?.enabled) {
-        const channelId = process.env.TELEGRAM_CHANNEL_ID || config.moments.channelId;
-
-        async function fetchTelegramMessages(id: string) {
-            try {
-                const response = await fetch(`https://t.me/s/${id}`);
-                const html = await response.text();
-
-                // Parse Telegram web preview HTML
-                const messages: Array<{ text: string, date: string, id: string, image?: string }> = [];
-
-                // Match entire message wrapper blocks
-                const messageBlocks = html.match(/<div class="tgme_widget_message_wrap[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g) || [];
-
-                for (const block of messageBlocks) {
-                    // Skip service messages (like "Channel created")
-                    if (block.includes('service_message')) continue;
-
-                    // Extract text content
-                    const textMatch = block.match(/<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/);
-                    // Extract datetime
-                    const dateMatch = block.match(/<time[^>]*datetime="([^"]*)"[^>]*>/);
-                    // Extract image URL from background-image style
-                    const imageMatch = block.match(/background-image:url\('([^']+)'\)/);
-
-                    if (dateMatch) {
-                        // Clean HTML tags and entities for text
-                        let text = '';
-                        if (textMatch) {
-                            text = textMatch[1]
-                                .replace(/<br\s*\/?>/gi, '\n')
-                                .replace(/<a[^>]*>([^<]*)<\/a>/g, '$1')  // Keep link text
-                                .replace(/<i class="emoji"[^>]*><b>([^<]*)<\/b><\/i>/g, '$1')  // Keep emoji
-                                .replace(/<[^>]*>/g, '')  // Remove remaining tags
-                                .replace(/&nbsp;/g, ' ')
-                                .replace(/&amp;/g, '&')
-                                .replace(/&lt;/g, '<')
-                                .replace(/&gt;/g, '>')
-                                .replace(/&quot;/g, '"')
-                                .trim();
-                        }
-
-                        // Skip "Channel created" messages
-                        if (text === 'Channel created') continue;
-
-                        // Only add if there's text or image
-                        if (text || imageMatch) {
-                            messages.push({
-                                text,
-                                date: dateMatch[1],
-                                id: Math.random().toString(36).substr(2, 9),
-                                image: imageMatch ? imageMatch[1] : undefined
-                            });
-                        }
-                    }
-                }
-
-                console.log(`Fetched ${messages.length} messages from Telegram channel: ${id}`);
-                return messages.reverse(); // Newest first
-            } catch (e) {
-                console.error("Error fetching Telegram messages:", e);
-                return [];
-            }
-        }
-
-        const messages = await fetchTelegramMessages(channelId);
-
-        const momentsContent = (
-            <Layout title={t('moments', config.language)}>
-                <Header />
-                <main>
-                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('moments', config.language)}</h1>
-
-                    {messages.length > 0 ? (
-                        <div class="space-y-8">
-                            {messages.map((msg) => (
-                                <article key={msg.id} class="group pb-8 border-b border-zinc-200 dark:border-zinc-700 last:border-b-0">
-                                    <time datetime={msg.date} class="text-sm text-zinc-500 dark:text-zinc-400 mb-3 block">
-                                        {new Date(msg.date).toLocaleDateString('zh-CN', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        })}
-                                    </time>
-                                    {msg.image && (
-                                        <div class="mb-4 moment-image-wrapper" data-collapsed="true">
-                                            <div class="relative cursor-pointer">
-                                                <img src={msg.image} alt="说说配图" class="w-full max-w-2xl rounded-lg object-cover shadow-sm moment-img transition-all duration-300" loading="lazy" />
-                                                <div class="moment-overlay absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg transition-opacity duration-300">
-                                                    <span class="px-4 py-2 bg-white/90 dark:bg-zinc-800/90 rounded-full text-sm text-zinc-700 dark:text-zinc-200 shadow-lg">
-                                                        点击查看图片
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                    {msg.text && (
-                                        <div class="text-base leading-relaxed text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap break-words">
-                                            {msg.text}
-                                        </div>
-                                    )}
-                                </article>
-                            ))}
-                        </div>
-                    ) : (
-                        <div class="text-center py-16 text-zinc-500 dark:text-zinc-400">
-                            <p class="text-lg mb-2">暂无说说内容</p>
-                            <p class="text-sm">请检查 Telegram 频道 ID 是否正确且频道为公开状态</p>
-                        </div>
-                    )}
-
-                    <style dangerouslySetInnerHTML={{
-                        __html: `
-                        .moment-image-wrapper {
-                            position: relative;
-                        }
-                        .moment-image-wrapper > div {
-                            position: relative;
-                            display: block;
-                        }
-                        .moment-image-wrapper[data-collapsed="true"] .moment-img {
-                            max-height: 200px;
-                            object-fit: cover;
-                        }
-                        .moment-image-wrapper[data-collapsed="false"] .moment-img {
-                            max-height: none;
-                        }
-                        .moment-image-wrapper[data-collapsed="false"] .moment-overlay {
-                            opacity: 0;
-                            pointer-events: none;
-                        }
-                        .moment-overlay {
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                            right: 0;
-                            bottom: 0;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                        }
-                        `
-                    }} />
-
-                    <script dangerouslySetInnerHTML={{
-                        __html: `
-                        document.addEventListener('DOMContentLoaded', function() {
-                            document.querySelectorAll('.moment-image-wrapper > div').forEach(function(el) {
-                                el.addEventListener('click', function() {
-                                    var wrapper = this.parentElement;
-                                    wrapper.dataset.collapsed = wrapper.dataset.collapsed === 'true' ? 'false' : 'true';
-                                });
-                            });
-                        });
-                        `
-                    }} />
-                </main>
-            </Layout>
-        );
-        momentsBuild = writeHtml(path.join(distDir, 'moments.html'), createHtml(momentsContent));
-    }
 
     // 9. Build About Page
     let aboutBuild: Promise<void> | null = null;
@@ -1000,7 +837,6 @@ async function build() {
     const allBuilds = [indexBuild, ...postBuilds, ...categoryBuilds, ...tagBuilds, archiveBuild, categoriesListBuild, tagsListBuild, cssBuild];
     if (aboutBuild) allBuilds.push(aboutBuild);
     if (projectsBuild) allBuilds.push(projectsBuild);
-    if (momentsBuild) allBuilds.push(momentsBuild);
     allBuilds.push(statsBuild);
     allBuilds.push(rssBuild);
     allBuilds.push(sitemapBuild);

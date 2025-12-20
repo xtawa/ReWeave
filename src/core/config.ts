@@ -38,10 +38,6 @@ export interface SiteConfig {
         file: string;
     };
     hero?: HeroConfig;
-    moments?: {
-        enabled: boolean;
-        channelId: string; // e.g. 'reweave_moments'
-    };
     homePage: 'hero' | 'posts';
     navbar?: {
         items: Array<{
@@ -66,6 +62,43 @@ export interface SiteConfig {
          * 每页显示文章数。
          */
         pageSize: number;
+    };
+    /**
+     * Comment system configuration.
+     * 评论系统配置。
+     */
+    comments?: {
+        /**
+         * Enable comments.
+         * 启用评论系统。
+         */
+        enabled: boolean;
+        /**
+         * Comment system type: 'waline' | 'twikoo' | 'gitalk'
+         * 评论系统类型
+         */
+        type: 'waline' | 'twikoo' | 'gitalk';
+        /**
+         * Waline server URL (for Waline)
+         * Waline 服务器地址
+         */
+        serverURL?: string;
+        /**
+         * Twikoo environment ID (for Twikoo)
+         * Twikoo 环境 ID
+         */
+        envId?: string;
+        /**
+         * Gitalk configuration (for Gitalk)
+         * Gitalk 配置
+         */
+        gitalk?: {
+            clientID: string;
+            clientSecret: string;
+            repo: string;
+            owner: string;
+            admin: string[];
+        };
     };
 }
 
@@ -97,7 +130,6 @@ export const config: SiteConfig = {
                 ]
             },
             { key: 'projects', href: '/projects' },
-            { key: 'moments', href: '/moments' },
             { key: 'about', href: '/about' },
         ],
     },
@@ -150,10 +182,11 @@ export const config: SiteConfig = {
     // Hero Page / 个人名片页
     hero: heroConfig,
 
-    // Moments Page / 说说页面
-    moments: {
+    // Comment System / 评论系统
+    comments: {
         enabled: true,
-        channelId: "hi_co1sini_casual", // Replace with your Telegram channel ID
+        type: 'waline',
+        serverURL: 'https://waline.xtyin.com',
     },
 
     // Default Home Page / 默认首页
