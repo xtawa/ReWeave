@@ -66,8 +66,8 @@ ReWeave 已经为各种规模的博客做好了准备。无论你有 10 篇文�
 
 ## 接下来
 
-- 了解 [配置指南](/posts/config-guide.html)
-- 探索 [富文本演示](/posts/rich-text-demo.html)
+- 了解 [配置指南](/posts/config-guide)
+- 探索 [富文本演示](/posts/rich-text-demo)
 
 ## 最新压力测试结果 (复杂文章)
 测试时间: 2025/12/20 19:30:08

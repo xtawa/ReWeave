@@ -21,8 +21,8 @@ tags: [入门, ReWeave]
 
 如果你是第一次使用 ReWeave，建议先阅读以下指南：
 
-1. [配置指南](/posts/config-guide.html) - 学习如何自定义你的站点。
-2. [主题开发教程](/posts/theme-development-tutorial.html) - 打造属于你的专属风格。
-3. [富文本演示](/posts/rich-text-demo.html) - 了解 Markdown 的强大功能。
+1. [配置指南](/posts/config-guide) - 学习如何自定义你的站点。
+2. [主题开发教程](/posts/theme-development-tutorial) - 打造属于你的专属风格。
+3. [富文本演示](/posts/rich-text-demo) - 了解 Markdown 的强大功能。
 
 祝你在 ReWeave 的世界里写作愉快！

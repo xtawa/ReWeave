@@ -143,7 +143,7 @@ async function build() {
         const pagePosts = posts.slice(start, end);
 
         return (
-            <Layout title={page === 1 && config.homePage === 'hero' ? t('articles', config.language) : (page === 1 ? undefined : `${t('articles', config.language)} - Page ${page}`)}>
+            <Layout contentWidth="normal" title={page === 1 && config.homePage === 'hero' ? t('articles', config.language) : (page === 1 ? undefined : `${t('articles', config.language)} - Page ${page}`)}>
                 <Header />
                 <main>
                     <div class="space-y-10 animate-fade-in-up">
@@ -152,6 +152,11 @@ async function build() {
                             return (
                                 <article key={post.slug} class="group relative flex flex-col items-start">
                                     <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                                        {post.pin && (
+                                            <svg class="inline-block w-5 h-5 mr-2 text-teal-500 -mt-1" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M16 12V4H17V2H7V4H8V12L6 14V16H11.2V22H12.8V16H18V14L16 12Z" />
+                                            </svg>
+                                        )}
                                         <a href={`/posts/${postUrl}`}>
                                             <span class="absolute inset-0 z-0" />
                                             {post.title}
@@ -180,7 +185,7 @@ async function build() {
     let indexContent;
     if (config.homePage === 'hero' && config.hero?.enabled) {
         indexContent = (
-            <Layout>
+            <Layout contentWidth="normal">
                 <Header />
                 <main>
                     <Hero />
@@ -445,13 +450,13 @@ async function build() {
             <Layout title={`${t('category', config.language)}: ${category}`}>
                 <Header />
                 <main>
-                    <h1 class="text-4xl font-bold mb-8">{t('category', config.language)}: {category}</h1>
+                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('category', config.language)}: {category}</h1>
                     <div class="space-y-10">
                         {categoryPosts.map((post) => {
                             const postUrl = safeSlug(post.abbrlink || post.slug);
                             return (
                                 <article key={post.slug} class="group relative flex flex-col items-start">
-                                    <h2 class="text-xl font-semibold text-gray-900 group-hover:text-gray-600">
+                                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
                                         <a href={`/posts/${postUrl}`}>
                                             <span class="absolute inset-0" />
                                             {post.title}
@@ -459,11 +464,11 @@ async function build() {
                                     </h2>
                                     <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
                                         <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
-                                            <span class="h-4 w-0.5 rounded-full bg-gray-200" />
+                                            <span class="h-4 w-0.5 rounded-full bg-gray-200 dark:bg-zinc-700" />
                                         </span>
                                         {new Date(post.date).toLocaleDateString()}
                                     </time>
-                                    <p class="relative z-10 mt-2 text-sm text-gray-600">{post.excerpt}</p>
+                                    <p class="relative z-10 mt-2 text-sm text-gray-600 dark:text-zinc-300">{post.excerpt}</p>
                                 </article>
                             );
                         })}
@@ -493,13 +498,13 @@ async function build() {
             <Layout title={`${t('tag', config.language)}: ${tag}`}>
                 <Header />
                 <main>
-                    <h1 class="text-4xl font-bold mb-8">{t('tag', config.language)}: {tag}</h1>
+                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('tag', config.language)}: {tag}</h1>
                     <div class="space-y-10">
                         {tagPosts.map((post) => {
                             const postUrl = safeSlug(post.abbrlink || post.slug);
                             return (
                                 <article key={post.slug} class="group relative flex flex-col items-start">
-                                    <h2 class="text-xl font-semibold text-gray-900 group-hover:text-gray-600">
+                                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
                                         <a href={`/posts/${postUrl}`}>
                                             <span class="absolute inset-0" />
                                             {post.title}
@@ -507,11 +512,11 @@ async function build() {
                                     </h2>
                                     <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
                                         <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
-                                            <span class="h-4 w-0.5 rounded-full bg-gray-200" />
+                                            <span class="h-4 w-0.5 rounded-full bg-gray-200 dark:bg-zinc-700" />
                                         </span>
                                         {new Date(post.date).toLocaleDateString()}
                                     </time>
-                                    <p class="relative z-10 mt-2 text-sm text-gray-600">{post.excerpt}</p>
+                                    <p class="relative z-10 mt-2 text-sm text-gray-600 dark:text-zinc-300">{post.excerpt}</p>
                                 </article>
                             );
                         })}
@@ -523,20 +528,52 @@ async function build() {
     });
 
     // 6. Build Archive Page
+    const postsByYear = new Map<number, typeof posts>();
+    posts.forEach(post => {
+        const year = new Date(post.date).getFullYear();
+        if (!postsByYear.has(year)) {
+            postsByYear.set(year, []);
+        }
+        postsByYear.get(year)!.push(post);
+    });
+    const years = Array.from(postsByYear.keys()).sort((a, b) => b - a);
+
     const archiveContent = (
         <Layout title={t('archive', config.language)}>
             <Header />
             <main>
-                <h1 class="text-4xl font-bold mb-8">{t('archive', config.language)}</h1>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('archive', config.language)}</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
                     <a href="/categories" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
-                        <h2 class="text-2xl font-semibold mb-2">{t('categories', config.language)}</h2>
-                        <p class="text-gray-600 dark:text-gray-400">{categories.size} {t('categories', config.language).toLowerCase()}</p>
+                        <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:text-white">{t('categories', config.language)}</h2>
+                        <p class="text-gray-600 dark:text-white">{categories.size} {t('categories', config.language).toLowerCase()}</p>
                     </a>
                     <a href="/tags" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
-                        <h2 class="text-2xl font-semibold mb-2">{t('tags', config.language)}</h2>
-                        <p class="text-gray-600 dark:text-gray-400">{tags.size} {t('tags', config.language).toLowerCase()}</p>
+                        <h2 class="text-2xl font-semibold mb-2 text-zinc-900 dark:text-white">{t('tags', config.language)}</h2>
+                        <p class="text-gray-600 dark:text-white">{tags.size} {t('tags', config.language).toLowerCase()}</p>
                     </a>
+                </div>
+
+                <div class="space-y-12">
+                    {years.map(year => (
+                        <section key={year}>
+                            <h2 class="text-3xl font-bold mb-6 text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-2">{year}</h2>
+                            <div class="space-y-6">
+                                {postsByYear.get(year)!.map(post => (
+                                    <article key={post.slug} class="flex items-baseline gap-4 group">
+                                        <time datetime={post.date} class="text-sm text-zinc-500 dark:text-white w-24 flex-shrink-0 text-right">
+                                            {new Date(post.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                        </time>
+                                        <h3 class="text-lg font-medium text-zinc-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
+                                            <a href={`/posts/${safeSlug(post.abbrlink || post.slug)}`}>
+                                                {post.title}
+                                            </a>
+                                        </h3>
+                                    </article>
+                                ))}
+                            </div>
+                        </section>
+                    ))}
                 </div>
             </main>
         </Layout>
@@ -548,12 +585,12 @@ async function build() {
         <Layout title={t('categories', config.language)}>
             <Header />
             <main>
-                <h1 class="text-4xl font-bold mb-8">{t('categories', config.language)}</h1>
+                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('categories', config.language)}</h1>
                 <div class="flex flex-wrap gap-4">
                     {Array.from(categories.entries()).map(([category, categoryPosts]) => (
-                        <a href={`/categories/${safeSlug(category)}`} class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
-                            <span class="font-medium">{category}</span>
-                            <span class="ml-2 text-sm text-gray-500">({categoryPosts.length})</span>
+                        <a href={`/categories/${safeSlug(category)}`} class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition group">
+                            <span class="font-medium text-zinc-700 dark:text-white">{category}</span>
+                            <span class="ml-2 text-sm text-gray-500 dark:text-white">({categoryPosts.length})</span>
                         </a>
                     ))}
                 </div>
@@ -567,12 +604,12 @@ async function build() {
         <Layout title={t('tags', config.language)}>
             <Header />
             <main>
-                <h1 class="text-4xl font-bold mb-8">{t('tags', config.language)}</h1>
+                <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('tags', config.language)}</h1>
                 <div class="flex flex-wrap gap-3">
                     {Array.from(tags.entries()).map(([tag, tagPosts]) => (
-                        <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 rounded-full hover:bg-teal-200 dark:hover:bg-teal-800 transition text-sm">
+                        <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-white rounded-full hover:bg-teal-200 dark:hover:bg-teal-800 transition text-sm">
                             #{tag}
-                            <span class="ml-1 text-xs">({tagPosts.length})</span>
+                            <span class="ml-1 text-xs opacity-80">({tagPosts.length})</span>
                         </a>
                     ))}
                 </div>

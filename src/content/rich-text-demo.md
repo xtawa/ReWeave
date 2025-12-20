@@ -85,5 +85,5 @@ sequenceDiagram
 
 ## 接下来
 
-- 了解 [配置指南](/posts/config-guide.html)
-- 查看 [性能报告](/posts/performance-report.html)
+- 了解 [配置指南](/posts/config-guide)
+- 查看 [性能报告](/posts/performance-report)

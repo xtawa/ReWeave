@@ -27,5 +27,33 @@
     - `safeSlug` converts non-ASCII strings to hex encoding to ensure safe filenames and URLs.
 - **Reason**: The user requested to fix issues with Chinese paths.
 
+### Pinned Posts Implementation
+- **Action**: Modified `src/core/markdown.ts` and `src/core/build.tsx`.
+- **Details**:
+    - Updated `Post` interface and `getPosts` in `markdown.ts` to support `pin` frontmatter.
+    - Updated sorting logic in `markdown.ts` to prioritize pinned posts (newest first).
+    - Updated `build.tsx` to display a pin icon next to the title of pinned posts.
+- **Reason**: The user requested a feature to pin posts to the top.
+
+### Full Width Layout Fix & Home Page Width Override
+- **Action**: Modified `src/themes/weave/layouts/Layout.tsx` and `src/core/build.tsx`.
+- **Details**:
+    - Updated `Layout.tsx` to allow overriding `contentWidth` via props.
+    - In `build.tsx`, passed `contentWidth="normal"` to the home page and articles list page.
+    - This ensures that while the site default can be `full`, the home page remains centered and non-flush with the screen edges as requested.
+- **Reason**: The user requested that the home page be non-full width while other pages follow the config.
+
+### Dark Mode Rendering Fix (Consistency & Contrast)
+- **Action**: Modified `src/themes/weave/layouts/Layout.tsx` and `src/core/build.tsx`.
+- **Details**:
+    - Updated `Layout.tsx` dark mode detection script to use `localStorage.getItem('color-theme')` to match the theme toggle logic in `Footer.tsx`.
+    - Added `text-zinc-900 dark:text-zinc-100` to the `body` in `Layout.tsx` for global dark mode text support.
+    - In `build.tsx`, updated Category, Tag, and Archive pages to use `dark:text-white` for titles and `dark:text-zinc-100` for post titles.
+    - **Added Timeline to Archive Page**: Added a list of posts grouped by year to the Archive page, as users expect to see articles there.
+    - **Improved Contrast**: Brightened dark mode text colors for excerpts (`zinc-300`) and category list items (`zinc-100`).
+    - **Forced White Text**: Updated Category and Tag list buttons to use `dark:text-white` explicitly for maximum visibility in dark mode.
+    - **Pure White Enforcement**: Updated all text elements (including counts and dates) in Archive, Category, and Tag pages to use `dark:text-white` as requested by the user.
+- **Reason**: The user reported that titles and posts in Archive, Category, and Tag pages were not white in dark mode, and articles were hard to see (or missing in Archive).
+
 ## Next Step
-- Verify that Chinese filenames are correctly converted and accessible.
+- Verify the dark mode rendering and home page layout.

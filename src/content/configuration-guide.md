@@ -94,15 +94,30 @@ export const heroConfig: HeroConfig = {
 | `abbrlink` | string | 自定义 URL 路径 (例如 `my-post`) |
 | `draft` | boolean | 是否为草稿 (不参与构建) |
 | `hide` | boolean | 是否在列表中隐藏 |
+| `pin` | boolean | 是否置顶文章 (置顶文章会显示图钉图标) |
 
-## 4. 自动化功能
+## 4. 分页配置
 
-ReWeave 会在构建时自动生成以下文件：
+在 `src/core/config.ts` 中可以配置每页显示的文章数量：
+
+```typescript
+{
+  pagination: {
+    pageSize: 15,
+  }
+}
+```
+
+## 5. 自动化功能与特性
+
+ReWeave 会在构建时自动生成以下文件并提供以下特性：
+- **Clean URLs**: 所有页面均通过目录结构生成（如 `/posts/my-post/index.html`），访问时无需带 `.html` 后缀。
+- **中文路径支持**: 自动处理非 ASCII 字符，确保中文文件名或 `abbrlink` 在各种环境下都能正常访问。
 - **RSS Feed**: `/rss.xml` (包含最近 20 篇文章)
 - **Sitemap**: `/sitemap.xml` (包含所有页面)
-- **统计页面**: `/stats.html` (字数、标签云、时间轴)
+- **统计页面**: `/stats` (字数、标签云、时间轴)
 
-## 5. 最佳实践
+## 6. 最佳实践
 
 1. **配置 siteUrl**：确保 RSS 和 Sitemap 中的链接正确。
 2. **使用 abbrlink**：创建更短、更美观的 URL。
@@ -113,6 +128,6 @@ ReWeave 会在构建时自动生成以下文件：
 
 ## 下一步
 
-- 阅读 [主题开发教程](/posts/theme-development-tutorial.html)
-- 查看 [性能报告](/posts/performance-report.html)
-- 探索 [富文本演示](/posts/rich-text-demo.html)
+- 阅读 [主题开发教程](/posts/theme-development-tutorial)
+- 查看 [性能报告](/posts/performance-report)
+- 探索 [富文本演示](/posts/rich-text-demo)

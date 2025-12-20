@@ -21,6 +21,7 @@ export interface Post {
     draft?: boolean;
     hide?: boolean;
     abbrlink?: string;
+    pin?: boolean;
 }
 
 export async function getPosts(contentDir: string): Promise<Post[]> {
@@ -55,9 +56,14 @@ export async function getPosts(contentDir: string): Promise<Post[]> {
                     draft: data.draft === true,
                     hide: data.hide === true,
                     abbrlink: data.abbrlink,
+                    pin: data.pin === true,
                 };
             })
     );
 
-    return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return posts.sort((a, b) => {
+        if (a.pin && !b.pin) return -1;
+        if (!a.pin && b.pin) return 1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 }
