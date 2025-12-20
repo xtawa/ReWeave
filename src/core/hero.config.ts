@@ -22,17 +22,17 @@ export interface HeroConfig {
 
 export const heroConfig: HeroConfig = {
     enabled: true,
-    name: "Innei",
-    role: "NodeJS Full Stack",
+    name: "Christina Ivan",
+    role: "UI/UX Designer & Frontend Developer",
     description: "An independent developer coding with love.",
     avatar: "logo.png", // Default to logo.png
     social: {
-        github: "https://github.com/innei",
-        twitter: "https://twitter.com/_innei",
-        email: "mailto:i@innei.ren",
-        bilibili: "https://space.bilibili.com/26578164",
-        netease: "https://music.163.com/#/user/home?id=63035382",
-        telegram: "https://t.me/innei_ren",
+        github: "https://github.com/xtawa",
+        twitter: "https://twitter.com/Coisini_Luo",
+        email: "mailto:zeromostia@gmail.com",
+//        bilibili: "https://space.bilibili.com/26578164",
+//        netease: "https://music.163.com/#/user/home?id=63035382",
+        telegram: "https://t.me/Yanluokeke",
         rss: true,
     },
 };

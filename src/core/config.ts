@@ -69,7 +69,7 @@ export const config: SiteConfig = {
     title: "ReWeave Blog",
     description: "A high-performance static blog built with ReWeave.",
     language: "zh",
-    siteUrl: "https://example.com", // Change this to your actual domain
+    siteUrl: "https://demo.reweave.xtyin.com", // Change this to your actual domain
 
     // Theme Selection / 主题选择
     themeName: "weave",
@@ -92,8 +92,8 @@ export const config: SiteConfig = {
                     { key: 'tags', href: '/tags.html' },
                 ]
             },
+            { key: 'projects', href: '/projects.html' },           
             { key: 'about', href: '/about.html' },
-            { key: 'projects', href: '/projects.html' },
         ],
     },
 
@@ -107,8 +107,7 @@ export const config: SiteConfig = {
 
     // Social Links / 社交链接
     social: {
-        twitter: "https://twitter.com",
-        github: "https://github.com",
+        github: "https://github.com/xtawa/ReWeave",
     },
 
     // Footer / 页脚
@@ -139,7 +138,7 @@ export const config: SiteConfig = {
 
     // Projects Page / 项目页面
     projects: {
-        title: "我的项目",
+        title: "项目",
         file: "projects.md",
     },
 
