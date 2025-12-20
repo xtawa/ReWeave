@@ -11,6 +11,16 @@ import { t } from './i18n';
 
 const execAsync = promisify(exec);
 
+// Helper to generate safe filenames/URLs for non-ASCII strings
+function safeSlug(str: string): string {
+    // If strictly ASCII alphanumeric (plus - and _), return as is
+    if (/^[a-zA-Z0-9-_]+$/.test(str)) {
+        return str;
+    }
+    // Otherwise use hex encoding to ensure safe filename
+    return Buffer.from(str).toString('hex');
+}
+
 // Helper to get Git version
 async function getVersion(): Promise<string> {
     // First try Vercel environment variable
@@ -30,6 +40,23 @@ async function getVersion(): Promise<string> {
 // Helper to create HTML string
 function createHtml(content: any) {
     return '<!DOCTYPE html>' + render(content);
+}
+
+// Helper to write file to folder/index.html structure
+async function writeHtml(filePath: string, content: string) {
+    // filePath is like 'dist/posts/slug.html' or 'dist/index.html'
+    // We want to convert 'dist/posts/slug.html' to 'dist/posts/slug/index.html'
+    // But 'dist/index.html' stays 'dist/index.html'
+
+    const parsed = path.parse(filePath);
+    if (parsed.name === 'index') {
+        await fs.mkdir(parsed.dir, { recursive: true });
+        await fs.writeFile(filePath, content);
+    } else {
+        const dir = path.join(parsed.dir, parsed.name);
+        await fs.mkdir(dir, { recursive: true });
+        await fs.writeFile(path.join(dir, 'index.html'), content);
+    }
 }
 
 async function build() {
@@ -121,11 +148,11 @@ async function build() {
                 <main>
                     <div class="space-y-10 animate-fade-in-up">
                         {pagePosts.map((post) => {
-                            const postUrl = post.abbrlink || post.slug;
+                            const postUrl = safeSlug(post.abbrlink || post.slug);
                             return (
                                 <article key={post.slug} class="group relative flex flex-col items-start">
                                     <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                                        <a href={`/posts/${postUrl}.html`}>
+                                        <a href={`/posts/${postUrl}`}>
                                             <span class="absolute inset-0 z-0" />
                                             {post.title}
                                         </a>
@@ -163,25 +190,25 @@ async function build() {
     } else {
         indexContent = generatePostsPage(1);
     }
-    const indexBuild = fs.writeFile(path.join(distDir, 'index.html'), createHtml(indexContent));
+    const indexBuild = writeHtml(path.join(distDir, 'index.html'), createHtml(indexContent));
 
     // 2.1 Build Articles Page (always available for menu link)
-    const articlesBuild = fs.writeFile(path.join(distDir, 'articles.html'), createHtml(generatePostsPage(1)));
+    const articlesBuild = writeHtml(path.join(distDir, 'articles.html'), createHtml(generatePostsPage(1)));
 
     // 2.2 Build Pagination Pages
     const paginationBuilds = [];
     if (totalPages > 1) {
-        await fs.mkdir(path.join(distDir, 'articles'), { recursive: true });
+        // await fs.mkdir(path.join(distDir, 'articles'), { recursive: true }); // Handled by writeHtml
         for (let i = 2; i <= totalPages; i++) {
             paginationBuilds.push(
-                fs.writeFile(path.join(distDir, 'articles', `${i}.html`), createHtml(generatePostsPage(i)))
+                writeHtml(path.join(distDir, 'articles', `${i}.html`), createHtml(generatePostsPage(i)))
             );
         }
     }
 
     // 3. Build Post Pages (Parallel)
     const postsDir = path.join(distDir, 'posts');
-    await fs.mkdir(postsDir, { recursive: true });
+    // await fs.mkdir(postsDir, { recursive: true }); // Handled by writeHtml
 
     // Helper function to extract headings from HTML content
     const extractHeadings = (html: string, maxDepth: number = 3): Array<{ level: number; text: string; id: string }> => {
@@ -306,7 +333,7 @@ async function build() {
     };
 
     const postBuilds = posts.map(post => {
-        const postUrl = post.abbrlink || post.slug;
+        const postUrl = safeSlug(post.abbrlink || post.slug);
 
         // Extract headings for TOC
         const tocEnabled = config.toc?.enabled ?? false;
@@ -342,13 +369,18 @@ async function build() {
                                         {post.tags && post.tags.length > 0 && (
                                             <div class="mt-4 flex flex-wrap gap-2">
                                                 {post.tags.map(tag => (
-                                                    <a href={`/tags/${tag}.html`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
+                                                    <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
                                                         #{tag}
                                                     </a>
                                                 ))}
                                             </div>
                                         )}
                                     </header>
+                                    {tocEnabled && headings.length > 0 && tocPosition === 'top' && (
+                                        <div class="mt-8">
+                                            {renderToc(headings, tocPosition, tocCollapsible)}
+                                        </div>
+                                    )}
                                     <div class="mt-8 prose prose-zinc dark:prose-invert" dangerouslySetInnerHTML={{ __html: post.content }} />
                                 </article>
                             </div>
@@ -372,7 +404,7 @@ async function build() {
                                     {post.tags && post.tags.length > 0 && (
                                         <div class="mt-4 flex flex-wrap gap-2">
                                             {post.tags.map(tag => (
-                                                <a href={`/tags/${tag}.html`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
+                                                <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition">
                                                     #{tag}
                                                 </a>
                                             ))}
@@ -391,7 +423,7 @@ async function build() {
                 </div>
             </Layout>
         );
-        return fs.writeFile(path.join(postsDir, `${postUrl}.html`), createHtml(postContent));
+        return writeHtml(path.join(postsDir, `${postUrl}.html`), createHtml(postContent));
     });
 
     // 4. Build Category Pages
@@ -406,7 +438,7 @@ async function build() {
     });
 
     const categoriesDir = path.join(distDir, 'categories');
-    await fs.mkdir(categoriesDir, { recursive: true });
+    // await fs.mkdir(categoriesDir, { recursive: true }); // Handled by writeHtml
 
     const categoryBuilds = Array.from(categories.entries()).map(([category, categoryPosts]) => {
         const categoryContent = (
@@ -416,11 +448,11 @@ async function build() {
                     <h1 class="text-4xl font-bold mb-8">{t('category', config.language)}: {category}</h1>
                     <div class="space-y-10">
                         {categoryPosts.map((post) => {
-                            const postUrl = post.abbrlink || post.slug;
+                            const postUrl = safeSlug(post.abbrlink || post.slug);
                             return (
                                 <article key={post.slug} class="group relative flex flex-col items-start">
                                     <h2 class="text-xl font-semibold text-gray-900 group-hover:text-gray-600">
-                                        <a href={`/posts/${postUrl}.html`}>
+                                        <a href={`/posts/${postUrl}`}>
                                             <span class="absolute inset-0" />
                                             {post.title}
                                         </a>
@@ -439,7 +471,7 @@ async function build() {
                 </main>
             </Layout>
         );
-        return fs.writeFile(path.join(categoriesDir, `${category}.html`), createHtml(categoryContent));
+        return writeHtml(path.join(categoriesDir, `${safeSlug(category)}.html`), createHtml(categoryContent));
     });
 
     // 5. Build Tag Pages
@@ -454,7 +486,7 @@ async function build() {
     });
 
     const tagsDir = path.join(distDir, 'tags');
-    await fs.mkdir(tagsDir, { recursive: true });
+    // await fs.mkdir(tagsDir, { recursive: true }); // Handled by writeHtml
 
     const tagBuilds = Array.from(tags.entries()).map(([tag, tagPosts]) => {
         const tagContent = (
@@ -464,11 +496,11 @@ async function build() {
                     <h1 class="text-4xl font-bold mb-8">{t('tag', config.language)}: {tag}</h1>
                     <div class="space-y-10">
                         {tagPosts.map((post) => {
-                            const postUrl = post.abbrlink || post.slug;
+                            const postUrl = safeSlug(post.abbrlink || post.slug);
                             return (
                                 <article key={post.slug} class="group relative flex flex-col items-start">
                                     <h2 class="text-xl font-semibold text-gray-900 group-hover:text-gray-600">
-                                        <a href={`/posts/${postUrl}.html`}>
+                                        <a href={`/posts/${postUrl}`}>
                                             <span class="absolute inset-0" />
                                             {post.title}
                                         </a>
@@ -487,7 +519,7 @@ async function build() {
                 </main>
             </Layout>
         );
-        return fs.writeFile(path.join(tagsDir, `${tag}.html`), createHtml(tagContent));
+        return writeHtml(path.join(tagsDir, `${safeSlug(tag)}.html`), createHtml(tagContent));
     });
 
     // 6. Build Archive Page
@@ -497,11 +529,11 @@ async function build() {
             <main>
                 <h1 class="text-4xl font-bold mb-8">{t('archive', config.language)}</h1>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <a href="/categories.html" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
+                    <a href="/categories" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
                         <h2 class="text-2xl font-semibold mb-2">{t('categories', config.language)}</h2>
                         <p class="text-gray-600 dark:text-gray-400">{categories.size} {t('categories', config.language).toLowerCase()}</p>
                     </a>
-                    <a href="/tags.html" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
+                    <a href="/tags" class="block p-6 bg-white dark:bg-zinc-800 rounded-lg shadow-md hover:shadow-lg transition">
                         <h2 class="text-2xl font-semibold mb-2">{t('tags', config.language)}</h2>
                         <p class="text-gray-600 dark:text-gray-400">{tags.size} {t('tags', config.language).toLowerCase()}</p>
                     </a>
@@ -509,7 +541,7 @@ async function build() {
             </main>
         </Layout>
     );
-    const archiveBuild = fs.writeFile(path.join(distDir, 'archive.html'), createHtml(archiveContent));
+    const archiveBuild = writeHtml(path.join(distDir, 'archive.html'), createHtml(archiveContent));
 
     // 7. Build Categories List Page
     const categoriesListContent = (
@@ -519,7 +551,7 @@ async function build() {
                 <h1 class="text-4xl font-bold mb-8">{t('categories', config.language)}</h1>
                 <div class="flex flex-wrap gap-4">
                     {Array.from(categories.entries()).map(([category, categoryPosts]) => (
-                        <a href={`/categories/${category}.html`} class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
+                        <a href={`/categories/${safeSlug(category)}`} class="inline-flex items-center px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
                             <span class="font-medium">{category}</span>
                             <span class="ml-2 text-sm text-gray-500">({categoryPosts.length})</span>
                         </a>
@@ -528,7 +560,7 @@ async function build() {
             </main>
         </Layout>
     );
-    const categoriesListBuild = fs.writeFile(path.join(distDir, 'categories.html'), createHtml(categoriesListContent));
+    const categoriesListBuild = writeHtml(path.join(distDir, 'categories.html'), createHtml(categoriesListContent));
 
     // 8. Build Tags List Page
     const tagsListContent = (
@@ -538,7 +570,7 @@ async function build() {
                 <h1 class="text-4xl font-bold mb-8">{t('tags', config.language)}</h1>
                 <div class="flex flex-wrap gap-3">
                     {Array.from(tags.entries()).map(([tag, tagPosts]) => (
-                        <a href={`/tags/${tag}.html`} class="inline-flex items-center px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 rounded-full hover:bg-teal-200 dark:hover:bg-teal-800 transition text-sm">
+                        <a href={`/tags/${safeSlug(tag)}`} class="inline-flex items-center px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 rounded-full hover:bg-teal-200 dark:hover:bg-teal-800 transition text-sm">
                             #{tag}
                             <span class="ml-1 text-xs">({tagPosts.length})</span>
                         </a>
@@ -547,7 +579,7 @@ async function build() {
             </main>
         </Layout>
     );
-    const tagsListBuild = fs.writeFile(path.join(distDir, 'tags.html'), createHtml(tagsListContent));
+    const tagsListBuild = writeHtml(path.join(distDir, 'tags.html'), createHtml(tagsListContent));
 
     // 9. Build About Page
     let aboutBuild: Promise<void> | null = null;
@@ -576,7 +608,7 @@ async function build() {
                 </main>
             </Layout>
         );
-        aboutBuild = fs.writeFile(path.join(distDir, 'about.html'), createHtml(aboutContent));
+        aboutBuild = writeHtml(path.join(distDir, 'about.html'), createHtml(aboutContent));
     }
 
     // 10. Build Projects Page
@@ -606,7 +638,7 @@ async function build() {
                 </main>
             </Layout>
         );
-        projectsBuild = fs.writeFile(path.join(distDir, 'projects.html'), createHtml(projectsContent));
+        projectsBuild = writeHtml(path.join(distDir, 'projects.html'), createHtml(projectsContent));
     }
 
     // 10. Build Stats Page
@@ -665,7 +697,7 @@ async function build() {
                     <div class="flex flex-wrap gap-3">
                         {topTags.map(([tag, count]) => (
                             <a
-                                href={`/tags/${tag}.html`}
+                                href={`/tags/${safeSlug(tag)}`}
                                 class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-teal-100 dark:hover:bg-teal-900/30 rounded-full transition"
                             >
                                 <span class="text-zinc-700 dark:text-zinc-300 font-medium">#{tag}</span>
@@ -687,10 +719,10 @@ async function build() {
                                     <h3 class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-3">{monthName}</h3>
                                     <ul class="space-y-2">
                                         {monthPosts.map(post => {
-                                            const postUrl = post.abbrlink || post.slug;
+                                            const postUrl = safeSlug(post.abbrlink || post.slug);
                                             return (
                                                 <li>
-                                                    <a href={`/posts/${postUrl}.html`} class="text-zinc-600 dark:text-zinc-400 hover:text-teal-500 dark:hover:text-teal-400 transition">
+                                                    <a href={`/posts/${postUrl}`} class="text-zinc-600 dark:text-zinc-400 hover:text-teal-500 dark:hover:text-teal-400 transition">
                                                         {post.title}
                                                     </a>
                                                     <span class="text-xs text-zinc-400 dark:text-zinc-600 ml-2">
@@ -708,7 +740,7 @@ async function build() {
             </main>
         </Layout>
     );
-    const statsBuild = fs.writeFile(path.join(distDir, 'stats.html'), createHtml(statsContent));
+    const statsBuild = writeHtml(path.join(distDir, 'stats.html'), createHtml(statsContent));
 
     // 11. Generate RSS Feed
     const rssContent = `<?xml version="1.0" encoding="UTF-8" ?>
@@ -720,12 +752,13 @@ async function build() {
     <language>${config.language}</language>
     <atom:link href="${config.siteUrl}/rss.xml" rel="self" type="application/rss+xml" />
     ${posts.slice(0, 20).map(post => {
-        const postUrl = `${config.siteUrl}/posts/${post.abbrlink || post.slug}.html`;
+        const postUrl = safeSlug(post.abbrlink || post.slug);
+        const fullPostUrl = `${config.siteUrl}/posts/${postUrl}`;
         return `
     <item>
         <title><![CDATA[${post.title}]]></title>
-        <link>${postUrl}</link>
-        <guid>${postUrl}</guid>
+        <link>${fullPostUrl}</link>
+        <guid>${fullPostUrl}</guid>
         <pubDate>${new Date(post.date).toUTCString()}</pubDate>
         <description><![CDATA[${post.excerpt || post.content.substring(0, 200)}]]></description>
     </item>`;
@@ -743,35 +776,35 @@ async function build() {
         <priority>1.0</priority>
     </url>
     <url>
-        <loc>${config.siteUrl}/archive.html</loc>
+        <loc>${config.siteUrl}/archive</loc>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>${config.siteUrl}/categories.html</loc>
+        <loc>${config.siteUrl}/categories</loc>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>${config.siteUrl}/tags.html</loc>
+        <loc>${config.siteUrl}/tags</loc>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
     ${config.about ? `
     <url>
-        <loc>${config.siteUrl}/about.html</loc>
+        <loc>${config.siteUrl}/about</loc>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>` : ''}
     ${config.projects ? `
     <url>
-        <loc>${config.siteUrl}/projects.html</loc>
+        <loc>${config.siteUrl}/projects</loc>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>` : ''}
     ${posts.map(post => `
     <url>
-        <loc>${config.siteUrl}/posts/${post.abbrlink || post.slug}.html</loc>
+        <loc>${config.siteUrl}/posts/${safeSlug(post.abbrlink || post.slug)}</loc>
         <lastmod>${new Date(post.date).toISOString()}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>

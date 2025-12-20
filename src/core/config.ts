@@ -83,17 +83,17 @@ export const config: SiteConfig = {
     navbar: {
         items: [
             { key: 'home', href: '/' },
-            { key: 'articles', href: '/articles.html' },
+            { key: 'articles', href: '/articles' },
             {
                 key: 'archive',
-                href: '/archive.html',
+                href: '/archive',
                 children: [
-                    { key: 'categories', href: '/categories.html' },
-                    { key: 'tags', href: '/tags.html' },
+                    { key: 'categories', href: '/categories' },
+                    { key: 'tags', href: '/tags' },
                 ]
             },
-            { key: 'projects', href: '/projects.html' },           
-            { key: 'about', href: '/about.html' },
+            { key: 'projects', href: '/projects' },
+            { key: 'about', href: '/about' },
         ],
     },
 

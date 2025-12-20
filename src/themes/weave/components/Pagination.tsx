@@ -8,11 +8,11 @@ interface PaginationProps {
 }
 
 export function Pagination({ current, total, baseUrl }: PaginationProps) {
-    const prevPage = current > 1 ? (current === 2 ? `${baseUrl}.html` : `${baseUrl}/${current - 1}.html`) : null;
-    const nextPage = current < total ? `${baseUrl}/${current + 1}.html` : null;
+    const prevPage = current > 1 ? (current === 2 ? `${baseUrl}` : `${baseUrl}/${current - 1}`) : null;
+    const nextPage = current < total ? `${baseUrl}/${current + 1}` : null;
 
     // Helper to generate page link
-    const getPageLink = (page: number) => page === 1 ? `${baseUrl}.html` : `${baseUrl}/${page}.html`;
+    const getPageLink = (page: number) => page === 1 ? `${baseUrl}` : `${baseUrl}/${page}`;
 
     // Simple range generator
     const range = (start: number, end: number) => Array.from({ length: end - start + 1 }, (_, i) => start + i);
@@ -52,8 +52,8 @@ export function Pagination({ current, total, baseUrl }: PaginationProps) {
                             key={index}
                             href={getPageLink(page)}
                             class={`px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm ring-1 ring-zinc-900/5 dark:ring-white/10 ${current === page
-                                    ? 'bg-teal-500 text-white ring-teal-500 dark:ring-teal-500'
-                                    : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-600 dark:hover:text-teal-400'
+                                ? 'bg-teal-500 text-white ring-teal-500 dark:ring-teal-500'
+                                : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-600 dark:hover:text-teal-400'
                                 }`}
                         >
                             {page}

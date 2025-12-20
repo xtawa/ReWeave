@@ -24,7 +24,7 @@ export function Header() {
                         </a>
                     </div>
 
-                    {/* Navigation */}
+                    {/* Desktop Navigation */}
                     <div class="flex flex-1 justify-end">
                         <nav class="pointer-events-auto hidden md:block">
                             <ul class="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
@@ -59,9 +59,100 @@ export function Header() {
                                 ))}
                             </ul>
                         </nav>
+
+                        {/* Mobile Menu Button */}
+                        <div class="pointer-events-auto md:hidden">
+                            <button
+                                id="mobile-menu-btn"
+                                class="group flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur transition dark:bg-zinc-800/90 dark:ring-white/10 dark:hover:ring-white/20"
+                                aria-label="Toggle Menu"
+                            >
+                                <svg class="h-5 w-5 text-zinc-800 dark:text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Mobile Menu Overlay */}
+            <div id="mobile-menu" class="pointer-events-auto fixed inset-0 z-50 hidden bg-white/95 backdrop-blur-sm dark:bg-zinc-900/95 transition-opacity duration-300 opacity-0">
+                <div class="flex flex-col h-full p-6">
+                    <div class="flex justify-end mb-8">
+                        <button
+                            id="close-menu-btn"
+                            class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+                            aria-label="Close Menu"
+                        >
+                            <svg class="h-6 w-6 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <nav class="flex-1">
+                        <ul class="flex flex-col space-y-4">
+                            {config.navbar?.items.map((item) => (
+                                <li key={item.key}>
+                                    <a
+                                        href={item.href}
+                                        class="block text-2xl font-medium text-zinc-800 dark:text-zinc-200 hover:text-teal-500 dark:hover:text-teal-400 transition"
+                                    >
+                                        {item.label || t(item.key as any, config.language)}
+                                    </a>
+                                    {item.children && (
+                                        <ul class="mt-2 ml-4 space-y-2 border-l-2 border-zinc-100 dark:border-zinc-800 pl-4">
+                                            {item.children.map((child) => (
+                                                <li key={child.key}>
+                                                    <a
+                                                        href={child.href}
+                                                        class="block text-lg text-zinc-600 dark:text-zinc-400 hover:text-teal-500 dark:hover:text-teal-400 transition"
+                                                    >
+                                                        {child.label || t(child.key as any, config.language)}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            {/* Mobile Menu Script */}
+            <script dangerouslySetInnerHTML={{
+                __html: `
+                (function() {
+                    const btn = document.getElementById('mobile-menu-btn');
+                    const menu = document.getElementById('mobile-menu');
+                    const closeBtn = document.getElementById('close-menu-btn');
+
+                    function toggleMenu() {
+                        const isHidden = menu.classList.contains('hidden');
+                        if (isHidden) {
+                            menu.classList.remove('hidden');
+                            // Small delay to allow display:block to apply before opacity transition
+                            requestAnimationFrame(() => {
+                                menu.classList.remove('opacity-0');
+                            });
+                            document.body.style.overflow = 'hidden';
+                        } else {
+                            menu.classList.add('opacity-0');
+                            setTimeout(() => {
+                                menu.classList.add('hidden');
+                            }, 300); // Match transition duration
+                            document.body.style.overflow = '';
+                        }
+                    }
+
+                    if (btn && menu && closeBtn) {
+                        btn.addEventListener('click', toggleMenu);
+                        closeBtn.addEventListener('click', toggleMenu);
+                    }
+                })();
+            `}} />
         </header>
     );
 }
