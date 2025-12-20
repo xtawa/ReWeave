@@ -4,7 +4,7 @@ import { Layout } from '../layouts/Layout';
 import { Header } from '../components/Header';
 import { Hero } from '../components/Hero';
 import { Pagination } from '../components/Pagination';
-import { config } from '../../../core/config';
+import { config } from '../config';
 
 interface Post {
     title: string;

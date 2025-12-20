@@ -42,5 +42,7 @@ src/themes/butterfly/templates/
 ### Next Step
 
 - ✅ 已创建 PostList, Archive, Post, CategoryList, TagList, Page 模板
-- ✅ 已实现 Butterfly 主题的全站覆盖，解决了混合主题问题
+- ✅ 已重构配置系统：核心配置 (`src/core/reweave.config.ts`) 与主题配置 (`src/themes/*/config.ts`) 分离
+- ✅ 已更新所有组件引用以使用新的配置结构
+- ✅ 已验证构建流程正常
 - 建议继续优化移动端适配和交互细节

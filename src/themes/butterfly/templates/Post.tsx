@@ -3,7 +3,7 @@ import { h, Fragment } from 'preact';
 import { Layout } from '../layouts/Layout';
 import { Header } from '../components/Header';
 import { Comments } from '../components/Comments';
-import { config } from '../../../core/config';
+import { config } from '../config';
 
 interface PostProps {
     post: {

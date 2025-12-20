@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h, ComponentChildren } from 'preact';
-import { config } from '../../../core/config';
+import { config } from '../config';
 import { Footer } from '../components/Footer';
 
 interface LayoutProps {

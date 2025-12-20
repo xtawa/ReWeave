@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from 'preact';
-import { config } from '../../../core/config';
+import { config } from '../config';
 
 export function Comments({ path }: { path: string }) {
     if (!config.comments?.enabled) {
