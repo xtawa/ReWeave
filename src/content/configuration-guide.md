@@ -1,195 +1,118 @@
 ---
-title: ReWeave Configuration Guide
+title: ReWeave 配置指南：全方位定制你的博客
 date: 2025-12-23
-excerpt: Complete guide to configuring your ReWeave blog theme and frontmatter options.
-category: Tutorial
-tags: [Configuration, Guide, ReWeave]
+excerpt: 完整介绍 ReWeave 博客框架的配置选项，包括站点信息、主题定制、名片页设置及目录功能。
+category: 教程
+tags: [配置, 指南, ReWeave]
 abbrlink: config-guide
 ---
 
-# ReWeave Configuration Guide
+# ReWeave 配置指南
 
-This guide covers all configuration options available in ReWeave.
+本指南涵盖了 ReWeave 中所有可用的配置选项。
 
-## Site Configuration
+## 1. 站点全局配置
 
-Edit `src/core/config.ts` to customize your blog.
+编辑 `src/core/config.ts` 来自定义你的博客。
 
-### Basic Settings
+### 基本设置
 
 ```typescript
 {
-  title: "Your Blog Title",
-  description: "A short description for SEO",
-  language: "en", // or "zh" for Chinese
+  title: "ReWeave Blog",
+  description: "专为美学和速度设计的高性能静态博客框架。",
+  language: "zh", // 'en' 或 'zh'
+  siteUrl: "https://example.com", // 用于生成 RSS 和 Sitemap 的基础 URL
+  homePage: "hero", // 'hero' (名片页) 或 'posts' (文章列表页)
   themeName: "weave"
 }
 ```
 
-### Social Links
+### 社交链接与页脚
 
 ```typescript
 {
   social: {
     twitter: "https://twitter.com/yourhandle",
     github: "https://github.com/yourusername"
-  }
-}
-```
-
-### Footer Configuration
-
-```typescript
-{
+  },
   footer: {
-    copyright: "Your Name or Company",
-    icp: "ICP备案号" // For Chinese websites
+    copyright: "ReWeave Labs",
+    icp: "京ICP备XXXXXXXX号" // 可选，中国备案号
   }
 }
 ```
 
-### Theme Customization
+### 目录 (TOC) 配置
 
 ```typescript
 {
-  theme: {
-    primaryColor: "#000000" // Hex color code
+  toc: {
+    enabled: true,
+    maxDepth: 3,
+    position: 'right', // 'top', 'left', 'right'
+    collapsible: true, // 是否允许折叠
   }
 }
 ```
 
-## Frontmatter Options
+## 2. 个人名片页配置 (Hero)
 
-Each Markdown post supports the following frontmatter fields:
-
-### Required Fields
-
-```yaml
----
-title: Your Post Title
-date: 2025-12-23
----
-```
-
-### Optional Fields
-
-#### SEO & Display
-
-```yaml
-excerpt: A short summary of your post
-image: https://example.com/image.jpg
-```
-
-#### Organization
-
-```yaml
-category: Tutorial
-tags: [tag1, tag2, tag3]
-```
-
-#### URL & Visibility
-
-```yaml
-abbrlink: custom-url-slug  # Use custom URL instead of filename
-draft: true                 # Hide from production build
-hide: true                  # Completely hide from all pages
-```
-
-## Frontmatter Field Reference
-
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `title` | string | Post title (required) |
-| `date` | string | Publication date in YYYY-MM-DD format (required) |
-| `excerpt` | string | Short summary for SEO and post listings |
-| `image` | string | Featured image URL for OpenGraph |
-| `category` | string | Single category for the post |
-| `tags` | array | List of tags |
-| `abbrlink` | string | Custom URL slug (e.g., "my-post" → `/posts/my-post.html`) |
-| `draft` | boolean | If `true`, post is excluded from build |
-| `hide` | boolean | If `true`, post is completely hidden |
-
-## Language Support
-
-ReWeave supports English and Chinese out of the box.
-
-### Switching Language
-
-In `config.ts`:
+名片页配置已独立到 `src/core/hero.config.ts`，方便管理个人信息。
 
 ```typescript
-language: "zh"  // Chinese
-// or
-language: "en"  // English
+export const heroConfig: HeroConfig = {
+    enabled: true,
+    name: "Innei",
+    role: "NodeJS Full Stack",
+    description: "An independent developer coding with love.",
+    avatar: "logo.png",
+    social: {
+        github: "https://github.com/innei",
+        twitter: "https://twitter.com/_innei",
+        email: "mailto:i@innei.ren",
+        bilibili: "https://space.bilibili.com/26578164",
+        netease: "https://music.163.com/#/user/home?id=63035382",
+        telegram: "https://t.me/innei_ren",
+        rss: true,
+    },
+};
 ```
 
-### Translated UI Elements
+## 3. 文章 Frontmatter 选项
 
-- Navigation (Home, About, Projects)
-- Post actions ("Read article" / "阅读文章")
-- Category/Tag labels
-- Footer text
+每个 Markdown 文章都支持以下 frontmatter 字段：
 
-## Draft vs Hide
+| 字段 | 类型 | 描述 |
+| :--- | :--- | :--- |
+| `title` | string | 文章标题 (必填) |
+| `date` | string | 发布日期 YYYY-MM-DD (必填) |
+| `excerpt` | string | 摘要，用于 SEO 和列表显示 |
+| `image` | string | 封面图 URL |
+| `category` | string | 文章分类 |
+| `tags` | array | 标签列表 |
+| `abbrlink` | string | 自定义 URL 路径 (例如 `my-post`) |
+| `draft` | boolean | 是否为草稿 (不参与构建) |
+| `hide` | boolean | 是否在列表中隐藏 |
 
-### Draft Posts
+## 4. 自动化功能
 
-```yaml
-draft: true
-```
+ReWeave 会在构建时自动生成以下文件：
+- **RSS Feed**: `/rss.xml` (包含最近 20 篇文章)
+- **Sitemap**: `/sitemap.xml` (包含所有页面)
+- **统计页面**: `/stats.html` (字数、标签云、时间轴)
 
-- Excluded from production builds
-- Useful for work-in-progress content
-- Can be previewed locally during development
+## 5. 最佳实践
 
-### Hidden Posts
+1. **配置 siteUrl**：确保 RSS 和 Sitemap 中的链接正确。
+2. **使用 abbrlink**：创建更短、更美观的 URL。
+3. **开启 TOC**：为长文章提供更好的阅读体验。
+4. **定制 Hero**：在 `hero.config.ts` 中展示你的个人风采。
 
-```yaml
-hide: true
-```
-
-- Completely excluded from all pages
-- Not indexed in categories or tags
-- Useful for archived or private content
-
-## Custom URLs with Abbrlink
-
-Instead of using the filename as the URL, you can specify a custom slug:
-
-```yaml
 ---
-title: My Awesome Post
-abbrlink: awesome
----
-```
 
-This creates `/posts/awesome.html` instead of `/posts/my-awesome-post.html`.
+## 下一步
 
-## Example: Complete Frontmatter
-
-```yaml
----
-title: Getting Started with ReWeave
-date: 2025-12-23
-excerpt: Learn how to set up and configure your ReWeave blog.
-image: https://example.com/reweave-cover.jpg
-category: Tutorial
-tags: [Getting Started, Configuration, ReWeave]
-abbrlink: getting-started
-draft: false
-hide: false
----
-```
-
-## Performance Tips
-
-1. **Use abbrlink** for shorter, cleaner URLs
-2. **Mark drafts** to exclude unfinished posts from builds
-3. **Optimize images** before adding them to posts
-4. **Use categories** to organize content logically
-
-## Next Steps
-
-- Read the [Performance Report](/posts/performance-report.html)
-- Explore [Rich Text Features](/posts/rich-text-demo.html)
-- Check the [Testing Checklist](/CHECKLIST.md)
+- 阅读 [主题开发教程](/posts/theme-development-tutorial.html)
+- 查看 [性能报告](/posts/performance-report.html)
+- 探索 [富文本演示](/posts/rich-text-demo.html)

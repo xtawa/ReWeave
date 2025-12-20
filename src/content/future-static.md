@@ -1,33 +1,42 @@
 ---
-title: The Future of Static Sites
+title: 静态站点的未来：回归与进化
 date: 2025-12-21
-excerpt: Why we built ReWeave and where we are going.
+excerpt: 为什么我们构建了 ReWeave，以及我们对现代静态博客的愿景。
+category: 思考
+tags: [静态站点, SSG, 愿景]
 ---
 
-# The Future is Static
+# 静态站点的未来
 
-Web development has come full circle. We started with static HTML, moved to complex server-side rendering, then to client-side SPAs, and now we are back to static generation (SSG) but with superpowers.
+Web 开发正处于一个有趣的轮回中。我们从静态 HTML 开始，经历了复杂的服务器端渲染，再到客户端单页应用（SPA），现在我们又回到了静态生成（SSG），但这次我们拥有了“超能力”。
 
-## Why ReWeave?
+## 为什么是 ReWeave？
 
-**ReWeave** is built on the premise that **performance is a feature**.
+**ReWeave** 的核心前提是：**性能本身就是一项功能**。
 
-1.  **Speed**: Pre-rendered HTML means instant time-to-first-byte.
-2.  **Simplicity**: No complex hydration or client-side routing unless necessary.
-3.  **Beauty**: A design-first approach.
+1.  **极致速度**：预渲染的 HTML 意味着瞬间的“首字节时间”（TTFB）。
+2.  **化繁为简**：除非必要，否则不使用复杂的注水（Hydration）或客户端路由。
+3.  **美学至上**：设计驱动的开发方法，让每一个博客都像艺术品。
 
-> "Simplicity is the ultimate sophistication." - Leonardo da Vinci
+> “简单是终极的复杂。” —— 莱昂纳多·达·芬奇
 
-## Code Snippet
+## 我们的愿景
 
-```typescript
-const hello = "world";
-console.log(hello);
-```
+我们不仅仅是在做一个博客生成器，我们是在重新定义个人表达的数字化空间。
 
-## The Stack
+- **个性化首页 (Hero Page)**：让你的第一印象不再只是文章列表，而是你的个人名片。
+- **数据驱动 (Stats)**：通过自动化的统计分析，让你更了解自己的创作历程。
+- **无缝体验**：从流畅的目录跳转到优雅的主题切换，每一个细节都经过精心打磨。
 
-- TypeScript
-- Vite
-- Preact
-- TailwindCSS
+## 技术栈
+
+- **TypeScript**：类型安全的开发体验。
+- **Preact**：轻量级且高效的组件化渲染。
+- **TailwindCSS**：灵活且强大的样式系统。
+
+---
+
+## 接下来
+
+- 了解 [配置指南](/posts/config-guide.html)
+- 阅读 [主题开发教程](/posts/theme-development-tutorial.html)

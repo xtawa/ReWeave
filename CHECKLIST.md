@@ -14,6 +14,10 @@
 - [ ] 检查 `dist/` 目录是否生成 / Check if `dist/` directory is generated
 - [ ] 验证生成的文件：
   - [ ] `index.html` (首页)
+  - [ ] `articles.html` (文章列表页)
+  - [ ] `stats.html` (统计页面)
+  - [ ] `rss.xml` (RSS Feed)
+  - [ ] `sitemap.xml` (Sitemap)
   - [ ] `posts/*.html` (文章页面)
   - [ ] `categories/*.html` (分类页面)
   - [ ] `tags/*.html` (标签页面)
@@ -89,10 +93,11 @@
 - [ ] 设置 `language: 'zh'` 并构建 / Set `language: 'zh'` and build
 - [ ] 验证页面显示中文 UI / Verify pages show Chinese UI
 - [ ] 检查以下元素的翻译：
-  - [ ] 导航栏（Home/首页, About/关于, Projects/项目）
+  - [ ] 导航栏（Home/首页, Articles/文章, About/关于, Projects/项目）
   - [ ] "Read article" / "阅读文章"
   - [ ] "Category" / "分类"
   - [ ] "Tag" / "标签"
+  - [ ] "Powered by" / "由...驱动"
   - [ ] "All rights reserved" / "保留所有权利"
 
 ### 7. 配置系统 / Configuration System
@@ -152,6 +157,36 @@
 - [ ] 验证自定义字体（Outfit）加载 / Verify custom font (Outfit) loads
 - [ ] 检查代码高亮主题（github-dark）/ Check code highlighting theme (github-dark)
 
+### 11. 高级功能 / Advanced Features
+#### 目录功能 (TOC) / Table of Contents
+- [ ] 验证目录自动生成 / Verify TOC auto-generation
+- [ ] 测试目录折叠/展开动画 / Test TOC collapse/expand animation
+- [ ] 验证平滑滚动跳转 / Verify smooth scroll to headings
+- [ ] 验证滚动时当前章节高亮 / Verify active heading highlighting on scroll
+
+#### 统计页面 / Stats Page
+- [ ] 访问 `/stats.html` / Visit `/stats.html`
+- [ ] 验证总文章数和总字数统计 / Verify total posts and words count
+- [ ] 验证热门标签云 / Verify top tags cloud
+- [ ] 验证文章时间轴 / Verify post timeline
+
+#### 个人名片页 (Hero Page)
+- [ ] 在 `config.ts` 中设置 `homePage: 'hero'` / Set `homePage: 'hero'` in `config.ts`
+- [ ] 验证首页显示名片内容 / Verify homepage shows hero content
+- [ ] 检查 `src/core/hero.config.ts` 中的配置是否生效 / Check if settings in `hero.config.ts` apply
+- [ ] 验证 👋 手势动画 / Verify waving hand animation
+- [ ] 验证头像和社交图标的悬浮效果 / Verify hover effects on avatar and social icons
+
+#### 视觉特效 / Visual Effects
+- [ ] 验证主题切换（深色/浅色）的平滑过渡动画 / Verify smooth theme transition animation
+- [ ] 验证导航菜单项的悬浮光晕效果 / Verify hover glow effect on nav items
+
+#### 其他 / Others
+- [ ] 验证页脚显示的 Git 版本号 / Verify Git version display in footer
+- [ ] 验证网站 Favicon (logo.png) / Verify site favicon
+- [ ] 验证 `/rss.xml` 内容 / Verify RSS feed content
+- [ ] 验证 `/sitemap.xml` 内容 / Verify sitemap content
+
 ## 边缘情况测试 / Edge Case Testing
 
 - [ ] 创建没有 frontmatter 的 Markdown 文件 / Create Markdown file without frontmatter
@@ -167,7 +202,7 @@
 
 - [ ] 删除 `src/content/` 目录后构建 / Build after deleting `src/content/` directory
 - [ ] 使用无效的 frontmatter 格式 / Use invalid frontmatter format
-- [ ] 使用不支持的语言代码 / Use unsupported language code
+- [ ] 使用不支持的语言 codes / Use unsupported language codes
 - [ ] 使用不存在的主题名称 / Use non-existent theme name
 
 ## 浏览器兼容性 / Browser Compatibility
@@ -205,7 +240,10 @@
 - 每篇文章生成一个 HTML 文件 / One HTML file per post
 - 每个分类生成一个页面 / One page per category
 - 每个标签生成一个页面 / One page per tag
-- 一个首页 / One index page
+- 一个首页 (Hero 或文章列表) / One index page (Hero or Posts)
+- 一个独立的文章列表页 (`articles.html`) / A separate articles list page
+- 一个统计页面 (`stats.html`) / A stats page
+- RSS Feed (`rss.xml`) 和 Sitemap (`sitemap.xml`)
 
 ### 文件大小 / File Sizes
 - CSS 文件应该 < 50KB (压缩后) / CSS file should be < 50KB (minified)
@@ -213,16 +251,11 @@
 
 ## 已知问题 / Known Issues
 
-- 暗黑模式切换按钮目前是占位符 / Dark mode toggle is currently a placeholder
 - 没有实现搜索功能 / Search functionality not implemented
-- 没有实现 RSS feed / RSS feed not implemented
 
 ## 下一步 / Next Steps
 
 建议的改进方向 / Suggested improvements:
-- [ ] 实现暗黑模式切换 / Implement dark mode toggle
 - [ ] 添加搜索功能 / Add search functionality
-- [ ] 生成 RSS feed / Generate RSS feed
 - [ ] 添加分页功能 / Add pagination
 - [ ] 图片优化（WebP 转换）/ Image optimization (WebP conversion)
-- [ ] 添加 sitemap.xml / Add sitemap.xml

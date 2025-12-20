@@ -16,10 +16,14 @@ export function Footer() {
                             {config.footer.icp}
                         </p>
                     )}
+                    <p class="text-xs text-gray-400 dark:text-zinc-500 mt-1">
+                        {t('poweredBy', config.language)} <a href="https://github.com/xtawa/ReWeave" target="_blank" rel="noopener noreferrer" class="text-teal-500 hover:text-teal-600 dark:text-teal-400 dark:hover:text-teal-300 transition">ReWeave</a> {config.language === 'zh' ? '驱动' : ''} {(config as any).version && <span class="text-gray-300 dark:text-zinc-600"> · {config.language === 'zh' ? '版本' : 'v'}{(config as any).version}</span>}
+                    </p>
                 </div>
                 <div class="flex items-center gap-6">
                     <div class="flex gap-6 text-sm font-medium text-gray-800 dark:text-zinc-200">
                         <a href="/" class="transition hover:text-teal-500">{t('home', config.language)}</a>
+                        <a href="/stats.html" class="transition hover:text-teal-500">{t('stats', config.language)}</a>
                         {config.social?.twitter && (
                             <a href={config.social.twitter} class="transition hover:text-teal-500">Twitter</a>
                         )}

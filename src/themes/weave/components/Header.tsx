@@ -28,35 +28,35 @@ export function Header() {
                     <div class="flex flex-1 justify-end">
                         <nav class="pointer-events-auto hidden md:block">
                             <ul class="flex rounded-full bg-white/90 px-3 text-sm font-medium text-zinc-800 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur dark:bg-zinc-800/90 dark:text-zinc-200 dark:ring-white/10">
-                                <li>
-                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-500/10 rounded-full hover:shadow-[0_0_15px_rgba(20,184,166,0.3)] dark:hover:shadow-[0_0_15px_rgba(45,212,191,0.2)]" href="/">{t('home', config.language)}</a>
-                                </li>
-                                <li class="relative group">
-                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 cursor-pointer hover:bg-teal-50/50 dark:hover:bg-teal-500/10 rounded-full hover:shadow-[0_0_15px_rgba(20,184,166,0.3)] dark:hover:shadow-[0_0_15px_rgba(45,212,191,0.2)]" href="/archive.html">
-                                        {t('archive', config.language)}
-                                        <svg class="inline-block ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </a>
-                                    <ul class="absolute left-0 mt-0 w-32 bg-white dark:bg-zinc-800 rounded-lg shadow-lg ring-1 ring-zinc-900/5 dark:ring-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                        <li>
-                                            <a class="block px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-t-lg transition" href="/categories.html">
-                                                {t('categories', config.language)}
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="block px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-b-lg transition" href="/tags.html">
-                                                {t('tags', config.language)}
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-500/10 rounded-full hover:shadow-[0_0_15px_rgba(20,184,166,0.3)] dark:hover:shadow-[0_0_15px_rgba(45,212,191,0.2)]" href="/about.html">{t('about', config.language)}</a>
-                                </li>
-                                <li>
-                                    <a class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-500/10 rounded-full hover:shadow-[0_0_15px_rgba(20,184,166,0.3)] dark:hover:shadow-[0_0_15px_rgba(45,212,191,0.2)]" href="/projects.html">{t('projects', config.language)}</a>
-                                </li>
+                                {config.navbar?.items.map((item) => (
+                                    <li key={item.key} class={item.children ? "relative group" : ""}>
+                                        <a
+                                            class="relative block px-3 py-2 transition hover:text-teal-500 dark:hover:text-teal-400 hover:bg-teal-50/50 dark:hover:bg-teal-500/10 rounded-full hover:shadow-[0_0_15px_rgba(20,184,166,0.3)] dark:hover:shadow-[0_0_15px_rgba(45,212,191,0.2)]"
+                                            href={item.href}
+                                        >
+                                            {item.label || t(item.key as any, config.language)}
+                                            {item.children && (
+                                                <svg class="inline-block ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            )}
+                                        </a>
+                                        {item.children && (
+                                            <ul class="absolute left-0 mt-0 w-32 bg-white dark:bg-zinc-800 rounded-lg shadow-lg ring-1 ring-zinc-900/5 dark:ring-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                                {item.children.map((child, index) => (
+                                                    <li key={child.key}>
+                                                        <a
+                                                            class={`block px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 transition ${index === 0 ? 'rounded-t-lg' : ''} ${index === item.children!.length - 1 ? 'rounded-b-lg' : ''}`}
+                                                            href={child.href}
+                                                        >
+                                                            {child.label || t(child.key as any, config.language)}
+                                                        </a>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </li>
+                                ))}
                             </ul>
                         </nav>
                     </div>

@@ -1,11 +1,31 @@
 /** @jsx h */
 import fs from 'fs/promises';
 import path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { render } from 'preact-render-to-string';
 import { h, Fragment } from 'preact';
 import { getPosts } from './markdown';
 import { config } from './config';
 import { t } from './i18n';
+
+const execAsync = promisify(exec);
+
+// Helper to get Git version
+async function getVersion(): Promise<string> {
+    // First try Vercel environment variable
+    if (process.env.VERCEL_GIT_COMMIT_SHA) {
+        return process.env.VERCEL_GIT_COMMIT_SHA.substring(0, 7);
+    }
+
+    // Fall back to local git command
+    try {
+        const { stdout } = await execAsync('git rev-parse --short HEAD');
+        return stdout.trim();
+    } catch {
+        return 'dev';
+    }
+}
 
 // Helper to create HTML string
 function createHtml(content: any) {
@@ -17,10 +37,15 @@ async function build() {
     const contentDir = path.join(rootDir, 'src', 'content');
     const distDir = path.join(rootDir, 'dist');
 
+    // Get Git version
+    const version = await getVersion();
+    (config as any).version = version;
+
     // Dynamic Theme Import
     const themePath = `../themes/${config.themeName}`;
     const { Layout } = await import(`${themePath}/layouts/Layout`);
     const { Header } = await import(`${themePath}/components/Header`);
+    const { Hero } = await import(`${themePath}/components/Hero`);
 
     // Ensure dist exists
     await fs.mkdir(distDir, { recursive: true });
@@ -74,9 +99,9 @@ async function build() {
         }
     })();
 
-    // 2. Build Index Page
-    const indexContent = (
-        <Layout>
+    // Define Posts List Content
+    const postsListContent = (
+        <Layout title={config.homePage === 'hero' ? t('articles', config.language) : undefined}>
             <Header />
             <main>
                 <div class="space-y-10">
@@ -105,7 +130,24 @@ async function build() {
         </Layout>
     );
 
+    // 2. Build Index Page
+    let indexContent;
+    if (config.homePage === 'hero' && config.hero?.enabled) {
+        indexContent = (
+            <Layout>
+                <Header />
+                <main>
+                    <Hero />
+                </main>
+            </Layout>
+        );
+    } else {
+        indexContent = postsListContent;
+    }
     const indexBuild = fs.writeFile(path.join(distDir, 'index.html'), createHtml(indexContent));
+
+    // 2.1 Build Articles Page (always available for menu link)
+    const articlesBuild = fs.writeFile(path.join(distDir, 'articles.html'), createHtml(postsListContent));
 
     // 3. Build Post Pages (Parallel)
     const postsDir = path.join(distDir, 'posts');
@@ -165,19 +207,25 @@ async function build() {
                         <>
                             <button
                                 class="toc-toggle p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition"
-                                dangerouslySetInnerHTML={{ __html: `<svg class="w-4 h-4 text-zinc-600 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>` }}
                                 aria-label="Toggle TOC"
-                            ></button>
+                            >
+                                <svg class="toc-toggle-icon w-4 h-4 text-zinc-600 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
                             <script dangerouslySetInnerHTML={{
                                 __html: `
                                 document.querySelector('#${tocId} .toc-toggle').addEventListener('click', function() {
-                                    document.getElementById('${contentId}').classList.toggle('hidden');
+                                    const content = document.getElementById('${contentId}');
+                                    const icon = this.querySelector('.toc-toggle-icon');
+                                    content.classList.toggle('collapsed');
+                                    icon.classList.toggle('rotated');
                                 });
                             ` }}></script>
                         </>
                     )}
                 </div>
-                <ul id={contentId} class="space-y-1 text-sm">
+                <ul id={contentId} class="toc-content space-y-1 text-sm">
                     {headings.map(heading => (
                         <li style={{ paddingLeft: `${(heading.level - minLevel) * 12}px` }}>
                             <a
@@ -189,6 +237,40 @@ async function build() {
                         </li>
                     ))}
                 </ul>
+                <script dangerouslySetInnerHTML={{
+                    __html: `
+                    (function() {
+                        const tocLinks = document.querySelectorAll('#${contentId} a');
+                        const headings = Array.from(tocLinks).map(link => {
+                            const id = link.getAttribute('href').substring(1);
+                            return document.getElementById(id);
+                        }).filter(h => h !== null);
+
+                        function highlightTocOnScroll() {
+                            const scrollPos = window.scrollY + 100;
+                            let currentHeading = null;
+
+                            for (let i = 0; i < headings.length; i++) {
+                                if (headings[i] && headings[i].offsetTop <= scrollPos) {
+                                    currentHeading = headings[i];
+                                } else {
+                                    break;
+                                }
+                            }
+
+                            tocLinks.forEach((link, index) => {
+                                if (headings[index] === currentHeading) {
+                                    link.classList.add('!text-teal-500', 'dark:!text-teal-400', 'font-semibold');
+                                } else {
+                                    link.classList.remove('!text-teal-500', 'dark:!text-teal-400', 'font-semibold');
+                                }
+                            });
+                        }
+
+                        window.addEventListener('scroll', highlightTocOnScroll);
+                        highlightTocOnScroll();
+                    })();
+                ` }}></script>
             </nav>
         );
     };
@@ -497,13 +579,187 @@ async function build() {
         projectsBuild = fs.writeFile(path.join(distDir, 'projects.html'), createHtml(projectsContent));
     }
 
+    // 10. Build Stats Page
+    const totalPosts = posts.length;
+    const totalWords = posts.reduce((sum, post) => {
+        const text = post.content.replace(/<[^>]*>/g, ''); // Remove HTML tags
+        return sum + text.length;
+    }, 0);
+
+    // Calculate top tags
+    const tagCounts = new Map<string, number>();
+    posts.forEach(post => {
+        if (post.tags) {
+            post.tags.forEach(tag => {
+                tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+            });
+        }
+    });
+    const topTags = Array.from(tagCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+    // Create timeline by year-month
+    const timeline = new Map<string, typeof posts>();
+    posts.forEach(post => {
+        const date = new Date(post.date);
+        const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (!timeline.has(yearMonth)) {
+            timeline.set(yearMonth, []);
+        }
+        timeline.get(yearMonth)!.push(post);
+    });
+    const sortedTimeline = Array.from(timeline.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+
+    const statsContent = (
+        <Layout title={t('stats', config.language)}>
+            <Header />
+            <main class="max-w-4xl mx-auto">
+                <h1 class="text-4xl font-bold text-zinc-800 dark:text-zinc-100 mb-8">{t('stats', config.language)}</h1>
+
+                {/* Stats Cards */}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                    <div class="p-6 bg-gradient-to-br from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
+                        <div class="text-sm text-teal-600 dark:text-teal-400 font-medium mb-2">{t('totalPosts', config.language)}</div>
+                        <div class="text-4xl font-bold text-zinc-900 dark:text-zinc-100">{totalPosts}</div>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                        <div class="text-sm text-purple-600 dark:text-purple-400 font-medium mb-2">{t('totalWords', config.language)}</div>
+                        <div class="text-4xl font-bold text-zinc-900 dark:text-zinc-100">{totalWords.toLocaleString()}</div>
+                    </div>
+                </div>
+
+                {/* Top Tags */}
+                <div class="mb-12">
+                    <h2 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-4">{t('topTags', config.language)}</h2>
+                    <div class="flex flex-wrap gap-3">
+                        {topTags.map(([tag, count]) => (
+                            <a
+                                href={`/tags/${tag}.html`}
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-teal-100 dark:hover:bg-teal-900/30 rounded-full transition"
+                            >
+                                <span class="text-zinc-700 dark:text-zinc-300 font-medium">#{tag}</span>
+                                <span class="text-xs px-2 py-0.5 bg-teal-500 text-white rounded-full">{count}</span>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Timeline */}
+                <div>
+                    <h2 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-4">{t('timeline', config.language)}</h2>
+                    <div class="space-y-8">
+                        {sortedTimeline.map(([yearMonth, monthPosts]) => {
+                            const [year, month] = yearMonth.split('-');
+                            const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString(config.language === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long' });
+                            return (
+                                <div class="border-l-2 border-teal-500 pl-6">
+                                    <h3 class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-3">{monthName}</h3>
+                                    <ul class="space-y-2">
+                                        {monthPosts.map(post => {
+                                            const postUrl = post.abbrlink || post.slug;
+                                            return (
+                                                <li>
+                                                    <a href={`/posts/${postUrl}.html`} class="text-zinc-600 dark:text-zinc-400 hover:text-teal-500 dark:hover:text-teal-400 transition">
+                                                        {post.title}
+                                                    </a>
+                                                    <span class="text-xs text-zinc-400 dark:text-zinc-600 ml-2">
+                                                        {new Date(post.date).toLocaleDateString()}
+                                                    </span>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </main>
+        </Layout>
+    );
+    const statsBuild = fs.writeFile(path.join(distDir, 'stats.html'), createHtml(statsContent));
+
+    // 11. Generate RSS Feed
+    const rssContent = `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+    <title><![CDATA[${config.title}]]></title>
+    <link>${config.siteUrl}</link>
+    <description><![CDATA[${config.description}]]></description>
+    <language>${config.language}</language>
+    <atom:link href="${config.siteUrl}/rss.xml" rel="self" type="application/rss+xml" />
+    ${posts.slice(0, 20).map(post => {
+        const postUrl = `${config.siteUrl}/posts/${post.abbrlink || post.slug}.html`;
+        return `
+    <item>
+        <title><![CDATA[${post.title}]]></title>
+        <link>${postUrl}</link>
+        <guid>${postUrl}</guid>
+        <pubDate>${new Date(post.date).toUTCString()}</pubDate>
+        <description><![CDATA[${post.excerpt || post.content.substring(0, 200)}]]></description>
+    </item>`;
+    }).join('')}
+</channel>
+</rss>`;
+    const rssBuild = fs.writeFile(path.join(distDir, 'rss.xml'), rssContent);
+
+    // 12. Generate Sitemap
+    const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>${config.siteUrl}/</loc>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>${config.siteUrl}/archive.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>${config.siteUrl}/categories.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>${config.siteUrl}/tags.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    ${config.about ? `
+    <url>
+        <loc>${config.siteUrl}/about.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>` : ''}
+    ${config.projects ? `
+    <url>
+        <loc>${config.siteUrl}/projects.html</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>` : ''}
+    ${posts.map(post => `
+    <url>
+        <loc>${config.siteUrl}/posts/${post.abbrlink || post.slug}.html</loc>
+        <lastmod>${new Date(post.date).toISOString()}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>`).join('')}
+</urlset>`;
+    const sitemapBuild = fs.writeFile(path.join(distDir, 'sitemap.xml'), sitemapContent);
+
     // Wait for all tasks
     const allBuilds = [indexBuild, ...postBuilds, ...categoryBuilds, ...tagBuilds, archiveBuild, categoriesListBuild, tagsListBuild, cssBuild];
     if (aboutBuild) allBuilds.push(aboutBuild);
     if (projectsBuild) allBuilds.push(projectsBuild);
+    allBuilds.push(statsBuild);
+    allBuilds.push(rssBuild);
+    allBuilds.push(sitemapBuild);
+    allBuilds.push(articlesBuild);
     await Promise.all(allBuilds);
 
-    const pageCount = posts.length + 1 + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0);
+    const pageCount = posts.length + 1 + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0) + 1 + 2 + 1; // +2 for RSS/Sitemap, +1 for Articles
     console.log(`Build complete! Generated ${pageCount} pages.`);
 }
 

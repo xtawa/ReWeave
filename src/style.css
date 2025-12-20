@@ -2,10 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 .theme-transition,
 .theme-transition *,
 .theme-transition *::before,
 .theme-transition *::after {
   transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, color 0.3s ease-in-out, fill 0.3s ease-in-out, stroke 0.3s ease-in-out, box-shadow 0.3s ease-in-out !important;
   transition-delay: 0s !important;
+}
+
+.toc-content {
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out;
+  opacity: 1;
+}
+
+.toc-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.toc-toggle-icon {
+  transition: transform 0.3s ease-in-out;
+}
+
+.toc-toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
+@keyframes wave {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  10% {
+    transform: rotate(14deg);
+  }
+
+  20% {
+    transform: rotate(-8deg);
+  }
+
+  30% {
+    transform: rotate(14deg);
+  }
+
+  40% {
+    transform: rotate(-4deg);
+  }
+
+  50% {
+    transform: rotate(10deg);
+  }
+
+  60% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-wave {
+  animation: wave 2s infinite;
+  display: inline-block;
 }

@@ -99,6 +99,11 @@
     -   **Position Configuration**: TOC can be positioned at 'top', 'left', or 'right'.
     -   **Collapsible**: Optional toggle button to collapse/expand TOC.
     -   **Sticky Sidebar**: Left/right positioned TOC stays visible while scrolling.
+    -   **Smooth Scroll**: Added `scroll-behavior: smooth` for animated scrolling.
+    -   **Active Highlighting**: Current section is highlighted in TOC during scroll.
+    -   **Auto ID Generation**: Uses `rehype-slug` to generate heading IDs.
+    -   **Collapse Animation**: Smooth max-height and opacity transition (0.4s) when toggling TOC.
+    -   **Icon Rotation**: Toggle icon rotates 180° during collapse/expand.
 20. **Theme Transition Animation**:
     -   Added smooth transition (300ms) for theme switching.
     -   Implemented via `.theme-transition` class in CSS.
@@ -107,9 +112,52 @@
     -   Added hover glow effect to navigation menu items.
     -   Uses `box-shadow` with blur for a neon/halo look.
     -   Adapted for both light and dark modes.
+22. **Stats Page**:
+    -   Added comprehensive statistics page at `/stats.html`.
+    -   Displays total posts count and total words.
+    -   Shows top 10 most used tags with counts.
+    -   Timeline organized by year-month with all posts.
+    -   Gradient card designs for stats with responsive layout.
+    -   Added Stats link in Footer navigation.
+23. **ReWeave Branding**:
+    -   Added "Powered by ReWeave" link in Footer.
+    -   Links to GitHub repository (https://github.com/xtawa/ReWeave).
+    -   Bilingual support (EN: "Powered by ReWeave", ZH: "由 ReWeave 驱动").
+    -   **Version Display**: Shows Git commit SHA (short form).
+    -   Auto-detects version from Vercel env (`VERCEL_GIT_COMMIT_SHA`) or local git.
+    -   Fallback to "dev" if Git is unavailable.
+24. **Favicon Configuration**:
+    -   Automatically uses logo.png as favicon.
+    -   Uses `config.logo.path` if configured, fallback to `/logo.png`.
+    -   Added standard favicon and Apple touch icon links.
+25. **RSS & Sitemap Generation**:
+    -   Added `siteUrl` to `config.ts` for absolute URL generation.
+    -   **RSS Feed**: Generates `/rss.xml` with latest 20 posts.
+    -   **Sitemap**: Generates `/sitemap.xml` including all pages and posts with priorities.
+    -   Runs automatically during build process.
+26. **Documentation & Content**:
+    -   Created `src/content/theme-development-tutorial.md`: A comprehensive guide for theme developers.
+    -   Synchronized all existing posts (`configuration-guide.md`, `rich-text-demo.md`, `performance-report.md`, `hello-world.md`, `future-static.md`) to reflect the latest framework version.
+    -   Translated all core posts to Chinese for better accessibility.
+    -   Updated `README.md` with comprehensive configuration guide, including Hero page and `homePage` settings.
+    -   Added "Content Management" section to `README.md` explaining how to add/remove articles, pages, and links.
+28. **Content Width Configuration**:
+    -   Added `contentWidth` option to `config.theme` ('normal', 'wide', 'full').
+    -   Updated `Layout.tsx` to dynamically apply width classes based on configuration.
+    -   Set default to 'wide' for better screen utilization.
+29. **Config Cleanup**:
+    -   Removed all JSDoc and descriptive comments from the first 186 lines of `config.ts` to make the file more compact and readable.
+30. **Navbar Configuration**:
+    -   Added `navbar` configuration to `config.ts`, allowing custom menu items and sorting.
+    -   Refactored `Header.tsx` to dynamically render the navigation menu based on `config.navbar.items`.
+    -   Supports nested menu items (dropdowns) via the `children` property.
+27. **Checklist Synchronization**:
+    -   Updated `CHECKLIST.md` with testing steps for all new features.
+    -   Marked RSS and Sitemap as implemented.
+    -   Added verification for Hero Page, Stats Page, and visual effects.
 6.  **Verification**:
     -   Successfully built the project (`npm run build`).
-    -   Verified generated HTML structure.
+    -   Verified generated HTML structure and file list (35 pages).
 
 ### Technical Decisions
 -   **Zero-JS Default**: The framework outputs pure HTML/CSS. Preact is used only for server-side rendering during the build process.

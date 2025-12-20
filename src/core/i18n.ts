@@ -11,6 +11,7 @@ export interface I18nConfig {
             postsInCategory: string;
             postsWithTag: string;
             home: string;
+            articles: string;
             about: string;
             projects: string;
             archive: string;
@@ -18,6 +19,12 @@ export interface I18nConfig {
             tags: string;
             allRightsReserved: string;
             toc: string;
+            stats: string;
+            totalPosts: string;
+            totalWords: string;
+            topTags: string;
+            timeline: string;
+            poweredBy: string;
         };
     };
 }
@@ -33,6 +40,7 @@ export const i18n: I18nConfig = {
             postsInCategory: 'Posts in',
             postsWithTag: 'Posts tagged with',
             home: 'Home',
+            articles: 'Articles',
             about: 'About',
             projects: 'Projects',
             archive: 'Archive',
@@ -40,6 +48,12 @@ export const i18n: I18nConfig = {
             tags: 'Tags',
             allRightsReserved: 'All rights reserved',
             toc: 'Table of Contents',
+            stats: 'Stats',
+            totalPosts: 'Total Posts',
+            totalWords: 'Total Words',
+            topTags: 'Top Tags',
+            timeline: 'Timeline',
+            poweredBy: 'Powered by',
         },
         zh: {
             readMore: '阅读文章',
@@ -49,6 +63,7 @@ export const i18n: I18nConfig = {
             postsInCategory: '分类下的文章',
             postsWithTag: '标签下的文章',
             home: '首页',
+            articles: '文章',
             about: '关于',
             projects: '项目',
             archive: '归档',
@@ -56,6 +71,12 @@ export const i18n: I18nConfig = {
             tags: '标签',
             allRightsReserved: '保留所有权利',
             toc: '目录',
+            stats: '统计',
+            totalPosts: '总文章数',
+            totalWords: '总字数',
+            topTags: '热门标签',
+            timeline: '时间轴',
+            poweredBy: '由',
         },
     },
 };

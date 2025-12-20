@@ -14,6 +14,20 @@ export function Layout({ title, description, image, children }: LayoutProps) {
     const pageTitle = title ? `${title} | ${config.title}` : config.title;
     const pageDescription = description || config.description;
 
+    const widthConfig = config.theme.contentWidth || 'normal';
+
+    const outerMaxWidth = {
+        'normal': 'max-w-7xl',
+        'wide': 'max-w-[90rem]', // Wider than 7xl
+        'full': 'max-w-full'
+    }[widthConfig];
+
+    const innerMaxWidth = {
+        'normal': 'max-w-2xl lg:max-w-5xl',
+        'wide': 'max-w-2xl lg:max-w-7xl',
+        'full': 'max-w-full'
+    }[widthConfig];
+
     return (
         <html lang={config.language} class="h-full antialiased">
             <head>
@@ -24,6 +38,9 @@ export function Layout({ title, description, image, children }: LayoutProps) {
                 {image && <meta property="og:image" content={image} />}
                 <meta property="og:title" content={pageTitle} />
                 <meta property="og:description" content={pageDescription} />
+                {/* Favicon */}
+                <link rel="icon" type="image/png" href={config.logo?.path ? (config.logo.path.startsWith('http') ? config.logo.path : `/${config.logo.path}`) : '/logo.png'} />
+                <link rel="apple-touch-icon" href={config.logo?.path ? (config.logo.path.startsWith('http') ? config.logo.path : `/${config.logo.path}`) : '/logo.png'} />
                 <link rel="stylesheet" href="/style.css" />
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -37,15 +54,15 @@ export function Layout({ title, description, image, children }: LayoutProps) {
             </head>
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black">
                 <div class="fixed inset-0 flex justify-center sm:px-8">
-                    <div class="flex w-full max-w-7xl lg:px-8">
+                    <div class={`flex w-full ${outerMaxWidth} lg:px-8`}>
                         <div class="w-full bg-white ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-300/20" />
                     </div>
                 </div>
                 <div class="relative flex w-full flex-col">
                     <div class="sm:px-8 mt-8 sm:mt-16">
-                        <div class="mx-auto w-full max-w-7xl lg:px-8">
+                        <div class={`mx-auto w-full ${outerMaxWidth} lg:px-8`}>
                             <div class="relative px-4 sm:px-8 lg:px-12">
-                                <div class="mx-auto max-w-2xl lg:max-w-5xl">
+                                <div class={`mx-auto ${innerMaxWidth}`}>
                                     {children}
                                     <Footer />
                                 </div>
