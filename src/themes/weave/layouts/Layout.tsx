@@ -28,6 +28,12 @@ export function Layout({ title, description, image, children }: LayoutProps) {
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
                 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+                <script type="module" dangerouslySetInnerHTML={{
+                    __html: `
+                    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+                    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+                `}} />
             </head>
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black">
                 <div class="fixed inset-0 flex justify-center sm:px-8">

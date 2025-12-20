@@ -38,6 +38,24 @@ export interface SiteConfig {
     };
 
     /**
+     * Footer configuration.
+     * 页脚配置。
+     */
+    footer?: {
+        /**
+         * Copyright text.
+         * 版权文字。
+         */
+        copyright?: string;
+
+        /**
+         * ICP license number (for China).
+         * ICP 备案号（中国）。
+         */
+        icp?: string;
+    };
+
+    /**
      * Theme customization options.
      * 主题自定义选项。
      */
@@ -63,6 +81,12 @@ export const config: SiteConfig = {
     social: {
         twitter: "https://twitter.com",
         github: "https://github.com",
+    },
+
+    // Footer / 页脚
+    footer: {
+        copyright: "ReWeave Labs by Ybhsoft Innovation",
+        icp: "",
     },
 
     // Visual Customization / 视觉自定义

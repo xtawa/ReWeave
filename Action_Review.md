@@ -21,6 +21,13 @@
     -   Result: ~7.3s for 500 posts.
     -   Updated README with results.
     -   **Created Blog Post**: Added `src/content/performance-report.md` with detailed analysis.
+    -   **Added GFM Support**: Installed `remark-gfm` to support tables and other GFM features.
+    -   **Added Rich Text Support**:
+        -   Installed `rehype-highlight` for syntax highlighting.
+        -   Installed `rehype-highlight` for syntax highlighting.
+        -   Added `highlight.js` CSS and `mermaid.js` to Layout.
+        -   Created `src/content/rich-text-demo.md`.
+    -   **Updated Configuration**: Added `footer` config for copyright and ICP.
 6.  **Verification**:
     -   Successfully built the project (`npm run build`).
     -   Verified generated HTML structure.
