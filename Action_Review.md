@@ -171,6 +171,9 @@
 6.  **Verification**:
     -   Verified that 100 new complex posts exist in `src/content/`.
     -   Successfully built the project with the new content and pagination logic.
+34. **Build Message Update**:
+    -   Added a friendly thank you message ("Thanks for using ReWeave!ヾ(≧▽≦*)o -Powered By ReWeave Labs") to the end of the build process in `src/core/build.tsx`.
+    -   Added version information and GitHub issue link ("ReWeave Version xxx. If you meet any issue, feel free to start an issue on Github!( •̀ ω •́ )✧").
 
 ### Technical Decisions
 -   **Zero-JS Default**: The framework outputs pure HTML/CSS. Preact is used only for server-side rendering during the build process.

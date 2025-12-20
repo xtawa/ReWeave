@@ -792,6 +792,8 @@ async function build() {
 
     const pageCount = posts.length + 1 + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0) + 1 + 2 + 1; // +2 for RSS/Sitemap, +1 for Articles
     console.log(`Build complete! Generated ${pageCount} pages.`);
+    console.log("Thanks for using ReWeave!ヾ(≧▽≦*)o -Powered By ReWeave Labs");
+    console.log(`ReWeave Version ${version}. If you meet any issue, feel free to start an issue on Github!( •̀ ω •́ )✧ (https://github.com/xtawa/ReWeave)`);
 }
 
 build().catch(console.error);
