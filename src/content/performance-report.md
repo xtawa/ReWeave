@@ -29,6 +29,26 @@ The test was run on a standard development machine with **parallel processing en
 | **250** | 6.52s | 26ms |
 | **500** | 7.27s | 14ms |
 
+## Extreme Benchmark (Optimized)
+
+After switching to programmatic TailwindCSS execution and further optimizations:
+
+| Posts | Build Time (Seconds) | Time per Post (ms) |
+| :--- | :--- | :--- |
+| **500** | 6.99s | 14ms |
+| **1000** | 9.72s | 9.7ms |
+| **2000** | 14.76s | 7.4ms |
+
+## Complex Content Benchmark
+
+We also tested with **300 posts** containing rich content (Code blocks, Tables, Lists, Images).
+
+| Posts | Build Time |
+| :--- | :--- |
+| **300 (Rich)** | 7.15s |
+
+This confirms that syntax highlighting and GFM processing have minimal impact on build performance.
+
 ## Analysis
 
 The results are incredibly promising.

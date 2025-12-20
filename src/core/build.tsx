@@ -1,7 +1,6 @@
 /** @jsx h */
 import fs from 'fs/promises';
 import path from 'path';
-import { exec } from 'child_process';
 import { render } from 'preact-render-to-string';
 import { h } from 'preact';
 import { getPosts } from './markdown';
@@ -30,18 +29,26 @@ async function build() {
 
     // Start CSS Build in background
     console.log("Building CSS...");
-    const cssBuild = new Promise<void>((resolve, reject) => {
-        exec('npx tailwindcss -i ./src/style.css -o ./dist/style.css', (error, stdout, stderr) => {
-            if (error) {
-                console.error(`CSS Build Error: ${error}`);
-                reject(error);
-                return;
-            }
-            if (stderr) console.error(`CSS Build Stderr: ${stderr}`);
+    const cssBuild = (async () => {
+        try {
+            const postcss = (await import('postcss')).default;
+            const tailwindcss = (await import('tailwindcss')).default;
+            const autoprefixer = (await import('autoprefixer')).default;
+
+            const css = await fs.readFile(path.join(rootDir, 'src', 'style.css'), 'utf-8');
+
+            const result = await postcss([
+                tailwindcss({ config: path.join(rootDir, 'tailwind.config.js') }),
+                autoprefixer
+            ]).process(css, { from: path.join(rootDir, 'src', 'style.css'), to: path.join(distDir, 'style.css') });
+
+            await fs.writeFile(path.join(distDir, 'style.css'), result.css);
             console.log("CSS built successfully.");
-            resolve();
-        });
-    });
+        } catch (e) {
+            console.error("CSS Build Error:", e);
+            throw e;
+        }
+    })();
 
     // 2. Build Index Page
     const indexContent = (

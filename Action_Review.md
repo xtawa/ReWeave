@@ -28,6 +28,14 @@
         -   Added `highlight.js` CSS and `mermaid.js` to Layout.
         -   Created `src/content/rich-text-demo.md`.
     -   **Updated Configuration**: Added `footer` config for copyright and ICP.
+    -   **Extreme Optimization**:
+        -   Switched to programmatic TailwindCSS API to reduce process overhead.
+        -   Tested with 2000 posts (Build time: ~14.76s).
+        -   Updated performance report.
+    -   **Complex Benchmark**:
+        -   Tested with 300 rich-content posts (Code, Tables, Images).
+        -   Result: ~7.15s.
+        -   Confirmed minimal impact of syntax highlighting.
 6.  **Verification**:
     -   Successfully built the project (`npm run build`).
     -   Verified generated HTML structure.
