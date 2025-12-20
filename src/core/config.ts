@@ -41,16 +41,27 @@ export interface SiteConfig {
     homePage: 'hero' | 'posts';
     navbar?: {
         items: Array<{
-            key: string; // Translation key or unique identifier
+            key: string;
             href: string;
-            label?: string; // Optional override
-            icon?: string; // Optional icon class
+            label?: string;
+            icon?: string;
             children?: Array<{
                 key: string;
                 href: string;
                 label?: string;
             }>;
         }>;
+    };
+    /**
+     * Pagination configuration.
+     * 分页配置。
+     */
+    pagination?: {
+        /**
+         * Posts per page.
+         * 每页显示文章数。
+         */
+        pageSize: number;
     };
 }
 
@@ -62,6 +73,11 @@ export const config: SiteConfig = {
 
     // Theme Selection / 主题选择
     themeName: "weave",
+
+    // Pagination / 分页配置
+    pagination: {
+        pageSize: 15,
+    },
 
     // Navbar Configuration / 导航栏配置
     navbar: {

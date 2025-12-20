@@ -46,6 +46,7 @@ async function build() {
     const { Layout } = await import(`${themePath}/layouts/Layout`);
     const { Header } = await import(`${themePath}/components/Header`);
     const { Hero } = await import(`${themePath}/components/Hero`);
+    const { Pagination } = await import(`${themePath}/components/Pagination`);
 
     // Ensure dist exists
     await fs.mkdir(distDir, { recursive: true });
@@ -99,36 +100,54 @@ async function build() {
         }
     })();
 
-    // Define Posts List Content
-    const postsListContent = (
-        <Layout title={config.homePage === 'hero' ? t('articles', config.language) : undefined}>
-            <Header />
-            <main>
-                <div class="space-y-10">
-                    {posts.map((post) => {
-                        const postUrl = post.abbrlink || post.slug;
-                        return (
-                            <article key={post.slug} class="group relative flex flex-col items-start">
-                                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-gray-600 dark:group-hover:text-gray-400">
-                                    <a href={`/posts/${postUrl}.html`}>
-                                        <span class="absolute inset-0 z-0" />
-                                        {post.title}
-                                    </a>
-                                </h2>
-                                <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
-                                    <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
-                                        <span class="h-4 w-0.5 rounded-full bg-gray-200 dark:bg-gray-700" />
-                                    </span>
-                                    {new Date(post.date).toLocaleDateString()}
-                                </time>
-                                <p class="relative z-10 mt-2 text-sm text-gray-600 dark:text-gray-300">{post.excerpt}</p>
-                            </article>
-                        );
-                    })}
-                </div>
-            </main>
-        </Layout>
-    );
+
+
+    // ... (inside indexBuild)
+
+    // Pagination Logic
+    const pageSize = config.pagination?.pageSize || 15;
+    const totalPosts = posts.length;
+    const totalPages = Math.ceil(totalPosts / pageSize);
+
+    // Helper to generate posts list page content
+    const generatePostsPage = (page: number) => {
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        const pagePosts = posts.slice(start, end);
+
+        return (
+            <Layout title={page === 1 && config.homePage === 'hero' ? t('articles', config.language) : (page === 1 ? undefined : `${t('articles', config.language)} - Page ${page}`)}>
+                <Header />
+                <main>
+                    <div class="space-y-10 animate-fade-in-up">
+                        {pagePosts.map((post) => {
+                            const postUrl = post.abbrlink || post.slug;
+                            return (
+                                <article key={post.slug} class="group relative flex flex-col items-start">
+                                    <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                                        <a href={`/posts/${postUrl}.html`}>
+                                            <span class="absolute inset-0 z-0" />
+                                            {post.title}
+                                        </a>
+                                    </h2>
+                                    <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
+                                        <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
+                                            <span class="h-4 w-0.5 rounded-full bg-gray-200 dark:bg-gray-700" />
+                                        </span>
+                                        {new Date(post.date).toLocaleDateString()}
+                                    </time>
+                                    <p class="relative z-10 mt-2 text-sm text-gray-600 dark:text-gray-300">{post.excerpt}</p>
+                                </article>
+                            );
+                        })}
+                    </div>
+                    {totalPages > 1 && (
+                        <Pagination current={page} total={totalPages} baseUrl="/articles" />
+                    )}
+                </main>
+            </Layout>
+        );
+    };
 
     // 2. Build Index Page
     let indexContent;
@@ -142,12 +161,23 @@ async function build() {
             </Layout>
         );
     } else {
-        indexContent = postsListContent;
+        indexContent = generatePostsPage(1);
     }
     const indexBuild = fs.writeFile(path.join(distDir, 'index.html'), createHtml(indexContent));
 
     // 2.1 Build Articles Page (always available for menu link)
-    const articlesBuild = fs.writeFile(path.join(distDir, 'articles.html'), createHtml(postsListContent));
+    const articlesBuild = fs.writeFile(path.join(distDir, 'articles.html'), createHtml(generatePostsPage(1)));
+
+    // 2.2 Build Pagination Pages
+    const paginationBuilds = [];
+    if (totalPages > 1) {
+        await fs.mkdir(path.join(distDir, 'articles'), { recursive: true });
+        for (let i = 2; i <= totalPages; i++) {
+            paginationBuilds.push(
+                fs.writeFile(path.join(distDir, 'articles', `${i}.html`), createHtml(generatePostsPage(i)))
+            );
+        }
+    }
 
     // 3. Build Post Pages (Parallel)
     const postsDir = path.join(distDir, 'posts');
@@ -580,7 +610,7 @@ async function build() {
     }
 
     // 10. Build Stats Page
-    const totalPosts = posts.length;
+    // const totalPosts = posts.length; // Already defined above
     const totalWords = posts.reduce((sum, post) => {
         const text = post.content.replace(/<[^>]*>/g, ''); // Remove HTML tags
         return sum + text.length;
@@ -757,6 +787,7 @@ async function build() {
     allBuilds.push(rssBuild);
     allBuilds.push(sitemapBuild);
     allBuilds.push(articlesBuild);
+    allBuilds.push(...paginationBuilds);
     await Promise.all(allBuilds);
 
     const pageCount = posts.length + 1 + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0) + 1 + 2 + 1; // +2 for RSS/Sitemap, +1 for Articles

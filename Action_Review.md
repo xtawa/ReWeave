@@ -155,9 +155,22 @@
     -   Updated `CHECKLIST.md` with testing steps for all new features.
     -   Marked RSS and Sitemap as implemented.
     -   Added verification for Hero Page, Stats Page, and visual effects.
+31. **Stress Test (Complex Content)**:
+    -   Created `scripts/benchmark.ts` to automate generation of complex posts.
+    -   Conducted benchmark for 100, 500, and 1000 complex posts.
+    -   Updated `src/content/performance-report.md` with the latest results.
+32. **Complex Post Generation**:
+    -   Created `scripts/generate-posts.ts` to generate 100 complex posts for permanent use in the blog.
+    -   Successfully generated 100 posts in `src/content/`.
+    -   Verified build with the new posts (total 237 pages generated).
+33. **Pagination System**:
+    -   Added `pagination` configuration to `config.ts` (default 15 posts/page).
+    -   Created `Pagination` component with responsive design and logic.
+    -   Updated `build.tsx` to generate paginated article lists (`articles.html`, `articles/2.html`, etc.).
+    -   Added `animate-fade-in-up` CSS animation for smooth page transitions.
 6.  **Verification**:
-    -   Successfully built the project (`npm run build`).
-    -   Verified generated HTML structure and file list (35 pages).
+    -   Verified that 100 new complex posts exist in `src/content/`.
+    -   Successfully built the project with the new content and pagination logic.
 
 ### Technical Decisions
 -   **Zero-JS Default**: The framework outputs pure HTML/CSS. Preact is used only for server-side rendering during the build process.
