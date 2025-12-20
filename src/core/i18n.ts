@@ -25,6 +25,7 @@ export interface I18nConfig {
             topTags: string;
             timeline: string;
             poweredBy: string;
+            moments: string;
         };
     };
 }
@@ -54,6 +55,7 @@ export const i18n: I18nConfig = {
             topTags: 'Top Tags',
             timeline: 'Timeline',
             poweredBy: 'Powered by',
+            moments: 'Moments',
         },
         zh: {
             readMore: '阅读文章',
@@ -77,6 +79,7 @@ export const i18n: I18nConfig = {
             topTags: '热门标签',
             timeline: '时间轴',
             poweredBy: '由',
+            moments: '说说',
         },
     },
 };

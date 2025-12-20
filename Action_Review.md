@@ -1,48 +1,52 @@
-# Action Review
+# 操作记录
 
-## 2025-12-20
+## 2025-12-20 21:55 - 修复说说页面 Telegram 消息获取
 
-### Fix Dark Mode Text Color on Archive, Categories, and Tags Pages
-- **Issue**: Text on Archive, Categories, and Tags pages was dark on a dark background in dark mode, making it unreadable.
-- **Action**: Updated `src/core/build.tsx` to use `dark:!text-white` instead of `dark:text-white` (or relying on inheritance) for:
-    - Archive page title and card content (Categories/Tags counts).
-    - Archive page list items (Years, Dates, Post Titles).
-    - Categories page title and list items.
-    - Tags page title and list items.
-- **Reason**: To ensure high contrast and readability in dark mode, overriding any conflicting styles.
+### 问题诊断:
+用户更新了 Telegram 频道 ID 为 `hi_co1sini_casual` 后,说说页面仍然显示"暂无说说内容"。
 
-### Change Global Content Width to Normal
-- **Issue**: User requested all pages to be non-full-width (非全贴合).
-- **Action**: Updated `src/core/config.ts` to set `theme.contentWidth` to `'normal'`.
-- **Reason**: This global setting ensures that all pages using the `Layout` component default to a constrained width (max-w-7xl) instead of full width, unless explicitly overridden.
+### 问题原因:
+1. 原始的正则表达式无法正确匹配 Telegram 实际的 HTML 结构
+2. Telegram 的 HTML 包含多种类型的消息(包括系统消息如 "Channel created")
+3. 消息文本中包含 emoji、链接、标签等需要特殊处理的元素
 
-### Implement Sticky Footer
-- **Issue**: User requested the footer on Archive and its sub-pages to be at the bottom of the screen (sticky footer).
-- **Action**: Updated `src/themes/weave/layouts/Layout.tsx`:
-    - Calculated `minHeightClass` based on `isFullWidth` and `verticalMargin` (accounting for top margins).
-    - Changed the inner content container to `flex flex-col ${minHeightClass}`.
-    - Wrapped `{children}` in a `div` with `flex-1` to push the footer down when content is short.
-- **Reason**: To ensure the footer stays at the bottom of the viewport on pages with little content, improving visual balance.
+### 解决方案:
+重写了 `fetchTelegramMessages` 函数:
+1. **改进的解析策略**:
+   - 先匹配整个消息块 `<div class="tgme_widget_message_wrap">`
+   - 过滤掉系统消息 (包含 `service_message` 类)
+   - 分别提取文本内容和时间戳
 
-### Revise Sticky Footer Logic
-- **Issue**: User reported the previous sticky footer fix was ineffective ("还是不变").
-- **Action**: Updated `src/themes/weave/layouts/Layout.tsx` to increase the subtracted height in `min-h` calculation:
-    - Changed from `min-h-[calc(100vh-2rem)]` to `min-h-[calc(100vh-6rem)]`.
-    - Changed from `sm:min-h-[calc(100vh-4rem)]` to `sm:min-h-[calc(100vh-8rem)]`.
-- **Reason**: The previous calculation likely didn't account for all vertical spacing (e.g., header height, footer padding, or other margins). Increasing the offset ensures the container fits within the viewport while still pushing the footer down.
+2. **增强的文本清理**:
+   - 保留 emoji 表情
+   - 保留链接文本(去掉 HTML 标签)
+   - 处理 HTML 实体 (`&nbsp;`, `&amp;`, `&lt;`, `&gt;`, `&quot;`)
+   - 保留换行符
+   - 过滤系统消息
 
-### Final Sticky Footer Fix (Flexbox)
-- **Issue**: Previous `min-h` calculation was still not perfectly positioning the footer at the bottom.
-- **Action**: Updated `src/themes/weave/layouts/Layout.tsx` to use a full flexbox chain:
-    - Added `min-h-screen` to the main wrapper.
-    - Added `flex-1 flex flex-col` to all nested containers down to the content area.
-    - Removed manual `min-h` calculations.
-- **Reason**: This is a more robust way to implement a sticky footer that automatically adapts to varying header heights and margins without manual offsets.
+3. **添加日志**:
+   - 在控制台输出获取到的消息数量,便于调试
 
-### Improve Dark Mode Visibility for Tags and Titles
-- **Issue**: Tags and titles on Archive, Categories, and Tags pages were hard to read in dark mode (poor contrast).
-- **Action**: Updated `src/core/build.tsx`:
-    - Replaced `dark:!text-white` with `dark:text-zinc-100` for main titles and headings.
-    - Adjusted tag styling: used `bg-teal-50 dark:bg-teal-900/30` and `text-teal-700 dark:text-teal-200` with subtle borders.
-    - Adjusted category styling: used `dark:bg-zinc-800/50` and `dark:text-zinc-200`.
-- **Reason**: Standard Tailwind gray and teal scales provide better readability and a more polished look than pure white on black, especially when combined with semi-transparent backgrounds.
+### 测试结果:
+✅ **成功!** 说说页面现在正确显示了 Telegram 消息:
+- 消息内容: "终于把新博客部署好了..😄太喜欢这个主题了 #博客"
+- 时间显示: 2025年12月13日 12:14
+- emoji 正确显示
+- 标签 #博客 正确保留
+- 亮色和暗色模式都完美显示
+
+### 设计效果:
+新的说说页面设计包括:
+- 🎨 渐变色标题和副标题
+- 💎 精美的卡片设计
+- ⏰ 时间徽章带渐变图标
+- 💬 装饰性引号
+- ✨ 淡入上升动画
+- 🌓 完美的暗黑模式支持
+- 🎯 悬停时的互动效果
+
+### Next Step:
+- ✅ 说说页面已完全正常工作
+- 可以继续在 Telegram 频道发布更多内容
+- 每次构建时会自动获取最新的说说内容
+- 建议定期重新部署以更新内容,或考虑添加自动化部署

@@ -38,6 +38,10 @@ export interface SiteConfig {
         file: string;
     };
     hero?: HeroConfig;
+    moments?: {
+        enabled: boolean;
+        channelId: string; // e.g. 'reweave_moments'
+    };
     homePage: 'hero' | 'posts';
     navbar?: {
         items: Array<{
@@ -93,6 +97,7 @@ export const config: SiteConfig = {
                 ]
             },
             { key: 'projects', href: '/projects' },
+            { key: 'moments', href: '/moments' },
             { key: 'about', href: '/about' },
         ],
     },
@@ -144,6 +149,12 @@ export const config: SiteConfig = {
 
     // Hero Page / 个人名片页
     hero: heroConfig,
+
+    // Moments Page / 说说页面
+    moments: {
+        enabled: true,
+        channelId: "hi_co1sini_casual", // Replace with your Telegram channel ID
+    },
 
     // Default Home Page / 默认首页
     homePage: 'hero', // 'hero' or 'posts'

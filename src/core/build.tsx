@@ -127,10 +127,6 @@ async function build() {
         }
     })();
 
-
-
-    // ... (inside indexBuild)
-
     // Pagination Logic
     const pageSize = config.pagination?.pageSize || 15;
     const totalPosts = posts.length;
@@ -203,7 +199,6 @@ async function build() {
     // 2.2 Build Pagination Pages
     const paginationBuilds = [];
     if (totalPages > 1) {
-        // await fs.mkdir(path.join(distDir, 'articles'), { recursive: true }); // Handled by writeHtml
         for (let i = 2; i <= totalPages; i++) {
             paginationBuilds.push(
                 writeHtml(path.join(distDir, 'articles', `${i}.html`), createHtml(generatePostsPage(i)))
@@ -213,7 +208,6 @@ async function build() {
 
     // 3. Build Post Pages (Parallel)
     const postsDir = path.join(distDir, 'posts');
-    // await fs.mkdir(postsDir, { recursive: true }); // Handled by writeHtml
 
     // Helper function to extract headings from HTML content
     const extractHeadings = (html: string, maxDepth: number = 3): Array<{ level: number; text: string; id: string }> => {
@@ -230,7 +224,6 @@ async function build() {
                 });
             }
         }
-        // If no IDs found, try without ID requirement
         if (headings.length === 0) {
             const simpleRegex = /<h([1-6])[^>]*>([^<]+)<\/h[1-6]>/gi;
             let simpleMatch;
@@ -254,7 +247,6 @@ async function build() {
         const tocId = 'toc-' + Math.random().toString(36).substr(2, 9);
         const contentId = 'toc-content-' + Math.random().toString(36).substr(2, 9);
 
-        // Position-specific classes
         const positionClasses: Record<string, string> = {
             'top': 'mb-8 w-full',
             'left': 'sticky top-6 max-h-[calc(100vh-3rem)] overflow-auto',
@@ -340,7 +332,6 @@ async function build() {
     const postBuilds = posts.map(post => {
         const postUrl = safeSlug(post.abbrlink || post.slug);
 
-        // Extract headings for TOC
         const tocEnabled = config.toc?.enabled ?? false;
         const maxDepth = config.toc?.maxDepth ?? 3;
         const tocPosition = config.toc?.position ?? 'top';
@@ -443,7 +434,6 @@ async function build() {
     });
 
     const categoriesDir = path.join(distDir, 'categories');
-    // await fs.mkdir(categoriesDir, { recursive: true }); // Handled by writeHtml
 
     const categoryBuilds = Array.from(categories.entries()).map(([category, categoryPosts]) => {
         const categoryContent = (
@@ -491,7 +481,6 @@ async function build() {
     });
 
     const tagsDir = path.join(distDir, 'tags');
-    // await fs.mkdir(tagsDir, { recursive: true }); // Handled by writeHtml
 
     const tagBuilds = Array.from(tags.entries()).map(([tag, tagPosts]) => {
         const tagContent = (
@@ -618,6 +607,194 @@ async function build() {
     );
     const tagsListBuild = writeHtml(path.join(distDir, 'tags.html'), createHtml(tagsListContent));
 
+    // 8.1 Build Moments Page
+    let momentsBuild: Promise<void> | null = null;
+    if (config.moments?.enabled) {
+        const channelId = process.env.TELEGRAM_CHANNEL_ID || config.moments.channelId;
+
+        async function fetchTelegramMessages(id: string) {
+            try {
+                const response = await fetch(`https://t.me/s/${id}`);
+                const html = await response.text();
+
+                // Parse Telegram web preview HTML
+                const messages: Array<{ text: string, date: string, id: string }> = [];
+
+                // Match message text and datetime separately
+                const messageBlocks = html.match(/<div class="tgme_widget_message_wrap[^>]*>[\s\S]*?<\/div><\/div>/g) || [];
+
+                for (const block of messageBlocks) {
+                    // Skip service messages (like "Channel created")
+                    if (block.includes('service_message')) continue;
+
+                    // Extract text content
+                    const textMatch = block.match(/<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+                    // Extract datetime
+                    const dateMatch = block.match(/<time[^>]*datetime="([^"]*)"[^>]*>/);
+
+                    if (textMatch && dateMatch) {
+                        // Clean HTML tags and entities
+                        let text = textMatch[1]
+                            .replace(/<br\s*\/?>/gi, '\n')
+                            .replace(/<a[^>]*>([^<]*)<\/a>/g, '$1')  // Keep link text
+                            .replace(/<i class="emoji"[^>]*><b>([^<]*)<\/b><\/i>/g, '$1')  // Keep emoji
+                            .replace(/<[^>]*>/g, '')  // Remove remaining tags
+                            .replace(/&nbsp;/g, ' ')
+                            .replace(/&amp;/g, '&')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                            .replace(/&quot;/g, '"')
+                            .trim();
+
+                        if (text && text !== 'Channel created') {
+                            messages.push({
+                                text,
+                                date: dateMatch[1],
+                                id: Math.random().toString(36).substr(2, 9)
+                            });
+                        }
+                    }
+                }
+
+                console.log(`Fetched ${messages.length} messages from Telegram channel: ${id}`);
+                return messages.reverse(); // Newest first
+            } catch (e) {
+                console.error("Error fetching Telegram messages:", e);
+                return [];
+            }
+        }
+
+        const messages = await fetchTelegramMessages(channelId);
+
+        const momentsContent = (
+            <Layout title={t('moments', config.language)}>
+                <Header />
+                <main class="max-w-4xl mx-auto px-4 py-8">
+                    {/* Page Header */}
+                    <div class="text-center mb-12">
+                        <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                            {t('moments', config.language)}
+                        </h1>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">
+                            分享生活的点点滴滴 ✨
+                        </p>
+                    </div>
+
+                    {messages.length > 0 ? (
+                        <div class="space-y-6">
+                            {messages.map((msg, idx) => (
+                                <article
+                                    key={msg.id}
+                                    class="group relative bg-gradient-to-br from-white to-zinc-50 dark:from-zinc-900 dark:to-zinc-800/50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-zinc-200/50 dark:border-zinc-700/50 hover:scale-[1.02] animate-fade-in-up"
+                                    style={{ animationDelay: `${idx * 0.1}s` }}
+                                >
+                                    {/* Decorative gradient overlay */}
+                                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 via-blue-400 to-purple-400 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                                    {/* Time badge */}
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-500 shadow-md">
+                                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                                                <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                                            </svg>
+                                        </div>
+                                        <time class="text-sm font-semibold text-transparent bg-gradient-to-r from-teal-600 to-blue-600 dark:from-teal-400 dark:to-blue-400 bg-clip-text">
+                                            {new Date(msg.date).toLocaleDateString('zh-CN', {
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </time>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div class="relative">
+                                        <div class="text-base leading-relaxed text-zinc-700 dark:text-zinc-200 whitespace-pre-wrap break-words">
+                                            {msg.text}
+                                        </div>
+
+                                        {/* Decorative quote mark */}
+                                        <div class="absolute -left-2 -top-2 text-6xl text-teal-200 dark:text-teal-900/30 font-serif leading-none select-none pointer-events-none">
+                                            "
+                                        </div>
+                                    </div>
+
+                                    {/* Interaction hint */}
+                                    <div class="mt-4 pt-4 border-t border-zinc-200/50 dark:border-zinc-700/50 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <div class="flex items-center gap-4 text-xs text-zinc-400 dark:text-zinc-500">
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                </svg>
+                                            </span>
+                                            <span class="flex items-center gap-1">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <div class="text-xs text-zinc-400 dark:text-zinc-500">
+                                            #{idx + 1}
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    ) : (
+                        <div class="text-center py-20">
+                            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-teal-100 to-blue-100 dark:from-teal-900/20 dark:to-blue-900/20 mb-6">
+                                <svg class="w-12 h-12 text-teal-500 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-zinc-800 dark:text-zinc-200 mb-2">暂无说说内容</h3>
+                            <p class="text-zinc-500 dark:text-zinc-400 mb-1">还没有发布任何动态</p>
+                            <p class="text-sm text-zinc-400 dark:text-zinc-500">请检查 Telegram 频道 ID 是否正确且频道为公开状态</p>
+                        </div>
+                    )}
+
+                    {/* Animations */}
+                    <style dangerouslySetInnerHTML={{
+                        __html: `
+                        @keyframes fade-in-up {
+                            from {
+                                opacity: 0;
+                                transform: translateY(20px);
+                            }
+                            to {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+                        .animate-fade-in-up {
+                            animation: fade-in-up 0.6s ease-out forwards;
+                            opacity: 0;
+                        }
+                        `
+                    }} />
+
+                    {/* Client-side Script */}
+                    <script dangerouslySetInnerHTML={{
+                        __html: `
+                        (function() {
+                            console.log("Moments page loaded with enhanced design ✨");
+                            
+                            // Add smooth scroll behavior
+                            document.querySelectorAll('article').forEach((article, index) => {
+                                article.style.setProperty('--delay', index * 0.1 + 's');
+                            });
+                        })();
+                        `
+                    }} />
+                </main>
+            </Layout>
+        );
+        momentsBuild = writeHtml(path.join(distDir, 'moments.html'), createHtml(momentsContent));
+    }
+
     // 9. Build About Page
     let aboutBuild: Promise<void> | null = null;
     if (config.about) {
@@ -626,7 +803,6 @@ async function build() {
         const remarkRehype = (await import('remark-rehype')).default;
         const rehypeStringify = (await import('rehype-stringify')).default;
 
-        // Read about.md file from pages directory
         const pagesDir = path.join(process.cwd(), 'src', 'pages');
         const aboutFilePath = path.join(pagesDir, config.about.file);
         const aboutMarkdown = await fs.readFile(aboutFilePath, 'utf-8');
@@ -656,7 +832,6 @@ async function build() {
         const remarkRehype = (await import('remark-rehype')).default;
         const rehypeStringify = (await import('rehype-stringify')).default;
 
-        // Read projects.md file from pages directory
         const pagesDir = path.join(process.cwd(), 'src', 'pages');
         const projectsFilePath = path.join(pagesDir, config.projects.file);
         const projectsMarkdown = await fs.readFile(projectsFilePath, 'utf-8');
@@ -679,13 +854,11 @@ async function build() {
     }
 
     // 10. Build Stats Page
-    // const totalPosts = posts.length; // Already defined above
     const totalWords = posts.reduce((sum, post) => {
         const text = post.content.replace(/<[^>]*>/g, ''); // Remove HTML tags
         return sum + text.length;
     }, 0);
 
-    // Calculate top tags
     const tagCounts = new Map<string, number>();
     posts.forEach(post => {
         if (post.tags) {
@@ -698,7 +871,6 @@ async function build() {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
 
-    // Create timeline by year-month
     const timeline = new Map<string, typeof posts>();
     posts.forEach(post => {
         const date = new Date(post.date);
@@ -716,7 +888,6 @@ async function build() {
             <main class="max-w-4xl mx-auto">
                 <h1 class="text-4xl font-bold text-zinc-800 dark:!text-white mb-8">{t('stats', config.language)}</h1>
 
-                {/* Stats Cards */}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                     <div class="p-6 bg-gradient-to-br from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
                         <div class="text-sm text-teal-600 dark:text-teal-400 font-medium mb-2">{t('totalPosts', config.language)}</div>
@@ -728,7 +899,6 @@ async function build() {
                     </div>
                 </div>
 
-                {/* Top Tags */}
                 <div class="mb-12">
                     <h2 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-4">{t('topTags', config.language)}</h2>
                     <div class="flex flex-wrap gap-3">
@@ -744,7 +914,6 @@ async function build() {
                     </div>
                 </div>
 
-                {/* Timeline */}
                 <div>
                     <h2 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-4">{t('timeline', config.language)}</h2>
                     <div class="space-y-8">
@@ -853,6 +1022,7 @@ async function build() {
     const allBuilds = [indexBuild, ...postBuilds, ...categoryBuilds, ...tagBuilds, archiveBuild, categoriesListBuild, tagsListBuild, cssBuild];
     if (aboutBuild) allBuilds.push(aboutBuild);
     if (projectsBuild) allBuilds.push(projectsBuild);
+    if (momentsBuild) allBuilds.push(momentsBuild);
     allBuilds.push(statsBuild);
     allBuilds.push(rssBuild);
     allBuilds.push(sitemapBuild);
