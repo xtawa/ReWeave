@@ -36,6 +36,18 @@
         -   Tested with 300 rich-content posts (Code, Tables, Images).
         -   Result: ~7.15s.
         -   Confirmed minimal impact of syntax highlighting.
+8.  **Category & Tag Support**:
+    -   Extended Post interface with `category` and `tags` fields.
+    -   Implemented automatic category and tag page generation.
+    -   Generated pages: `/categories/{category}.html` and `/tags/{tag}.html`.
+9.  **Internationalization (i18n)**:
+    -   Created `src/core/i18n.ts` with en/zh translations.
+    -   Updated config to use `Locale` type ('en' | 'zh').
+    -   Applied translations to Header, Footer, and all generated pages.
+    -   Users can switch language by changing `config.language`.
+10. **Documentation**:
+    -   Created `CHECKLIST.md` with comprehensive testing guide.
+    -   Covers all features, edge cases, and performance benchmarks.
 6.  **Verification**:
     -   Successfully built the project (`npm run build`).
     -   Verified generated HTML structure.

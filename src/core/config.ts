@@ -3,6 +3,8 @@
  * ReWeave 博客配置
  */
 
+import { Locale } from './i18n';
+
 export interface SiteConfig {
     /**
      * The title of your blog.
@@ -17,10 +19,10 @@ export interface SiteConfig {
     description: string;
 
     /**
-     * The language of your content (e.g., 'en', 'zh-CN').
-     * 内容语言（例如 'en', 'zh-CN'）。
+     * The language of your content (e.g., 'en', 'zh').
+     * 内容语言（例如 'en', 'zh'）。
      */
-    language: string;
+    language: Locale;
 
     /**
      * The name of the theme folder in src/themes/.

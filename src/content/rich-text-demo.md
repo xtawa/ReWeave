@@ -2,6 +2,8 @@
 title: Rich Text Features Demo
 date: 2025-12-22
 excerpt: Demonstrating code highlighting, mermaid diagrams, and GFM tables.
+category: Tutorial
+tags: [Markdown, Features, Demo]
 ---
 
 # Rich Text Features

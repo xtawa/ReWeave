@@ -12,9 +12,14 @@ export interface Post {
     slug: string;
     title: string;
     date: string;
-    content: string; // HTML content
+    content: string;
     excerpt?: string;
     image?: string;
+    category?: string;
+    tags?: string[];
+    draft?: boolean;
+    hide?: boolean;
+    abbrlink?: string;
 }
 
 export async function getPosts(contentDir: string): Promise<Post[]> {
@@ -43,6 +48,11 @@ export async function getPosts(contentDir: string): Promise<Post[]> {
                     content: processedContent.toString(),
                     excerpt: data.excerpt || '',
                     image: data.image,
+                    category: data.category,
+                    tags: Array.isArray(data.tags) ? data.tags : (data.tags ? [data.tags] : []),
+                    draft: data.draft === true,
+                    hide: data.hide === true,
+                    abbrlink: data.abbrlink,
                 };
             })
     );

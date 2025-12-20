@@ -5,6 +5,7 @@ import { render } from 'preact-render-to-string';
 import { h } from 'preact';
 import { getPosts } from './markdown';
 import { config } from './config';
+import { t } from './i18n';
 
 // Helper to create HTML string
 function createHtml(content: any) {
@@ -25,7 +26,10 @@ async function build() {
     await fs.mkdir(distDir, { recursive: true });
 
     // 1. Get Posts (Parallel)
-    const posts = await getPosts(contentDir);
+    const allPosts = await getPosts(contentDir);
+
+    // Filter out draft and hidden posts
+    const posts = allPosts.filter(post => !post.draft && !post.hide);
 
     // Start CSS Build in background
     console.log("Building CSS...");
@@ -56,26 +60,29 @@ async function build() {
             <Header />
             <main>
                 <div class="space-y-10">
-                    {posts.map((post) => (
-                        <article key={post.slug} class="group relative flex flex-col items-start">
-                            <h2 class="text-xl font-semibold text-gray-900 group-hover:text-gray-600">
-                                <a href={`/posts/${post.slug}.html`}>
-                                    <span class="absolute inset-0" />
-                                    {post.title}
-                                </a>
-                            </h2>
-                            <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
-                                <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
-                                    <span class="h-4 w-0.5 rounded-full bg-gray-200" />
-                                </span>
-                                {new Date(post.date).toLocaleDateString()}
-                            </time>
-                            <p class="relative z-10 mt-2 text-sm text-gray-600">{post.excerpt}</p>
-                            <div class="relative z-10 mt-4 flex items-center text-sm font-medium text-teal-500">
-                                Read article
-                            </div>
-                        </article>
-                    ))}
+                    {posts.map((post) => {
+                        const postUrl = post.abbrlink || post.slug;
+                        return (
+                            <article key={post.slug} class="group relative flex flex-col items-start">
+                                <h2 class="text-xl font-semibold text-gray-900 group-hover:text-gray-600">
+                                    <a href={`/posts/${postUrl}.html`}>
+                                        <span class="absolute inset-0" />
+                                        {post.title}
+                                    </a>
+                                </h2>
+                                <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
+                                    <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
+                                        <span class="h-4 w-0.5 rounded-full bg-gray-200" />
+                                    </span>
+                                    {new Date(post.date).toLocaleDateString()}
+                                </time>
+                                <p class="relative z-10 mt-2 text-sm text-gray-600">{post.excerpt}</p>
+                                <div class="relative z-10 mt-4 flex items-center text-sm font-medium text-teal-500">
+                                    {t('readMore', config.language)}
+                                </div>
+                            </article>
+                        );
+                    })}
                 </div>
             </main>
         </Layout>
@@ -88,6 +95,7 @@ async function build() {
     await fs.mkdir(postsDir, { recursive: true });
 
     const postBuilds = posts.map(post => {
+        const postUrl = post.abbrlink || post.slug;
         const postContent = (
             <Layout title={post.title} description={post.excerpt} image={post.image}>
                 <Header />
@@ -114,13 +122,109 @@ async function build() {
                 </div>
             </Layout>
         );
-        return fs.writeFile(path.join(postsDir, `${post.slug}.html`), createHtml(postContent));
+        return fs.writeFile(path.join(postsDir, `${postUrl}.html`), createHtml(postContent));
+    });
+
+    // 4. Build Category Pages
+    const categories = new Map<string, typeof posts>();
+    posts.forEach(post => {
+        if (post.category) {
+            if (!categories.has(post.category)) {
+                categories.set(post.category, []);
+            }
+            categories.get(post.category)!.push(post);
+        }
+    });
+
+    const categoriesDir = path.join(distDir, 'categories');
+    await fs.mkdir(categoriesDir, { recursive: true });
+
+    const categoryBuilds = Array.from(categories.entries()).map(([category, categoryPosts]) => {
+        const categoryContent = (
+            <Layout title={`${t('category', config.language)}: ${category}`}>
+                <Header />
+                <main>
+                    <h1 class="text-4xl font-bold mb-8">{t('category', config.language)}: {category}</h1>
+                    <div class="space-y-10">
+                        {categoryPosts.map((post) => {
+                            const postUrl = post.abbrlink || post.slug;
+                            return (
+                                <article key={post.slug} class="group relative flex flex-col items-start">
+                                    <h2 class="text-xl font-semibold text-gray-900 group-hover:text-gray-600">
+                                        <a href={`/posts/${postUrl}.html`}>
+                                            <span class="absolute inset-0" />
+                                            {post.title}
+                                        </a>
+                                    </h2>
+                                    <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
+                                        <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
+                                            <span class="h-4 w-0.5 rounded-full bg-gray-200" />
+                                        </span>
+                                        {new Date(post.date).toLocaleDateString()}
+                                    </time>
+                                    <p class="relative z-10 mt-2 text-sm text-gray-600">{post.excerpt}</p>
+                                </article>
+                            );
+                        })}
+                    </div>
+                </main>
+            </Layout>
+        );
+        return fs.writeFile(path.join(categoriesDir, `${category}.html`), createHtml(categoryContent));
+    });
+
+    // 5. Build Tag Pages
+    const tags = new Map<string, typeof posts>();
+    posts.forEach(post => {
+        post.tags?.forEach(tag => {
+            if (!tags.has(tag)) {
+                tags.set(tag, []);
+            }
+            tags.get(tag)!.push(post);
+        });
+    });
+
+    const tagsDir = path.join(distDir, 'tags');
+    await fs.mkdir(tagsDir, { recursive: true });
+
+    const tagBuilds = Array.from(tags.entries()).map(([tag, tagPosts]) => {
+        const tagContent = (
+            <Layout title={`${t('tag', config.language)}: ${tag}`}>
+                <Header />
+                <main>
+                    <h1 class="text-4xl font-bold mb-8">{t('tag', config.language)}: {tag}</h1>
+                    <div class="space-y-10">
+                        {tagPosts.map((post) => {
+                            const postUrl = post.abbrlink || post.slug;
+                            return (
+                                <article key={post.slug} class="group relative flex flex-col items-start">
+                                    <h2 class="text-xl font-semibold text-gray-900 group-hover:text-gray-600">
+                                        <a href={`/posts/${postUrl}.html`}>
+                                            <span class="absolute inset-0" />
+                                            {post.title}
+                                        </a>
+                                    </h2>
+                                    <time class="relative z-10 order-first mb-3 flex items-center text-sm text-gray-400 pl-3.5" datetime={post.date}>
+                                        <span class="absolute inset-y-0 left-0 flex items-center" aria-hidden="true">
+                                            <span class="h-4 w-0.5 rounded-full bg-gray-200" />
+                                        </span>
+                                        {new Date(post.date).toLocaleDateString()}
+                                    </time>
+                                    <p class="relative z-10 mt-2 text-sm text-gray-600">{post.excerpt}</p>
+                                </article>
+                            );
+                        })}
+                    </div>
+                </main>
+            </Layout>
+        );
+        return fs.writeFile(path.join(tagsDir, `${tag}.html`), createHtml(tagContent));
     });
 
     // Wait for all tasks
-    await Promise.all([indexBuild, ...postBuilds, cssBuild]);
+    await Promise.all([indexBuild, ...postBuilds, ...categoryBuilds, ...tagBuilds, cssBuild]);
 
-    console.log(`Build complete! Generated ${posts.length + 1} pages.`);
+    console.log(`Build complete! Generated ${posts.length + 1 + categories.size + tags.size} pages.`);
 }
 
 build().catch(console.error);

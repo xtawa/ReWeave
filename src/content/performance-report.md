@@ -3,6 +3,8 @@ title: ReWeave Performance Report
 date: 2025-12-21
 excerpt: Benchmarking ReWeave's build performance with up to 500 posts.
 image: https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070
+category: Performance
+tags: [Benchmark, SSG, Performance]
 ---
 
 # ReWeave Performance Report
