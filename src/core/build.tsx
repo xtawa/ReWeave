@@ -372,7 +372,7 @@ async function build() {
                     <Header />
                     <div class="xl:relative">
                         {tocEnabled && headings.length > 0 && (tocPosition === 'left' || tocPosition === 'right') ? (
-                            <div class={`flex gap-8 ${tocPosition === 'left' ? 'flex-row' : 'flex-row-reverse'}`}>
+                            <div class={`lg:flex lg:gap-8 ${tocPosition === 'left' ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}>
                                 <aside class="hidden lg:block w-64 flex-shrink-0">
                                     {renderToc(headings, tocPosition, tocCollapsible)}
                                 </aside>
