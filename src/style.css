@@ -88,3 +88,48 @@ html {
 .animate-fade-in-up {
   animation: fadeInUp 0.5s ease-out forwards;
 }
+
+/* Mobile responsive fixes for prose content */
+.prose {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Code blocks - horizontal scroll on mobile */
+.prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose code {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose pre code {
+  word-break: normal;
+  overflow-wrap: normal;
+  white-space: pre;
+}
+
+/* Tables - horizontal scroll on mobile */
+.prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent images from overflowing */
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Long URLs and links */
+.prose a {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}

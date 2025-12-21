@@ -36,7 +36,7 @@ export function Layout({ title, description, image, children, contentWidth }: La
     const verticalMargin = isFullWidth ? '' : 'mt-8 sm:mt-16';
 
     return (
-        <html lang={config.language} class="h-full antialiased">
+        <html lang={config.language} class="h-full antialiased overflow-x-hidden">
             <head>
                 <meta charset="UTF-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -67,16 +67,16 @@ export function Layout({ title, description, image, children, contentWidth }: La
                     mermaid.initialize({ startOnLoad: true, theme: 'dark' });
                 `}} />
             </head>
-            <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100">
+            <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden">
                 <div class={`fixed inset-0 flex justify-center ${outerPadding}`}>
                     <div class={`flex w-full ${outerMaxWidth} ${containerPadding}`}>
                         <div class="w-full bg-white ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-300/20" />
                     </div>
                 </div>
-                <div class="relative flex w-full flex-col min-h-screen">
+                <div class="relative flex w-full flex-col min-h-screen overflow-x-hidden">
                     <div class={`flex-1 flex flex-col ${outerPadding} ${verticalMargin}`}>
                         <div class={`flex-1 flex flex-col mx-auto w-full ${outerMaxWidth} ${containerPadding}`}>
-                            <div class={`flex-1 flex flex-col relative ${contentPadding}`}>
+                            <div class={`flex-1 flex flex-col relative ${contentPadding} overflow-hidden`}>
                                 <div class={`mx-auto ${innerMaxWidth} flex-1 flex flex-col w-full`}>
                                     <div class="flex-1">
                                         {children}

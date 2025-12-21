@@ -1,48 +1,36 @@
-# 操作记录
+# Action Review
 
-## 2025-12-20 23:25 - 重制 Butterfly 主题页面
+## 2025-12-21
 
-### 完成的功能
-
-#### 页面模板化
-- ✅ 创建了 `src/themes/butterfly/templates` 目录
-- ✅ 实现了 `PostList` 模板：用于首页、分类详情页、标签详情页，支持自定义标题和副标题
-- ✅ 实现了 `Archive` 模板：用于归档页，带有时间轴和统计卡片
-- ✅ 实现了 `Post` 模板：用于文章详情页，带有全屏封面、目录和评论区
-
-#### 构建系统更新
-- ✅ 修改 `src/core/build.tsx`，支持动态加载主题模板
-- ✅ 更新了文章列表页生成逻辑，优先使用 `PostList` 模板
-- ✅ 更新了归档页生成逻辑，优先使用 `Archive` 模板
-- ✅ 更新了分类和标签详情页生成逻辑，复用 `PostList` 模板
-- ✅ 更新了文章详情页生成逻辑，优先使用 `Post` 模板，并支持 TOC 生成
-
-### 技术实现
-
-**模板文件:**
-```
-src/themes/butterfly/templates/
-├── Archive.tsx   # 归档页模板
-├── Post.tsx      # 文章详情页模板
-└── PostList.tsx  # 文章列表页模板
-```
-
-**关键特性:**
-- **完全解耦**: Butterfly 主题现在拥有独立的页面结构，不再依赖 Weave 主题的硬编码逻辑
-- **动态加载**: 构建脚本根据当前主题动态导入模板，保持了系统的灵活性
-- **复用性**: `PostList` 模板被多个页面复用，减少了代码重复
-
-### 页面展示
-
-- **首页**: 卡片式文章列表，带有侧边栏个人信息
-- **文章页**: 全屏背景图，沉浸式阅读体验，集成目录和评论
-- **归档页**: 清晰的时间轴布局
-- **分类/标签页**: 统一的列表展示风格
+### Mobile Layout Inspection & Fix (Round 2)
+- **Objective**: Investigate and fix abnormal stretching issues on mobile article pages.
+- **Problem Found**: 
+    - Configuration Guide article contains code blocks and tables that overflow on mobile devices (375x812 viewport)
+    - Long code lines and wide tables were stretching the entire page layout
+    - Root cause: Layout component missing `overflow-x-hidden` on html/body/container elements
+    
+- **Solution Implemented (Round 1 - CSS)**:
+    - Modified `src/style.css` to add mobile-responsive styles for `.prose` content
+    - Added `overflow-x: auto` to code blocks (`pre`) and tables for horizontal scrolling
+    - Added `word-break` and `overflow-wrap` properties for better text wrapping
+    
+- **Solution Implemented (Round 2 - Layout Component)**:
+    - Modified `src/themes/weave/layouts/Layout.tsx`
+    - Added `overflow-x-hidden` to `<html>` tag
+    - Added `overflow-x-hidden` to `<body>` tag
+    - Added `overflow-x-hidden` to main content wrapper div
+    - Added `overflow-hidden` to inner content container
+    
+- **Verification**:
+    - Tested on mobile viewport (375x812)
+    - Horizontal scroll test returned 0 pixels - no page-level overflow
+    - Code blocks now contained within viewport with internal scrollbars
+    - Tables properly contained
+    - Page layout no longer stretches horizontally
+    
+- **Status**: ✅ Fixed and verified
 
 ### Next Step
+- Test other articles to confirm fix works across all content
+- Consider testing on actual mobile devices for additional verification
 
-- ✅ 已创建 PostList, Archive, Post, CategoryList, TagList, Page 模板
-- ✅ 已重构配置系统：核心配置 (`src/core/reweave.config.ts`) 与主题配置 (`src/themes/*/config.ts`) 分离
-- ✅ 已更新所有组件引用以使用新的配置结构
-- ✅ 已验证构建流程正常
-- 建议继续优化移动端适配和交互细节
