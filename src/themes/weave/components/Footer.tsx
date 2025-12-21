@@ -23,7 +23,7 @@ export function Footer() {
                 <div class="flex items-center gap-6">
                     <div class="flex gap-6 text-sm font-medium text-gray-800 dark:text-zinc-200">
                         <a href="/" class="transition hover:text-teal-500">{t('home', config.language)}</a>
-                        <a href="/stats.html" class="transition hover:text-teal-500">{t('stats', config.language)}</a>
+                        <a href="/stats/" class="transition hover:text-teal-500">{t('stats', config.language)}</a>
                         {config.social?.twitter && (
                             <a href={config.social.twitter} class="transition hover:text-teal-500">Twitter</a>
                         )}

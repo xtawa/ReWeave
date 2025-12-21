@@ -2,6 +2,7 @@
 import { h, ComponentChildren } from 'preact';
 import { config } from '../config';
 import { Footer } from '../components/Footer';
+import { MobileToc } from '../components/MobileToc';
 
 interface LayoutProps {
     title?: string;
@@ -87,7 +88,8 @@ export function Layout({ title, description, image, children, contentWidth }: La
                         </div>
                     </div>
                 </div>
+                <MobileToc />
             </body>
-        </html>
+        </html >
     );
 }

@@ -342,6 +342,8 @@ async function build() {
         );
     };
 
+
+
     const postBuilds = posts.map((post, index) => {
         const postUrl = safeSlug(post.abbrlink || post.slug);
 
@@ -370,6 +372,9 @@ async function build() {
             postContent = (
                 <Layout title={post.title} description={post.excerpt} image={post.image}>
                     <Header />
+                    {/* Mobile TOC */}
+
+
                     <div class="xl:relative">
                         {tocEnabled && headings.length > 0 && (tocPosition === 'left' || tocPosition === 'right') ? (
                             <div class={`lg:flex lg:gap-8 ${tocPosition === 'left' ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}>
