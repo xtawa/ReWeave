@@ -24,6 +24,18 @@ export interface Post {
     pin?: boolean;
 }
 
+export async function renderMarkdown(content: string): Promise<string> {
+    const processedContent = await unified()
+        .use(remarkParse)
+        .use(remarkGfm)
+        .use(remarkRehype)
+        .use(rehypeSlug)
+        .use(rehypeHighlight)
+        .use(rehypeStringify)
+        .process(content);
+    return processedContent.toString();
+}
+
 export async function getPosts(contentDir: string): Promise<Post[]> {
     const files = await fs.readdir(contentDir);
 
@@ -35,14 +47,7 @@ export async function getPosts(contentDir: string): Promise<Post[]> {
                 const fileContent = await fs.readFile(filePath, 'utf-8');
                 const { data, content } = matter(fileContent);
 
-                const processedContent = await unified()
-                    .use(remarkParse)
-                    .use(remarkGfm)
-                    .use(remarkRehype)
-                    .use(rehypeSlug)
-                    .use(rehypeHighlight)
-                    .use(rehypeStringify)
-                    .process(content);
+                const processedContent = await renderMarkdown(content);
 
                 return {
                     slug: file.replace('.md', ''),

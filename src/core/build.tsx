@@ -8,6 +8,7 @@ import { h, Fragment } from 'preact';
 import { getPosts } from './markdown';
 import { reweaveConfig as config } from './reweave.config';
 import { t } from './i18n';
+import matter from 'gray-matter';
 
 const execAsync = promisify(exec);
 
@@ -59,6 +60,110 @@ async function writeHtml(filePath: string, content: string) {
     }
 }
 
+interface DocItem {
+    title: string;
+    path: string;
+    url: string;
+    children?: DocItem[];
+    content?: string;
+    frontmatter?: any;
+    isIndex?: boolean;
+}
+
+async function getDocs(dir: string, baseDir: string = ''): Promise<DocItem[]> {
+    let entries;
+    try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch (e) {
+        return [];
+    }
+
+    const items: DocItem[] = [];
+
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        const relativePath = path.join(baseDir, entry.name);
+
+        if (entry.isDirectory()) {
+            const indexMdPath = path.join(fullPath, 'index.md');
+            let title = entry.name;
+            let content = '';
+            let frontmatter: any = {};
+            let hasIndex = false;
+
+            try {
+                const fileContent = await fs.readFile(indexMdPath, 'utf-8');
+                const parsed = matter(fileContent);
+                content = parsed.content;
+                frontmatter = parsed.data;
+                title = parsed.data.title || title;
+                hasIndex = true;
+            } catch (e) {
+                // No index.md
+            }
+
+            const children = await getDocs(fullPath, relativePath);
+
+            if (hasIndex || children.length > 0) {
+                items.push({
+                    title,
+                    path: hasIndex ? path.join(relativePath, 'index.md') : relativePath,
+                    url: `/${relativePath.replace(/\\/g, '/')}/`,
+                    children,
+                    content: hasIndex ? content : '',
+                    frontmatter,
+                    isIndex: true
+                });
+            }
+        } else if (entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'index.md') {
+            const fileContent = await fs.readFile(fullPath, 'utf-8');
+            const parsed = matter(fileContent);
+            const name = path.parse(entry.name).name;
+
+            items.push({
+                title: parsed.data.title || name,
+                path: relativePath,
+                url: `/${baseDir.replace(/\\/g, '/')}/${name}/`,
+                content: parsed.content,
+                frontmatter: parsed.data,
+                isIndex: false
+            });
+        }
+    }
+
+    // Sort items
+    items.sort((a, b) => {
+        const orderA = a.frontmatter?.order ?? 999;
+        const orderB = b.frontmatter?.order ?? 999;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.title.localeCompare(b.title);
+    });
+
+    return items;
+}
+
+function generateSidebar(docs: DocItem[], currentUrl: string): any[] {
+    return docs.map(doc => ({
+        title: doc.title,
+        url: doc.content ? doc.url : undefined,
+        children: doc.children ? generateSidebar(doc.children, currentUrl) : undefined,
+        isActive: currentUrl === doc.url || (doc.children && doc.children.some(c => currentUrl.startsWith(c.url)))
+    }));
+}
+
+function flattenDocs(docs: DocItem[]): DocItem[] {
+    let flat: DocItem[] = [];
+    for (const doc of docs) {
+        if (doc.content) {
+            flat.push(doc);
+        }
+        if (doc.children) {
+            flat = flat.concat(flattenDocs(doc.children));
+        }
+    }
+    return flat;
+}
+
 async function build() {
     const rootDir = process.cwd();
     const contentDir = path.join(rootDir, 'src', 'content');
@@ -67,6 +172,116 @@ async function build() {
     // Get Git version
     const version = await getVersion();
     (config as any).version = version;
+
+    // GitBook Mode
+    if (config.themeName === 'gitbook') {
+        console.log("Building in GitBook mode...");
+        const docsDir = path.join(rootDir, 'src', 'docs');
+        const docs = await getDocs(docsDir);
+        const flatDocs = flattenDocs(docs);
+
+        // Import Layout
+        const { Layout } = await import(`../themes/${config.themeName}/layouts/Layout`);
+        const { renderMarkdown } = await import('./markdown');
+
+        // Recursive render function
+        const renderDocs = async (items: DocItem[]) => {
+            for (const item of items) {
+                if (item.content) {
+                    const sidebarItems = generateSidebar(docs, item.url);
+                    const htmlContent = await renderMarkdown(item.content);
+
+                    // Find prev/next
+                    const currentIndex = flatDocs.findIndex(d => d.url === item.url);
+                    const prev = currentIndex > 0 ? flatDocs[currentIndex - 1] : undefined;
+                    const next = currentIndex < flatDocs.length - 1 ? flatDocs[currentIndex + 1] : undefined;
+
+                    const pageContent = (
+                        <Layout
+                            title={item.title}
+                            sidebarItems={sidebarItems}
+                            siteTitle={config.title}
+                            updatedDate={item.frontmatter?.updatedDate}
+                            prev={prev ? { title: prev.title, url: prev.url } : undefined}
+                            next={next ? { title: next.title, url: next.url } : undefined}
+                        >
+                            <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                        </Layout>
+                    );
+
+                    const outputHtml = createHtml(pageContent);
+                    // Remove leading slash for writeHtml
+                    const writePath = item.url.startsWith('/') ? item.url.substring(1) : item.url;
+                    await writeHtml(path.join(distDir, writePath.endsWith('/') ? writePath + 'index.html' : writePath + '.html'), outputHtml);
+                }
+
+                if (item.children) {
+                    await renderDocs(item.children);
+                }
+            }
+        };
+
+        // Ensure dist exists
+        await fs.mkdir(distDir, { recursive: true });
+
+        // Copy public assets
+        const publicDir = path.join(process.cwd(), 'public');
+        try {
+            const publicExists = await fs.access(publicDir).then(() => true).catch(() => false);
+            if (publicExists) {
+                const files = await fs.readdir(publicDir);
+                await Promise.all(files.map(async (file) => {
+                    const srcPath = path.join(publicDir, file);
+                    const destPath = path.join(distDir, file);
+                    const stat = await fs.stat(srcPath);
+                    if (stat.isFile()) {
+                        await fs.copyFile(srcPath, destPath);
+                    }
+                }));
+            }
+        } catch (e) { }
+
+        // Build CSS
+        console.log("Building CSS...");
+        try {
+            const postcss = (await import('postcss')).default;
+            const tailwindcss = (await import('tailwindcss')).default;
+            const autoprefixer = (await import('autoprefixer')).default;
+            const css = await fs.readFile(path.join(rootDir, 'src', 'style.css'), 'utf-8');
+            const result = await postcss([
+                tailwindcss({ config: path.join(rootDir, 'tailwind.config.js') }),
+                autoprefixer
+            ]).process(css, { from: path.join(rootDir, 'src', 'style.css'), to: path.join(distDir, 'style.css') });
+            await fs.writeFile(path.join(distDir, 'style.css'), result.css);
+        } catch (e) {
+            console.error("CSS Build Error:", e);
+        }
+
+        // Generate Home Page
+        const { Home } = await import(`../themes/${config.themeName}/layouts/Home`);
+        const homeContent = (
+            <Home
+                siteTitle={config.title}
+                tagline="下一代静态站点生成器"
+                description="基于 Preact 和 TypeScript 构建，支持多主题、Markdown 渲染、代码高亮等功能。"
+                actions={[
+                    { text: '开始阅读', link: '/introduction/', primary: true },
+                    { text: '查看源码', link: 'https://github.com/yourusername/reweave' }
+                ]}
+                features={[
+                    { icon: '⚡', title: '极速构建', description: '基于 esbuild 和 Preact，毫秒级构建速度。' },
+                    { icon: '🎨', title: '多主题支持', description: '灵活的主题系统，轻松切换博客和文档模式。' },
+                    { icon: '📝', title: 'Markdown 原生', description: '支持 GFM、代码高亮、数学公式等扩展语法。' }
+                ]}
+            />
+        );
+        const homeHtml = createHtml(homeContent);
+        await writeHtml(path.join(distDir, 'index.html'), homeHtml);
+
+        await renderDocs(docs);
+        console.log("GitBook build complete.");
+        return;
+    }
 
     // Dynamic Theme Import
     const themePath = `../themes/${config.themeName}`;

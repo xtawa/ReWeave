@@ -37,6 +37,63 @@
     
 - **Status**: ✅ Fixed and verified across all article types
 
+### GitBook Theme Creation
+- **Objective**: Create a GitBook-style theme for documentation, reading from `src/docs`.
+- **Implementation**:
+    - Created `src/docs` directory with sample content.
+    - Created `src/themes/gitbook` with `Layout` and `Sidebar` components.
+    - Modified `src/core/reweave.config.ts` to switch to `gitbook` theme.
+    - Modified `src/core/build.tsx` to support `gitbook` mode:
+        - Added `getDocs` to recursively read `src/docs` and build tree structure.
+        - Added `buildGitBook` logic to generate pages and sidebar.
+        - Integrated `renderMarkdown` from `markdown.ts` (modified to export it).
+    - Implemented responsive sidebar (collapsible on mobile).
+- **Verification**:
+    - Verified desktop view: Sidebar displays correct hierarchy.
+    - Verified mobile view: Sidebar is hidden by default, toggleable via hamburger menu.
+    - Verified content rendering.
+- **Status**: ✅ Completed
+
+### GitBook Navigation & Metadata
+- **Objective**: Add `updatedDate` display and Previous/Next navigation links to GitBook theme.
+- **Implementation**:
+    - Modified `src/core/build.tsx`:
+        - Updated `getDocs` to sort items based on `frontmatter.order` (defaulting to title sort).
+        - Added `flattenDocs` helper to create a linear list of pages for navigation.
+        - Calculated `prev` and `next` pages in `renderDocs` and passed them to Layout.
+    - Modified `src/themes/gitbook/layouts/Layout.tsx`:
+        - Added `updatedDate`, `prev`, `next` to props.
+        - Rendered "Last Updated" and navigation links at the bottom of the content area.
+    - Updated sample docs with `order` and `updatedDate` for verification.
+- **Verification**:
+    - Verified correct navigation order: Introduction -> Quick Start -> Advanced -> Configuration.
+    - Verified "Last Updated" display.
+- **Status**: ✅ Completed
+
+### Code Highlighting & Copy Feature
+- **Objective**: Implement code syntax highlighting and one-click copy functionality for GitBook theme.
+- **Implementation**:
+    - Modified `src/themes/gitbook/layouts/Layout.tsx`:
+        - Switched `highlight.js` theme from `github.min.css` to `atom-one-dark.min.css` for better contrast in dark mode.
+        - Injected client-side script to automatically append a "Copy" button to all `<pre>` blocks.
+        - Implemented clipboard API integration with visual feedback (icon change) on click.
+- **Verification**:
+    - Verified code block styling (dark background).
+    - Verified copy button presence and visibility on hover.
+- **Status**: ✅ Completed
+
+### Fix Code Highlighting & Copy Icon
+- **Objective**: Resolve code highlighting issues and update copy button icon.
+- **Implementation**:
+    - Modified `src/themes/gitbook/layouts/Layout.tsx`:
+        - Added custom CSS (`<style>`) to override Tailwind Typography's default styling for `<pre>` and `<code>` blocks, ensuring `atom-one-dark` styles take precedence.
+        - Updated the copy button SVG icon to a clearer "clipboard" design.
+        - Adjusted button padding for better visual balance.
+- **Verification**:
+    - Verified code block background is now dark (`#282c34`).
+    - Verified copy button icon is correct and visible.
+- **Status**: ✅ Completed
+
 ### Next Step
 - Test other articles to confirm fix works across all content
 - Consider testing on actual mobile devices for additional verification
