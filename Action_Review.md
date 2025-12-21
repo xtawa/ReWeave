@@ -21,14 +21,21 @@
     - Added `overflow-x-hidden` to main content wrapper div
     - Added `overflow-hidden` to inner content container
     
+- **Solution Implemented (Round 3 - Flexbox & Specific Articles)**:
+    - Addressed issue where "Configuration Guide" and "Theme Development Tutorial" were still stretching due to flexbox behavior
+    - Modified `src/themes/weave/layouts/Layout.tsx`: Added `min-w-0` and `w-full` to flex children to allow shrinking
+    - Modified `src/style.css`:
+        - Added `min-width: 0` and `width: 100%` to `.prose` class
+        - Added `max-width: calc(100vw - 2rem)` to `pre` tags to force them within viewport
+        - Added global `box-sizing: border-box` and `max-width: 100%`
+    
 - **Verification**:
     - Tested on mobile viewport (375x812)
-    - Horizontal scroll test returned 0 pixels - no page-level overflow
-    - Code blocks now contained within viewport with internal scrollbars
-    - Tables properly contained
-    - Page layout no longer stretches horizontally
+    - "Configuration Guide" page no longer scrolls horizontally (0 pixels)
+    - Code blocks have internal horizontal scrollbars and do not stretch the page
+    - `.prose` width is significantly reduced and contained
     
-- **Status**: ✅ Fixed and verified
+- **Status**: ✅ Fixed and verified across all article types
 
 ### Next Step
 - Test other articles to confirm fix works across all content

@@ -32,7 +32,7 @@ export function Layout({ title, description, image, children, contentWidth }: La
     const isFullWidth = widthConfig === 'full';
     const outerPadding = isFullWidth ? '' : 'sm:px-8';
     const containerPadding = isFullWidth ? '' : 'lg:px-8';
-    const contentPadding = isFullWidth ? '' : 'px-4 sm:px-8 lg:px-12';
+    const contentPadding = isFullWidth ? '' : 'px-6 sm:px-8 lg:px-12';
     const verticalMargin = isFullWidth ? '' : 'mt-8 sm:mt-16';
 
     return (
@@ -77,8 +77,8 @@ export function Layout({ title, description, image, children, contentWidth }: La
                     <div class={`flex-1 flex flex-col ${outerPadding} ${verticalMargin}`}>
                         <div class={`flex-1 flex flex-col mx-auto w-full ${outerMaxWidth} ${containerPadding}`}>
                             <div class={`flex-1 flex flex-col relative ${contentPadding} overflow-hidden`}>
-                                <div class={`mx-auto ${innerMaxWidth} flex-1 flex flex-col w-full`}>
-                                    <div class="flex-1">
+                                <div class={`mx-auto ${innerMaxWidth} flex-1 flex flex-col w-full min-w-0`}>
+                                    <div class="flex-1 min-w-0 w-full">
                                         {children}
                                     </div>
                                     <Footer />
