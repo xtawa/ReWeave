@@ -21,6 +21,7 @@ export function Layout({ title, sidebarItems, children, siteTitle, updatedDate, 
                 <title>{title}</title>
                 <link rel="stylesheet" href="/style.css" />
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous" />
                 <style>{`
                     /* Override Tailwind Typography for code blocks to fix highlighting */
                     .prose pre {

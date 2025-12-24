@@ -4,9 +4,11 @@ import matter from 'gray-matter';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import remarkRehype from 'remark-rehype';
 import rehypeSlug from 'rehype-slug';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeKatex from 'rehype-katex';
 import rehypeStringify from 'rehype-stringify';
 
 export interface Post {
@@ -24,15 +26,18 @@ export interface Post {
     pin?: boolean;
 }
 
+const processor = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkMath)
+    .use(remarkRehype)
+    .use(rehypeKatex)
+    .use(rehypeSlug)
+    .use(rehypeHighlight)
+    .use(rehypeStringify);
+
 export async function renderMarkdown(content: string): Promise<string> {
-    const processedContent = await unified()
-        .use(remarkParse)
-        .use(remarkGfm)
-        .use(remarkRehype)
-        .use(rehypeSlug)
-        .use(rehypeHighlight)
-        .use(rehypeStringify)
-        .process(content);
+    const processedContent = await processor.process(content);
     return processedContent.toString();
 }
 

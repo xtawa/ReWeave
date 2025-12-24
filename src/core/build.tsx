@@ -412,7 +412,7 @@ async function build() {
             <Layout contentWidth="normal">
                 <Header />
                 <main>
-                    <Hero />
+                    <Hero posts={posts.slice(0, 3)} />
                 </main>
             </Layout>
         );

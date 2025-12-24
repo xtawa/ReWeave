@@ -98,3 +98,46 @@
 - Test other articles to confirm fix works across all content
 - Consider testing on actual mobile devices for additional verification
 
+
+## 2025-12-24
+
+### Created Landing Theme
+- Created `src/themes/landing` directory.
+- Created `src/themes/landing/config.ts` with landing page configuration.
+- Created `src/themes/landing/layouts/Layout.tsx` with landing page layout.
+- Created `src/themes/landing/components/Header.tsx`, `Hero.tsx`, `Pagination.tsx`, `Comments.tsx`.
+
+### Added LaTeX Support
+- Installed `remark-math` and `rehype-katex`.
+- Updated `src/core/markdown.ts` to use `remark-math` and `rehype-katex`.
+- Added KaTeX CSS link to:
+    - `src/themes/weave/layouts/Layout.tsx`
+    - `src/themes/butterfly/layouts/Layout.tsx`
+    - `src/themes/gitbook/layouts/Layout.tsx`
+    - `src/themes/landing/layouts/Layout.tsx`
+
+## Next Step
+- Verify the landing theme by setting `themeName: 'landing'` in `src/core/reweave.config.ts` and running the dev server.
+
+### Enhanced Landing Theme
+- Modified `src/core/build.tsx` to pass latest 3 posts to `Hero` component.
+- Updated `src/themes/landing/components/Hero.tsx` to display "Latest News" section.
+- Created `src/themes/landing/templates/Post.tsx` for rich text article display.
+- Verified "Latest News" on homepage and article page layout.
+
+### Configuration & Assets
+- Created `src/themes/gitbook/config.ts`.
+- Updated `src/themes/landing/config.ts` with hero image path.
+- Generated and added `landing_hero_bg.png` to `public` directory.
+- Updated `src/themes/landing/components/Hero.tsx` to render background image.
+
+### Performance Optimization
+- Created `scripts/generate-posts.ts` to generate 1000 complex benchmark posts.
+- Optimized `src/core/markdown.ts` to reuse `unified` processor instance.
+- Achieved build time of ~8 seconds for 1000 posts (reduced from ~12.5s).
+- Fixed Landing theme scrolling issue by changing `h-full` to `min-h-full` in Layout.
+- Fixed Landing theme title clipping by adding padding.
+
+### Cleanup
+- Removed 1000 benchmark posts (`src/content/perf-*.md`).
+- Removed `scripts/generate-posts.ts` and `scripts` directory.
