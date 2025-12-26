@@ -9,6 +9,8 @@ import { getPosts } from './markdown';
 import { reweaveConfig as config } from '../config/reweave.config';
 import { t } from './i18n';
 import matter from 'gray-matter';
+import { DefaultLayout } from './defaults/DefaultLayout';
+import { NotFound } from './defaults/NotFound';
 
 const execAsync = promisify(exec);
 
@@ -50,7 +52,7 @@ async function writeHtml(filePath: string, content: string) {
     // But 'dist/index.html' stays 'dist/index.html'
 
     const parsed = path.parse(filePath);
-    if (parsed.name === 'index') {
+    if (parsed.name === 'index' || parsed.name === '404') {
         await fs.mkdir(parsed.dir, { recursive: true });
         await fs.writeFile(filePath, content);
     } else {
@@ -284,19 +286,44 @@ async function build() {
     }
 
     // Dynamic Theme Import
-    const themePath = `../themes/${config.themeName}`;
-    const { Layout } = await import(`${themePath}/layouts/Layout`);
-    const { Header } = await import(`${themePath}/components/Header`);
-    const { Hero } = await import(`${themePath}/components/Hero`);
-    const { Pagination } = await import(`${themePath}/components/Pagination`);
-    const { Comments } = await import(`${themePath}/components/Comments`);
-    // Try to import templates if they exist
-    const { PostList } = await import(`${themePath}/templates/PostList`).catch(() => ({ PostList: null }));
-    const { Archive } = await import(`${themePath}/templates/Archive`).catch(() => ({ Archive: null }));
-    const { Post } = await import(`${themePath}/templates/Post`).catch(() => ({ Post: null }));
-    const { CategoryList } = await import(`${themePath}/templates/CategoryList`).catch(() => ({ CategoryList: null }));
-    const { TagList } = await import(`${themePath}/templates/TagList`).catch(() => ({ TagList: null }));
-    const { Page } = await import(`${themePath}/templates/Page`).catch(() => ({ Page: null }));
+    // Dynamic Theme Import
+    let Layout: any, Header: any, Hero: any, Pagination: any, Comments: any, PostList: any, Archive: any, Post: any, CategoryList: any, TagList: any, Page: any;
+
+    try {
+        const themePath = `../themes/${config.themeName}`;
+        // We use this weird syntax to make sure we can catch the error if the module doesn't exist
+        // and also to assign to the variables declared above
+        const LayoutModule = await import(`${themePath}/layouts/Layout`);
+        Layout = LayoutModule.Layout;
+
+        const HeaderModule = await import(`${themePath}/components/Header`);
+        Header = HeaderModule.Header;
+
+        const HeroModule = await import(`${themePath}/components/Hero`);
+        Hero = HeroModule.Hero;
+
+        const PaginationModule = await import(`${themePath}/components/Pagination`);
+        Pagination = PaginationModule.Pagination;
+
+        const CommentsModule = await import(`${themePath}/components/Comments`);
+        Comments = CommentsModule.Comments;
+
+        // Templates
+        PostList = (await import(`${themePath}/templates/PostList`).catch(() => ({ PostList: null }))).PostList;
+        Archive = (await import(`${themePath}/templates/Archive`).catch(() => ({ Archive: null }))).Archive;
+        Post = (await import(`${themePath}/templates/Post`).catch(() => ({ Post: null }))).Post;
+        CategoryList = (await import(`${themePath}/templates/CategoryList`).catch(() => ({ CategoryList: null }))).CategoryList;
+        TagList = (await import(`${themePath}/templates/TagList`).catch(() => ({ TagList: null }))).TagList;
+        Page = (await import(`${themePath}/templates/Page`).catch(() => ({ Page: null }))).Page;
+
+    } catch (e) {
+        console.warn(`Theme '${config.themeName}' not found or failed to load. Using default layout. Error:`, e);
+        Layout = DefaultLayout;
+        Header = () => null;
+        Hero = () => null;
+        Pagination = () => null;
+        Comments = () => null;
+    }
 
     // Ensure dist exists
     await fs.mkdir(distDir, { recursive: true });
@@ -1144,6 +1171,18 @@ async function build() {
     allBuilds.push(sitemapBuild);
     allBuilds.push(articlesBuild);
     allBuilds.push(...paginationBuilds);
+    // 13. Generate 404 Page
+    const notFoundContent = (
+        <Layout title="404 Not Found">
+            <Header />
+            <main>
+                <NotFound />
+            </main>
+        </Layout>
+    );
+    const notFoundBuild = writeHtml(path.join(distDir, '404.html'), createHtml(notFoundContent));
+    allBuilds.push(notFoundBuild);
+
     await Promise.all(allBuilds);
 
     const pageCount = posts.length + 1 + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0) + 1 + 2 + 1; // +2 for RSS/Sitemap, +1 for Articles

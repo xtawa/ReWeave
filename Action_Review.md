@@ -161,5 +161,20 @@
         - All theme components and layouts in `src/themes` that imported config.
 - **Status**: ✅ Completed
 
+### Default Pages & Robust Theme Loading
+- **Objective**: Create a default 404 page and a fallback mechanism for missing/invalid themes.
+- **Implementation**:
+    - Created `src/core/defaults` directory.
+    - Created `src/core/defaults/NotFound.tsx`: A generic 404 page component.
+    - Created `src/core/defaults/DefaultLayout.tsx`: A minimal fallback layout.
+    - Modified `src/core/build.tsx`:
+        - Implemented `try-catch` block around dynamic theme imports.
+        - If theme import fails, falls back to `DefaultLayout` and no-op components.
+        - Added logic to generate `dist/404.html` using the `NotFound` component.
+        - Updated `writeHtml` helper to allow writing `404.html` directly (instead of `404/index.html`).
+- **Verification**:
+    - Verified `dist/404.html` is generated correctly.
+- **Status**: ✅ Completed
+
 ### Next Step
-- Verify the build process to ensure all paths are correct.
+- Verify the fallback behavior manually if needed.
