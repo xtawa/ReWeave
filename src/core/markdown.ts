@@ -1,15 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
-import matter from 'gray-matter';
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import remarkRehype from 'remark-rehype';
-import rehypeSlug from 'rehype-slug';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeKatex from 'rehype-katex';
-import rehypeStringify from 'rehype-stringify';
+import { Worker } from 'worker_threads';
+import os from 'os';
 
 export interface Post {
     slug: string;
@@ -24,56 +16,96 @@ export interface Post {
     hide?: boolean;
     abbrlink?: string;
     pin?: boolean;
+    headings?: Array<{ level: number; text: string; id: string }>;
 }
 
-const processor = unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(remarkMath)
-    .use(remarkRehype)
-    .use(rehypeKatex)
-    .use(rehypeSlug)
-    .use(rehypeHighlight)
-    .use(rehypeStringify);
-
-export async function renderMarkdown(content: string): Promise<string> {
-    const processedContent = await processor.process(content);
-    return processedContent.toString();
-}
-
+// Static distribution approach (easiest to implement correctly quickly)
 export async function getPosts(contentDir: string): Promise<Post[]> {
-    const files = await fs.readdir(contentDir);
+    const files = (await fs.readdir(contentDir)).filter(file => file.endsWith('.md'));
+    const numWorkers = Math.max(1, os.cpus().length);
+    const workers: Worker[] = [];
 
-    const posts = await Promise.all(
-        files
-            .filter(file => file.endsWith('.md'))
-            .map(async (file) => {
-                const filePath = path.join(contentDir, file);
-                const fileContent = await fs.readFile(filePath, 'utf-8');
-                const { data, content } = matter(fileContent);
+    // Create workers
+    const workerPath = path.join(process.cwd(), 'dist', 'worker.js');
+    for (let i = 0; i < numWorkers; i++) {
+        workers.push(new Worker(workerPath));
+    }
 
-                const processedContent = await renderMarkdown(content);
+    // Distribute files
+    const chunks: string[][] = Array.from({ length: numWorkers }, () => []);
+    files.forEach((file, i) => chunks[i % numWorkers].push(file));
 
-                return {
-                    slug: file.replace('.md', ''),
-                    title: data.title || 'Untitled',
-                    date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
-                    content: processedContent.toString(),
-                    excerpt: data.excerpt || '',
-                    image: data.image,
-                    category: data.category,
-                    tags: Array.isArray(data.tags) ? data.tags : (data.tags ? [data.tags] : []),
-                    draft: data.draft === true,
-                    hide: data.hide === true,
-                    abbrlink: data.abbrlink,
-                    pin: data.pin === true,
-                };
-            })
-    );
+    // Process
+    const promises = workers.map((worker, i) => {
+        return new Promise<Post[]>((resolve, reject) => {
+            const chunk = chunks[i];
+            const results: Post[] = [];
+            let completed = 0;
 
-    return posts.sort((a, b) => {
+            if (chunk.length === 0) {
+                resolve([]);
+                return;
+            }
+
+            worker.on('message', (msg) => {
+                if (msg.status === 'success') {
+                    results.push(msg.result);
+                } else {
+                    console.error(`Error processing ${msg.slug}:`, msg.error);
+                }
+                completed++;
+                if (completed === chunk.length) {
+                    resolve(results);
+                }
+            });
+
+            worker.on('error', (err) => reject(err));
+
+            // Send all tasks
+            chunk.forEach(file => {
+                worker.postMessage({ filePath: path.join(contentDir, file), slug: file.replace('.md', '') });
+            });
+        });
+    });
+
+    const results = await Promise.all(promises);
+
+    // Terminate workers
+    workers.forEach(w => w.terminate());
+
+    const flatPosts = results.flat();
+
+    return flatPosts.sort((a, b) => {
         if (a.pin && !b.pin) return -1;
         if (!a.pin && b.pin) return 1;
         return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
+}
+
+// Keep renderMarkdown for single usage if needed (e.g. dev mode?)
+// But for build, we use getPosts.
+export async function renderMarkdown(content: string): Promise<string> {
+    // Fallback or dev usage
+    const { unified } = await import('unified');
+    const remarkParse = (await import('remark-parse')).default;
+    const remarkGfm = (await import('remark-gfm')).default;
+    const remarkMath = (await import('remark-math')).default;
+    const remarkRehype = (await import('remark-rehype')).default;
+    const rehypeSlug = (await import('rehype-slug')).default;
+    const rehypeHighlight = (await import('rehype-highlight')).default;
+    const rehypeKatex = (await import('rehype-katex')).default;
+    const rehypeStringify = (await import('rehype-stringify')).default;
+
+    const processor = unified()
+        .use(remarkParse)
+        .use(remarkGfm)
+        .use(remarkMath)
+        .use(remarkRehype)
+        .use(rehypeKatex)
+        .use(rehypeSlug)
+        .use(rehypeHighlight)
+        .use(rehypeStringify);
+
+    const processed = await processor.process(content);
+    return processed.toString();
 }

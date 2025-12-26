@@ -45,6 +45,8 @@ function createHtml(content: any) {
     return '<!DOCTYPE html>' + render(content);
 }
 
+import { ensureDir } from './utils/fs-cache';
+
 // Helper to write file to folder/index.html structure
 async function writeHtml(filePath: string, content: string) {
     // filePath is like 'dist/posts/slug.html' or 'dist/index.html'
@@ -53,11 +55,11 @@ async function writeHtml(filePath: string, content: string) {
 
     const parsed = path.parse(filePath);
     if (parsed.name === 'index' || parsed.name === '404') {
-        await fs.mkdir(parsed.dir, { recursive: true });
+        await ensureDir(parsed.dir);
         await fs.writeFile(filePath, content);
     } else {
         const dir = path.join(parsed.dir, parsed.name);
-        await fs.mkdir(dir, { recursive: true });
+        await ensureDir(dir);
         await fs.writeFile(path.join(dir, 'index.html'), content);
     }
 }
@@ -170,6 +172,29 @@ async function build() {
     const rootDir = process.cwd();
     const contentDir = path.join(rootDir, 'src', 'content');
     const distDir = path.join(rootDir, 'dist');
+
+    // Ensure dist exists
+    await fs.mkdir(distDir, { recursive: true });
+
+    // Bundle Worker
+    console.log("Bundling worker...");
+    try {
+        const esbuild = await import('esbuild');
+        await esbuild.build({
+            entryPoints: [path.join(rootDir, 'src', 'core', 'workers', 'markdown.worker.ts')],
+            bundle: true,
+            outfile: path.join(distDir, 'worker.js'),
+            platform: 'node',
+            format: 'esm',
+            target: 'node18',
+            external: ['worker_threads', 'fs', 'path', 'util', 'os', 'gray-matter', 'unified', 'remark-parse', 'remark-gfm', 'remark-math', 'remark-rehype', 'rehype-katex', 'rehype-slug', 'rehype-highlight', 'rehype-stringify']
+        });
+        console.log("Worker bundled.");
+    } catch (e) {
+        console.error("Worker bundle failed:", e);
+        // Fallback or exit?
+        // If worker bundle fails, getPosts will fail if it relies on it.
+    }
 
     // Get Git version
     const version = await getVersion();
@@ -349,10 +374,14 @@ async function build() {
     }
 
     // 1. Get Posts (Parallel)
+    console.time('getPosts');
     const allPosts = await getPosts(contentDir);
+    console.timeEnd('getPosts');
+    console.log(`Found ${allPosts.length} posts.`);
 
     // Filter out draft and hidden posts
     const posts = allPosts.filter(post => !post.draft && !post.hide);
+    console.log(`Processing ${posts.length} active posts.`);
 
     // Start CSS Build in background
     console.log("Building CSS...");
@@ -462,6 +491,7 @@ async function build() {
     }
 
     // 3. Build Post Pages (Parallel)
+    console.time('postBuilds');
     const postsDir = path.join(distDir, 'posts');
 
     // Helper function to extract headings from HTML content
@@ -594,7 +624,11 @@ async function build() {
         const maxDepth = config.toc?.maxDepth ?? 3;
         const tocPosition = config.toc?.position ?? 'top';
         const tocCollapsible = config.toc?.collapsible ?? false;
-        const headings = tocEnabled ? extractHeadings(post.content, maxDepth) : [];
+
+        // Use pre-calculated headings from worker if available, otherwise fallback (e.g. for dev mode)
+        const headings = tocEnabled
+            ? (post.headings || extractHeadings(post.content, maxDepth))
+            : [];
 
         let postContent;
         if (Post) {
@@ -700,9 +734,12 @@ async function build() {
             );
         }
         await writeHtml(path.join(postsDir, `${postUrl}.html`), createHtml(postContent));
-        const end = performance.now();
-        console.log(`Built page: ${postUrl} (${(end - start).toFixed(2)}ms)`);
+        // const end = performance.now();
+        // console.log(`Built page: ${postUrl} (${(end - start).toFixed(2)}ms)`);
     });
+
+    await Promise.all(postBuilds);
+    console.timeEnd('postBuilds');
 
     // 4. Build Category Pages
     const categories = new Map<string, typeof posts>();

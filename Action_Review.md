@@ -245,6 +245,21 @@
     - Verified by running `npm run build` (user request).
 - **Status**: ✅ Completed
 
+### Comprehensive Benchmark
+- **Objective**: Run 500/1000/2000 complex article load tests and document results.
+- **Implementation**:
+    - Created `scripts/generate-load-test.ts` to generate complex markdown content (Code, Math, Tables).
+    - Created `scripts/run-benchmark.ts` to orchestrate generation, building, and timing.
+    - Executed benchmark:
+        - 500 articles: ~19s
+        - 1000 articles: ~27s
+        - 2000 articles: ~44s
+    - Appended detailed results to `src/content/performance-report.md`.
+    - Cleaned up benchmark scripts.
+- **Verification**:
+    - Verified `src/content/performance-report.md` contains new data table.
+- **Status**: ✅ Completed
+
 ### Load Testing & Theme Switch
 - **Objective**: Switch default theme to `weave` and perform a load test with 1000 complex pages.
 - **Implementation**:
