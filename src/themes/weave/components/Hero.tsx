@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from 'preact';
-import { config } from '../config';
+import { config } from '../../../config/weave.config';
 
 export function Hero() {
     if (!config.hero || !config.hero.enabled) return null;

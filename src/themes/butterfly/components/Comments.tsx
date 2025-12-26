@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from 'preact';
-import { config } from '../config';
+import { config } from '../../../config/butterfly.config';
 
 export function Comments({ path }: { path: string }) {
     if (!config.comments?.enabled) {

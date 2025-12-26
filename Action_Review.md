@@ -141,3 +141,25 @@
 ### Cleanup
 - Removed 1000 benchmark posts (`src/content/perf-*.md`).
 - Removed `scripts/generate-posts.ts` and `scripts` directory.
+
+## 2025-12-26
+
+### Configuration Restructuring
+- **Objective**: Move configuration files to `src/config` and rename theme configs.
+- **Implementation**:
+    - Created `src/config` directory.
+    - Moved `src/core/reweave.config.ts` to `src/config/reweave.config.ts`.
+    - Moved and renamed theme configs:
+        - `src/themes/butterfly/config.ts` -> `src/config/butterfly.config.ts`
+        - `src/themes/gitbook/config.ts` -> `src/config/gitbook.config.ts`
+        - `src/themes/landing/config.ts` -> `src/config/landing.config.ts`
+        - `src/themes/weave/config.ts` -> `src/config/weave.config.ts`
+    - Updated imports in:
+        - `src/core/build.tsx`
+        - `src/config/reweave.config.ts`
+        - Theme config files in `src/config`
+        - All theme components and layouts in `src/themes` that imported config.
+- **Status**: ✅ Completed
+
+### Next Step
+- Verify the build process to ensure all paths are correct.

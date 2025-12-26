@@ -1,5 +1,5 @@
-import { reweaveConfig, ReweaveConfig } from '../../core/reweave.config';
-import { HeroConfig, heroConfig } from '../../core/hero.config';
+import { reweaveConfig, ReweaveConfig } from './reweave.config';
+import { HeroConfig, heroConfig } from '../core/hero.config';
 
 export interface ThemeConfig extends ReweaveConfig {
     logo?: {

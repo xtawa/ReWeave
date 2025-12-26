@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from 'preact';
-import { config } from '../config';
+import { config } from '../../../config/butterfly.config';
 import { t } from '../../../core/i18n';
 
 export function Footer() {

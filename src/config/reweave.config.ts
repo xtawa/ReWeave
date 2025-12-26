@@ -1,5 +1,5 @@
-import { Locale } from './i18n';
-import { HeroConfig, heroConfig } from './hero.config';
+import { Locale } from '../core/i18n';
+import { HeroConfig, heroConfig } from '../core/hero.config';
 
 export interface ReweaveConfig {
     title: string;

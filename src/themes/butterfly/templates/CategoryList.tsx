@@ -2,7 +2,7 @@
 import { h } from 'preact';
 import { Layout } from '../layouts/Layout';
 import { Header } from '../components/Header';
-import { config } from '../config';
+import { config } from '../../../config/butterfly.config';
 import { t } from '../../../core/i18n';
 
 interface CategoryListProps {

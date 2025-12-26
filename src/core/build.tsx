@@ -6,7 +6,7 @@ import { promisify } from 'util';
 import { render } from 'preact-render-to-string';
 import { h, Fragment } from 'preact';
 import { getPosts } from './markdown';
-import { reweaveConfig as config } from './reweave.config';
+import { reweaveConfig as config } from '../config/reweave.config';
 import { t } from './i18n';
 import matter from 'gray-matter';
 

@@ -1,4 +1,4 @@
-import { reweaveConfig, ReweaveConfig } from '../../core/reweave.config';
+import { reweaveConfig, ReweaveConfig } from './reweave.config';
 
 export interface LandingThemeConfig extends Omit<ReweaveConfig, 'hero'> {
     hero: {

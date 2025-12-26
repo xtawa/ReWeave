@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h, ComponentChildren } from 'preact';
-import { config } from '../config';
+import { config } from '../../../config/landing.config';
 
 interface LayoutProps {
     title?: string;
