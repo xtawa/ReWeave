@@ -31,40 +31,40 @@ export async function getPosts(contentDir: string): Promise<Post[]> {
         workers.push(new Worker(workerPath));
     }
 
-    // Distribute files
-    const chunks: string[][] = Array.from({ length: numWorkers }, () => []);
-    files.forEach((file, i) => chunks[i % numWorkers].push(file));
+    // Use a shared atomic counter for dynamic load balancing
+    const sharedBuffer = new SharedArrayBuffer(4);
+    const sharedCounter = new Int32Array(sharedBuffer);
 
     // Process
-    const promises = workers.map((worker, i) => {
+    const promises = workers.map((worker) => {
         return new Promise<Post[]>((resolve, reject) => {
-            const chunk = chunks[i];
             const results: Post[] = [];
-            let completed = 0;
 
-            if (chunk.length === 0) {
-                resolve([]);
-                return;
-            }
+            const processNext = () => {
+                const index = Atomics.add(sharedCounter, 0, 1);
+                if (index >= files.length) {
+                    resolve(results);
+                    return;
+                }
+
+                const file = files[index];
+                worker.postMessage({ filePath: path.join(contentDir, file), slug: file.replace('.md', '') });
+            };
 
             worker.on('message', (msg) => {
                 if (msg.status === 'success') {
                     results.push(msg.result);
+                    processNext();
                 } else {
                     console.error(`Error processing ${msg.slug}:`, msg.error);
-                }
-                completed++;
-                if (completed === chunk.length) {
-                    resolve(results);
+                    processNext();
                 }
             });
 
             worker.on('error', (err) => reject(err));
 
-            // Send all tasks
-            chunk.forEach(file => {
-                worker.postMessage({ filePath: path.join(contentDir, file), slug: file.replace('.md', '') });
-            });
+            // Start processing - pipeline 4 tasks per worker initially to keep queue full
+            for (let i = 0; i < 4; i++) processNext();
         });
     });
 
