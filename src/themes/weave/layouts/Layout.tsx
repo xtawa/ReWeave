@@ -3,6 +3,7 @@ import { h, ComponentChildren } from 'preact';
 import { config } from '../../../config/weave.config';
 import { Footer } from '../components/Footer';
 import { MobileToc } from '../components/MobileToc';
+import { SnowEffect } from '../../../core/components/SnowEffect';
 
 interface LayoutProps {
     title?: string;
@@ -90,6 +91,7 @@ export function Layout({ title, description, image, children, contentWidth }: La
                     </div>
                 </div>
                 <MobileToc />
+                <SnowEffect />
             </body>
         </html >
     );

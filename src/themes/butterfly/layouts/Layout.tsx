@@ -2,6 +2,7 @@
 import { h, ComponentChildren } from 'preact';
 import { config } from '../../../config/butterfly.config';
 import { Footer } from '../components/Footer';
+import { SnowEffect } from '../../../core/components/SnowEffect';
 
 interface LayoutProps {
     title?: string;
@@ -67,6 +68,7 @@ export function Layout({ title, description, image, children, contentWidth }: La
                     {children}
                 </div>
                 <Footer />
+                <SnowEffect />
             </body>
         </html>
     );

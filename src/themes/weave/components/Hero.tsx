@@ -2,6 +2,8 @@
 import { h } from 'preact';
 import { config } from '../../../config/weave.config';
 
+import { ChristmasHat } from '../../../core/components/ChristmasHat';
+
 export function Hero() {
     if (!config.hero || !config.hero.enabled) return null;
 
@@ -64,11 +66,18 @@ export function Hero() {
             {/* Avatar */}
             <div class="relative group">
                 <div class="absolute -inset-1 bg-gradient-to-r from-teal-500 to-blue-500 rounded-full opacity-25 group-hover:opacity-50 blur transition duration-1000 group-hover:duration-200"></div>
-                <img
-                    src={avatar.startsWith('http') ? avatar : `/${avatar}`}
-                    alt={name}
-                    class="relative w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-white dark:border-zinc-800 shadow-2xl transition transform group-hover:scale-105 duration-500"
-                />
+                <ChristmasHat
+                    offset="-top-[55%] -left-[5%]"
+                    size="w-[110%] h-[110%]"
+                    rotate="-rotate-6"
+                    imageSrc="/christmas-hat.svg"
+                >
+                    <img
+                        src={avatar.startsWith('http') ? avatar : `/${avatar}`}
+                        alt={name}
+                        class="relative w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-white dark:border-zinc-800 shadow-2xl transition transform group-hover:scale-105 duration-500"
+                    />
+                </ChristmasHat>
             </div>
         </div>
     );

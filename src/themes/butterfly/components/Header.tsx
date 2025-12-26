@@ -3,6 +3,8 @@ import { h } from 'preact';
 import { config } from '../../../config/butterfly.config';
 import { t } from '../../../core/i18n';
 
+import { ChristmasHat } from '../../../core/components/ChristmasHat';
+
 export function Header() {
     return (
         <header id="page-header" class="fixed top-0 w-full z-50 transition-all duration-300 bg-transparent text-white">
@@ -10,9 +12,11 @@ export function Header() {
                 <div class="flex items-center justify-between h-16">
                     {/* Logo */}
                     <div class="flex-shrink-0">
-                        <a href="/" class="text-xl font-bold tracking-wider hover:text-blue-400 transition-colors">
-                            {config.title}
-                        </a>
+                        <ChristmasHat>
+                            <a href="/" class="text-xl font-bold tracking-wider hover:text-blue-400 transition-colors">
+                                {config.title}
+                            </a>
+                        </ChristmasHat>
                     </div>
 
                     {/* Desktop Navigation */}

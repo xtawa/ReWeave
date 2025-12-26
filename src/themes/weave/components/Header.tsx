@@ -3,6 +3,8 @@ import { h } from 'preact';
 import { config } from '../../../config/weave.config';
 import { t } from '../../../core/i18n';
 
+import { ChristmasHat } from '../../../core/components/ChristmasHat';
+
 export function Header() {
     return (
         <header class="pointer-events-none relative z-50 flex flex-none flex-col mb-12">
@@ -11,15 +13,17 @@ export function Header() {
                     {/* Logo */}
                     <div class="flex">
                         <a href="/" class="pointer-events-auto relative flex h-10 items-center rounded-full bg-white/90 p-1 pr-4 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur transition dark:bg-zinc-800/90 dark:ring-white/10 dark:hover:ring-white/20" aria-label="Home">
-                            {config.logo ? (
-                                <img
-                                    src={config.logo.path.startsWith('http') ? config.logo.path : `/${config.logo.path}`}
-                                    alt={config.logo.alt || config.title}
-                                    class="h-8 w-8 rounded-full object-cover"
-                                />
-                            ) : (
-                                <div class="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-500" />
-                            )}
+                            <ChristmasHat offset="-top-4 -right-1" size="w-6 h-6" rotate="rotate-12">
+                                {config.logo ? (
+                                    <img
+                                        src={config.logo.path.startsWith('http') ? config.logo.path : `/${config.logo.path}`}
+                                        alt={config.logo.alt || config.title}
+                                        class="h-8 w-8 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-500" />
+                                )}
+                            </ChristmasHat>
                             <span class="ml-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">{config.title}</span>
                         </a>
                     </div>

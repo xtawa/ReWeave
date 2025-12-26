@@ -13,6 +13,8 @@ interface SidebarProps {
     title: string;
 }
 
+import { ChristmasHat } from '../../../core/components/ChristmasHat';
+
 export function Sidebar({ items, title }: SidebarProps) {
     const renderItems = (items: SidebarItem[], depth = 0) => {
         return (
@@ -23,8 +25,8 @@ export function Sidebar({ items, title }: SidebarProps) {
                             <a
                                 href={item.url}
                                 class={`block py-1.5 text-sm transition-colors ${item.isActive
-                                        ? 'font-medium text-blue-600 dark:text-blue-400'
-                                        : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                                    ? 'font-medium text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                                     }`}
                             >
                                 {item.title}
@@ -44,9 +46,11 @@ export function Sidebar({ items, title }: SidebarProps) {
     return (
         <aside class="fixed inset-y-0 left-0 z-50 w-64 transform overflow-y-auto bg-white border-r border-gray-200 px-6 py-8 transition-transform duration-300 dark:bg-gray-900 dark:border-gray-800 lg:translate-x-0 -translate-x-full" id="sidebar">
             <div class="mb-8">
-                <a href="/" class="text-xl font-bold text-gray-900 dark:text-white">
-                    {title}
-                </a>
+                <ChristmasHat>
+                    <a href="/" class="text-xl font-bold text-gray-900 dark:text-white">
+                        {title}
+                    </a>
+                </ChristmasHat>
             </div>
             <nav>{renderItems(items)}</nav>
         </aside>

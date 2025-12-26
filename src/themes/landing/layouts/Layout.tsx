@@ -1,6 +1,7 @@
 /** @jsx h */
 import { h, ComponentChildren } from 'preact';
 import { config } from '../../../config/landing.config';
+import { SnowEffect } from '../../../core/components/SnowEffect';
 
 interface LayoutProps {
     title?: string;
@@ -46,6 +47,7 @@ export function Layout({ title, description, image, children }: LayoutProps) {
                         {config.footer?.copyright}
                     </div>
                 </footer>
+                <SnowEffect />
             </body>
         </html>
     );

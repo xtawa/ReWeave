@@ -1,6 +1,7 @@
 /** @jsx h */
 import { h, ComponentChildren } from 'preact';
 import { Sidebar, SidebarItem } from '../components/Sidebar';
+import { SnowEffect } from '../../../core/components/SnowEffect';
 
 interface LayoutProps {
     title: string;
@@ -160,6 +161,7 @@ export function Layout({ title, sidebarItems, children, siteTitle, updatedDate, 
                     });
                     `
                 }} />
+                <SnowEffect />
             </body>
         </html>
     );

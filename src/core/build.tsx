@@ -586,7 +586,8 @@ async function build() {
 
 
 
-    const postBuilds = posts.map((post, index) => {
+    const postBuilds = posts.map(async (post, index) => {
+        const start = performance.now();
         const postUrl = safeSlug(post.abbrlink || post.slug);
 
         const tocEnabled = config.toc?.enabled ?? false;
@@ -698,7 +699,9 @@ async function build() {
                 </Layout>
             );
         }
-        return writeHtml(path.join(postsDir, `${postUrl}.html`), createHtml(postContent));
+        await writeHtml(path.join(postsDir, `${postUrl}.html`), createHtml(postContent));
+        const end = performance.now();
+        console.log(`Built page: ${postUrl} (${(end - start).toFixed(2)}ms)`);
     });
 
     // 4. Build Category Pages
