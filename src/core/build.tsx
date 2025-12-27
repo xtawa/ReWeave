@@ -1018,8 +1018,28 @@ async function build() {
         // Try to use Projects template with structured data
         if (ProjectsTemplate) {
             try {
-                const { projectsConfig } = await import('../config/projects.config');
-                projectsContent = <ProjectsTemplate projects={projectsConfig} title={config.projects.title || t('projects', config.language)} />;
+                const { projectsConfig, contributorsConfig, sponsorsConfig } = await import('../config/projects.config');
+
+                // Try to load theme config for section visibility
+                let themeConfig: any = {};
+                try {
+                    const themeModule = await import(`../config/${config.themeName}.config`);
+                    themeConfig = themeModule.config || {};
+                } catch {
+                    // Theme config not found, use defaults
+                }
+
+                const pageSettings = themeConfig.projectsPage || {};
+
+                projectsContent = (
+                    <ProjectsTemplate
+                        projects={pageSettings.showProjects !== false ? projectsConfig : []}
+                        contributors={pageSettings.showContributors !== false ? contributorsConfig : []}
+                        sponsors={pageSettings.showSponsors !== false ? sponsorsConfig : []}
+                        sponsorLink={pageSettings.sponsorLink}
+                        title={config.projects.title || t('projects', config.language)}
+                    />
+                );
             } catch (e) {
                 console.warn('Projects config not found, falling back to markdown. Error:', e);
                 ProjectsTemplate = null;

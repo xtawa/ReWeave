@@ -1,5 +1,38 @@
 # Action Review
 
+## 2025-12-27 (Part 3)
+
+### Projects Page Card Display
+- **Objective**: Add card display format for projects on the projects page.
+- **Implementation**:
+    - Created `src/config/projects.config.ts`: Structured configuration file for project data with fields:
+        - `name`, `description`, `techStack[]`, `link`, `github`, `image`, `featured`
+    - Created `src/themes/weave/templates/Projects.tsx`: New project page template with:
+        - Animated card layout using CSS Grid
+        - "Featured Projects" section for highlighted projects (2-column grid)
+        - "Other Projects" section for non-featured projects (3-column grid on desktop)
+        - Project cards include:
+            - Project icon (first letter of name with gradient background)
+            - Project name and description
+            - Tech stack as rounded badges
+            - External links (website/GitHub) with icons
+            - Featured badge for highlighted projects
+            - Hover effects (shadow, border, scale transitions)
+    - Modified `src/core/build.tsx`:
+        - Added `ProjectsTemplate` to dynamic theme imports
+        - Updated projects page build logic to use template with structured data
+        - Added fallback to markdown-based rendering if template not available
+- **Features**:
+    - Responsive layout (1 col mobile -> 2/3 cols desktop)
+    - Dark mode support
+    - Smooth animations on page load
+    - Hover effects for better interactivity
+- **Status**: ✅ Completed and verified
+
+### Next Step
+- Consider adding project images support
+- Add more projects to configuration
+
 ## 2025-12-21
 
 ### Mobile Layout Inspection & Fix (Round 2)

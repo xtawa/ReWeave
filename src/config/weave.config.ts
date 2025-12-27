@@ -32,6 +32,12 @@ export interface ThemeConfig extends ReweaveConfig {
             }>;
         }>;
     };
+    projectsPage?: {
+        showProjects?: boolean;
+        showContributors?: boolean;
+        showSponsors?: boolean;
+        sponsorLink?: string;
+    };
 }
 
 export const config: ThemeConfig = {
@@ -67,5 +73,11 @@ export const config: ThemeConfig = {
             { key: 'projects', href: '/projects' },
             { key: 'about', href: '/about' },
         ],
+    },
+    projectsPage: {
+        showProjects: true,
+        showContributors: true,
+        showSponsors: true,
+        sponsorLink: 'https://github.com/sponsors/yourusername',
     },
 };
