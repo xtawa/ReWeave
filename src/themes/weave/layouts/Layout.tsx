@@ -68,51 +68,51 @@ export function Layout({ title, description, image, children, contentWidth }: La
                     (function() {
                         var hour = new Date().getHours();
                         var isDay = hour >= 7 && hour < 20;
-                        var faviconSuffix = isDay ? '-light' : '';
                         
-                        // Update favicon
+                        // Update favicon immediately
                         var favicon = document.getElementById('favicon');
                         var appleTouchIcon = document.getElementById('apple-touch-icon');
                         if (favicon) favicon.href = '/favicon' + (isDay ? '-light' : '') + '.png';
                         if (appleTouchIcon) appleTouchIcon.href = '/favicon-48' + (isDay ? '-light' : '') + '.png';
                         
-                        // Store for avatar usage
                         window.__reweaveIsDay = isDay;
+
+                        function updateImages() {
+                            if (!window.__reweaveIsDay) return;
+
+                            // Update avatar images
+                            document.querySelectorAll('img[data-avatar]').forEach(function(img) {
+                                img.src = img.src.replace('avatar.png', 'avatar-light.png');
+                            });
+
+                            // Update background images
+                            document.querySelectorAll('[data-bg-image]').forEach(function(el) {
+                                var bgImage = el.getAttribute('data-bg-image');
+                                if (bgImage && bgImage.includes('logo.png')) {
+                                    el.style.backgroundImage = 'url(' + bgImage.replace('logo.png', 'logo-light.png') + ')';
+                                }
+                            });
+
+                            // Update project icons
+                            document.querySelectorAll('img[data-project-icon]').forEach(function(img) {
+                                var src = img.getAttribute('data-project-icon');
+                                if (src && src.includes('logo.png')) {
+                                    img.src = src.replace('logo.png', 'logo-light.png');
+                                }
+                            });
+                        }
+
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', updateImages);
+                        } else {
+                            updateImages();
+                        }
                     })();
                 `}} />
                 <script type="module" dangerouslySetInnerHTML={{
                     __html: `
                     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
                     mermaid.initialize({ startOnLoad: true, theme: 'dark' });
-                    
-                    // Update avatar images based on time
-                    document.querySelectorAll('img[data-avatar]').forEach(function(img) {
-                        if (window.__reweaveIsDay) {
-                            img.src = img.src.replace('avatar.png', 'avatar-light.png');
-                        }
-                    });
-
-                    });
-
-                    // Update background images (for projects) based on time
-                    document.querySelectorAll('[data-bg-image]').forEach(function(el) {
-                        if (window.__reweaveIsDay) {
-                            var bgImage = el.getAttribute('data-bg-image');
-                            if (bgImage && bgImage.includes('logo.png')) {
-                                el.style.backgroundImage = 'url(' + bgImage.replace('logo.png', 'logo-light.png') + ')';
-                            }
-                        }
-                    });
-
-                    // Update project icons based on time
-                    document.querySelectorAll('img[data-project-icon]').forEach(function(img) {
-                        if (window.__reweaveIsDay) {
-                            var src = img.getAttribute('data-project-icon');
-                            if (src && src.includes('logo.png')) {
-                                img.src = src.replace('logo.png', 'logo-light.png');
-                            }
-                        }
-                    });
                 `}} />
             </head>
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden">

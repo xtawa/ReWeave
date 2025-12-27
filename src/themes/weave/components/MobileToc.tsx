@@ -30,8 +30,14 @@ export function MobileToc() {
 
                 {/* TOC Panel */}
                 <div class="toc-panel absolute bottom-24 right-6 w-64 max-h-[60vh] overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-zinc-900/5 dark:bg-zinc-900 dark:ring-white/10 transition-all duration-300 transform translate-y-4 opacity-0">
-                    <div class="mb-3 flex items-center justify-between">
-                        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{t('toc', config.language)}</h3>
+                    <div class="mb-3 flex flex-col">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{t('toc', config.language)}</h3>
+                            <span class="text-xs text-zinc-500 font-mono" id="mobile-toc-percent">0%</span>
+                        </div>
+                        <div class="w-full bg-zinc-200 dark:bg-zinc-700 h-1 mt-2 rounded-full overflow-hidden">
+                            <div id="mobile-toc-progress" class="bg-teal-500 h-full transition-all duration-150" style="width: 0%"></div>
+                        </div>
                     </div>
                     <ul id="mobile-toc-list" class="space-y-2 text-sm">
                         {/* Links will be injected here by JS */}
@@ -47,6 +53,8 @@ export function MobileToc() {
                     const backdrop = document.getElementById('mobile-toc-backdrop');
                     const content = overlay.querySelector('.toc-panel');
                     const list = document.getElementById('mobile-toc-list');
+                    const percentEl = document.getElementById('mobile-toc-percent');
+                    const progressEl = document.getElementById('mobile-toc-progress');
                     
                     // 1. Scan for headings
                     const headings = Array.from(document.querySelectorAll('.prose h1, .prose h2, .prose h3'));
@@ -109,15 +117,55 @@ export function MobileToc() {
                         }, 300);
                     }
 
-                    btn.addEventListener('click', function() {
-                        if (overlay.classList.contains('hidden')) {
-                            openToc();
-                        } else {
-                            closeToc();
-                        }
-                    });
+                    if (btn) {
+                        btn.addEventListener('click', function() {
+                            if (overlay.classList.contains('hidden')) {
+                                openToc();
+                            } else {
+                                closeToc();
+                            }
+                        });
+                    }
 
-                    backdrop.addEventListener('click', closeToc);
+                    if (backdrop) {
+                        backdrop.addEventListener('click', closeToc);
+                    }
+
+                    // 4. Scroll Tracking & Progress
+                    function updateProgress() {
+                        const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                        const scrollTop = window.scrollY;
+                        const percent = Math.min(100, Math.max(0, Math.round((scrollTop / docHeight) * 100)));
+                        
+                        if (percentEl) percentEl.textContent = percent + '%';
+                        if (progressEl) progressEl.style.width = percent + '%';
+
+                        // Highlight active link
+                        const scrollPos = window.scrollY + 100;
+                        let currentHeading = null;
+
+                        for (let i = 0; i < headings.length; i++) {
+                            if (headings[i] && headings[i].offsetTop <= scrollPos) {
+                                currentHeading = headings[i];
+                            } else {
+                                break;
+                            }
+                        }
+
+                        const tocLinks = list.querySelectorAll('a');
+                        tocLinks.forEach((link, index) => {
+                            if (headings[index] === currentHeading) {
+                                link.classList.add('text-teal-600', 'dark:text-teal-400', 'font-medium');
+                                link.classList.remove('text-zinc-600', 'dark:text-zinc-400');
+                            } else {
+                                link.classList.remove('text-teal-600', 'dark:text-teal-400', 'font-medium');
+                                link.classList.add('text-zinc-600', 'dark:text-zinc-400');
+                            }
+                        });
+                    }
+
+                    window.addEventListener('scroll', updateProgress);
+                    updateProgress();
                 })();
             ` }} />
         </div>

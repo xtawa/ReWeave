@@ -539,29 +539,37 @@ async function build() {
 
         return (
             <nav id={tocId} class={`toc p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg ${positionClasses[position] || positionClasses['top']}`}>
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{t('toc', config.language)}</h2>
-                    {collapsible && (
-                        <>
-                            <button
-                                class="toc-toggle p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition"
-                                aria-label="Toggle TOC"
-                            >
-                                <svg class="toc-toggle-icon w-4 h-4 text-zinc-600 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <script dangerouslySetInnerHTML={{
-                                __html: `
-                                document.querySelector('#${tocId} .toc-toggle').addEventListener('click', function() {
-                                    const content = document.getElementById('${contentId}');
-                                    const icon = this.querySelector('.toc-toggle-icon');
-                                    content.classList.toggle('collapsed');
-                                    icon.classList.toggle('rotated');
-                                });
-                            ` }}></script>
-                        </>
-                    )}
+                <div class="flex flex-col mb-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{t('toc', config.language)}</h2>
+                            <span class="text-xs text-zinc-500 font-mono" id={`${tocId}-percent`}>0%</span>
+                        </div>
+                        {collapsible && (
+                            <>
+                                <button
+                                    class="toc-toggle p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition"
+                                    aria-label="Toggle TOC"
+                                >
+                                    <svg class="toc-toggle-icon w-4 h-4 text-zinc-600 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <script dangerouslySetInnerHTML={{
+                                    __html: `
+                                    document.querySelector('#${tocId} .toc-toggle').addEventListener('click', function() {
+                                        const content = document.getElementById('${contentId}');
+                                        const icon = this.querySelector('.toc-toggle-icon');
+                                        content.classList.toggle('collapsed');
+                                        icon.classList.toggle('rotated');
+                                    });
+                                ` }}></script>
+                            </>
+                        )}
+                    </div>
+                    <div class="w-full bg-zinc-200 dark:bg-zinc-700 h-1 mt-2 rounded-full overflow-hidden">
+                        <div id={`${tocId}-progress`} class="bg-teal-500 h-full transition-all duration-150" style="width: 0%"></div>
+                    </div>
                 </div>
                 <ul id={contentId} class="toc-content space-y-1 text-sm">
                     {headings.map(heading => (
@@ -583,9 +591,18 @@ async function build() {
                             const id = link.getAttribute('href').substring(1);
                             return document.getElementById(id);
                         }).filter(h => h !== null);
+                        const percentEl = document.getElementById('${tocId}-percent');
+                        const progressEl = document.getElementById('${tocId}-progress');
 
-                        function highlightTocOnScroll() {
+                        function updateToc() {
                             const scrollPos = window.scrollY + 100;
+                            const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                            const scrollTop = window.scrollY;
+                            const percent = Math.min(100, Math.max(0, Math.round((scrollTop / docHeight) * 100)));
+                            
+                            if (percentEl) percentEl.textContent = percent + '%';
+                            if (progressEl) progressEl.style.width = percent + '%';
+
                             let currentHeading = null;
 
                             for (let i = 0; i < headings.length; i++) {
@@ -598,15 +615,17 @@ async function build() {
 
                             tocLinks.forEach((link, index) => {
                                 if (headings[index] === currentHeading) {
-                                    link.classList.add('!text-teal-500', 'dark:!text-teal-400', 'font-semibold');
+                                    link.classList.add('text-teal-600', 'dark:text-teal-400', 'font-medium');
+                                    link.classList.remove('text-zinc-600', 'dark:text-zinc-400');
                                 } else {
-                                    link.classList.remove('!text-teal-500', 'dark:!text-teal-400', 'font-semibold');
+                                    link.classList.remove('text-teal-600', 'dark:text-teal-400', 'font-medium');
+                                    link.classList.add('text-zinc-600', 'dark:text-zinc-400');
                                 }
                             });
                         }
 
-                        window.addEventListener('scroll', highlightTocOnScroll);
-                        highlightTocOnScroll();
+                        window.addEventListener('scroll', updateToc);
+                        updateToc();
                     })();
                 ` }}></script>
             </nav>
