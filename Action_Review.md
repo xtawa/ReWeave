@@ -311,5 +311,14 @@
     - Verified that all 8 articles are successfully processed with the new multi-threaded implementation.
 - **Status**: ✅ Completed (Stable Multi-threaded Build)
 
+### Performance Stress Test
+- **Objective**: Verify the stability and performance of the new Worker Pool implementation.
+- **Implementation**:
+    - Created `scripts/benchmark.ts` to generate 1000 complex markdown posts (Code, Math, Mermaid, Tables).
+    - Executed the benchmark script.
+    - Result: Built 1000 complex posts in **10.01 seconds** (10.01ms/post).
+    - Updated `src/content/performance-report.md` with the new data.
+- **Status**: ✅ Completed
+
 ### Next Step
 - Verify the site in browser to ensure all articles render correctly.
