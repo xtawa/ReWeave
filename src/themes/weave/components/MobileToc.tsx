@@ -133,10 +133,12 @@ export function MobileToc() {
 
                     // 4. Scroll Tracking & Progress
                     function updateProgress() {
-                        const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-                        const scrollTop = window.scrollY;
-                        let percent = 0;
+                        const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+                        const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+                        const clientHeight = document.documentElement.clientHeight || window.innerHeight;
+                        const docHeight = scrollHeight - clientHeight;
                         
+                        let percent = 0;
                         if (docHeight > 0) {
                             percent = Math.min(100, Math.max(0, Math.round((scrollTop / docHeight) * 100)));
                         }
@@ -145,7 +147,7 @@ export function MobileToc() {
                         if (progressEl) progressEl.style.width = percent + '%';
 
                         // Highlight active link
-                        const scrollPos = window.scrollY + 100;
+                        const scrollPos = scrollTop + 100;
                         let currentHeading = null;
 
                         for (let i = 0; i < headings.length; i++) {
