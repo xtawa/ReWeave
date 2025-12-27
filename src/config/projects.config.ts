@@ -18,6 +18,7 @@ export interface Contributor {
     avatar?: string;
     bio: string;
     role?: string;
+    gender?: 'male' | 'female';
     github?: string;
     website?: string;
     contributions?: string[];
@@ -51,6 +52,7 @@ export const contributorsConfig: Contributor[] = [
         avatar: "https://avatars.githubusercontent.com/u/95358259?v=4&size=64",
         bio: "Cherish every moment",
         role: "Core developer",
+        gender: "male",
         github: "https://github.com/xtawa",
         website: "https://blog.xtyin.com",
         contributions: ["核心架构", "功能测试"],
@@ -60,6 +62,7 @@ export const contributorsConfig: Contributor[] = [
         avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=wangwu",
         bio: "//I don't know:(",
         role: "Idea fly",
+        gender: "female",
         //        github: "https://github.com/",
         contributions: ["灵感启发"],
     },

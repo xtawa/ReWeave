@@ -279,10 +279,20 @@ function ContributorCard({ contributor, delay }: ContributorCardProps) {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className="text-lg font-bold text-zinc-900 dark:text-white truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                             {contributor.name}
                         </h3>
+                        {contributor.gender && (
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${contributor.gender === 'male'
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                                    : contributor.gender === 'female'
+                                        ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400'
+                                        : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
+                                }`}>
+                                {contributor.gender === 'male' ? 'He&Him' : contributor.gender === 'female' ? 'She&Her' : contributor.gender}
+                            </span>
+                        )}
                         {contributor.role && (
                             <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full whitespace-nowrap">
                                 {contributor.role}

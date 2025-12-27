@@ -8,7 +8,7 @@ export function MobileToc() {
     if (!config.toc?.enabled) return null;
 
     return (
-        <div id="mobile-toc-wrapper" class="lg:hidden pointer-events-none fixed inset-0 z-[100]">
+        <div id="mobile-toc-wrapper" class="pointer-events-none fixed inset-0 z-[100]">
             {/* Floating Button Container - positioned absolute to wrapper */}
             <div class="absolute bottom-6 right-6 pointer-events-auto">
                 <button
