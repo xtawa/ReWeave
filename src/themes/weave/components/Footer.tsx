@@ -46,12 +46,35 @@ export function Footer() {
                     </button>
                 </div>
             </div>
+            {config.themeTransition === 'circle-clip' && (
+                <style dangerouslySetInnerHTML={{
+                    __html: `
+                    ::view-transition-old(root),
+                    ::view-transition-new(root) {
+                        animation: none;
+                        mix-blend-mode: normal;
+                    }
+                    ::view-transition-old(root) {
+                        z-index: 1;
+                    }
+                    ::view-transition-new(root) {
+                        z-index: 9999;
+                    }
+                    .dark::view-transition-old(root) {
+                        z-index: 9999;
+                    }
+                    .dark::view-transition-new(root) {
+                        z-index: 1;
+                    }
+                ` }} />
+            )}
             <script dangerouslySetInnerHTML={{
                 __html: `
                 (function() {
                     const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
                     const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
                     const themeToggleBtn = document.getElementById('theme-toggle');
+                    const transitionStyle = '${config.themeTransition || 'default'}';
                     
                     if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                         themeToggleLightIcon.classList.remove('hidden');
@@ -60,10 +83,7 @@ export function Footer() {
                         themeToggleDarkIcon.classList.remove('hidden');
                     }
                     
-                    themeToggleBtn.addEventListener('click', function() {
-                        // Add transition class
-                        document.documentElement.classList.add('theme-transition');
-
+                    function toggleTheme() {
                         themeToggleDarkIcon.classList.toggle('hidden');
                         themeToggleLightIcon.classList.toggle('hidden');
                         
@@ -84,11 +104,45 @@ export function Footer() {
                                 localStorage.setItem('color-theme', 'dark');
                             }
                         }
+                    }
 
-                        // Remove transition class after animation
-                        setTimeout(() => {
-                            document.documentElement.classList.remove('theme-transition');
-                        }, 300);
+                    themeToggleBtn.addEventListener('click', function(event) {
+                        if (transitionStyle === 'circle-clip' && document.startViewTransition) {
+                             const x = event.clientX;
+                             const y = event.clientY;
+                             const endRadius = Math.hypot(
+                                 Math.max(x, innerWidth - x),
+                                 Math.max(y, innerHeight - y)
+                             );
+
+                             const transition = document.startViewTransition(() => {
+                                 toggleTheme();
+                             });
+
+                             transition.ready.then(() => {
+                                 const clipPath = [
+                                     \`circle(0px at \${x}px \${y}px)\`,
+                                     \`circle(\${endRadius}px at \${x}px \${y}px)\`
+                                 ];
+                                 document.documentElement.animate(
+                                     {
+                                         clipPath: document.documentElement.classList.contains('dark') ? clipPath : [...clipPath].reverse(),
+                                     },
+                                     {
+                                         duration: 500,
+                                         easing: 'ease-in',
+                                         pseudoElement: document.documentElement.classList.contains('dark') ? '::view-transition-new(root)' : '::view-transition-old(root)',
+                                     }
+                                 );
+                             });
+                        } else {
+                            // Default transition
+                            document.documentElement.classList.add('theme-transition');
+                            toggleTheme();
+                            setTimeout(() => {
+                                document.documentElement.classList.remove('theme-transition');
+                            }, 300);
+                        }
                     });
                 })();
             ` }}></script>
