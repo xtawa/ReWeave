@@ -64,40 +64,46 @@ export function Layout({ title, description, image, children, contentWidth }: La
                         document.documentElement.classList.remove('dark')
                     }
                     
-                    // Time-based favicon and avatar switching (7:00-20:00 = light, else = dark)
+                    // Dark mode based favicon and avatar switching
                     (function() {
-                        var hour = new Date().getHours();
-                        var isDay = hour >= 7 && hour < 20;
-                        
-                        // Update favicon immediately
-                        var favicon = document.getElementById('favicon');
-                        var appleTouchIcon = document.getElementById('apple-touch-icon');
-                        if (favicon) favicon.href = '/favicon' + (isDay ? '-light' : '') + '.png';
-                        if (appleTouchIcon) appleTouchIcon.href = '/favicon-48' + (isDay ? '-light' : '') + '.png';
-                        
-                        window.__reweaveIsDay = isDay;
-
                         function updateImages() {
-                            if (!window.__reweaveIsDay) return;
+                            var isDark = document.documentElement.classList.contains('dark');
+                            
+                            function switchSrc(src) {
+                                if (!src) return src;
+                                var base = src.replace('-light.', '.');
+                                if (isDark) return base;
+                                return base.replace(/(\.[a-z0-9]+)$/i, '-light$1');
+                            }
 
-                            // Update avatar images
-                            document.querySelectorAll('img[data-avatar]').forEach(function(img) {
-                                img.src = img.src.replace('avatar.png', 'avatar-light.png');
+                            // Update favicon
+                            var favicon = document.getElementById('favicon');
+                            if (favicon) {
+                                var href = favicon.getAttribute('href');
+                                var newHref = switchSrc(href);
+                                if (href !== newHref) favicon.setAttribute('href', newHref);
+                            }
+                            
+                            var appleTouchIcon = document.getElementById('apple-touch-icon');
+                            if (appleTouchIcon) {
+                                var href = appleTouchIcon.getAttribute('href');
+                                var newHref = switchSrc(href);
+                                if (href !== newHref) appleTouchIcon.setAttribute('href', newHref);
+                            }
+
+                            // Update avatars and project icons
+                            document.querySelectorAll('img[data-avatar], img[data-project-icon]').forEach(function(img) {
+                                var src = img.getAttribute('src');
+                                var newSrc = switchSrc(src);
+                                if (src !== newSrc) img.setAttribute('src', newSrc);
                             });
 
                             // Update background images
                             document.querySelectorAll('[data-bg-image]').forEach(function(el) {
                                 var bgImage = el.getAttribute('data-bg-image');
-                                if (bgImage && bgImage.includes('logo.png')) {
-                                    el.style.backgroundImage = 'url(' + bgImage.replace('logo.png', 'logo-light.png') + ')';
-                                }
-                            });
-
-                            // Update project icons
-                            document.querySelectorAll('img[data-project-icon]').forEach(function(img) {
-                                var src = img.getAttribute('data-project-icon');
-                                if (src && src.includes('logo.png')) {
-                                    img.src = src.replace('logo.png', 'logo-light.png');
+                                if (bgImage) {
+                                    var newPath = switchSrc(bgImage);
+                                    el.style.backgroundImage = 'url(' + newPath + ')';
                                 }
                             });
                         }
@@ -107,6 +113,15 @@ export function Layout({ title, description, image, children, contentWidth }: La
                         } else {
                             updateImages();
                         }
+
+                        var observer = new MutationObserver(function(mutations) {
+                            mutations.forEach(function(mutation) {
+                                if (mutation.attributeName === 'class') {
+                                    updateImages();
+                                }
+                            });
+                        });
+                        observer.observe(document.documentElement, { attributes: true });
                     })();
                 `}} />
                 <script type="module" dangerouslySetInnerHTML={{
