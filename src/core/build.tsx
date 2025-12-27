@@ -383,28 +383,26 @@ async function build() {
     const posts = allPosts.filter(post => !post.draft && !post.hide);
     console.log(`Processing ${posts.length} active posts.`);
 
-    // Start CSS Build in background
+    // Start CSS Build (Sequential)
     console.log("Building CSS...");
-    const cssBuild = (async () => {
-        try {
-            const postcss = (await import('postcss')).default;
-            const tailwindcss = (await import('tailwindcss')).default;
-            const autoprefixer = (await import('autoprefixer')).default;
+    try {
+        const postcss = (await import('postcss')).default;
+        const tailwindcss = (await import('tailwindcss')).default;
+        const autoprefixer = (await import('autoprefixer')).default;
 
-            const css = await fs.readFile(path.join(rootDir, 'src', 'style.css'), 'utf-8');
+        const css = await fs.readFile(path.join(rootDir, 'src', 'style.css'), 'utf-8');
 
-            const result = await postcss([
-                tailwindcss({ config: path.join(rootDir, 'tailwind.config.js') }),
-                autoprefixer
-            ]).process(css, { from: path.join(rootDir, 'src', 'style.css'), to: path.join(distDir, 'style.css') });
+        const result = await postcss([
+            tailwindcss({ config: path.join(rootDir, 'tailwind.config.js') }),
+            autoprefixer
+        ]).process(css, { from: path.join(rootDir, 'src', 'style.css'), to: path.join(distDir, 'style.css') });
 
-            await fs.writeFile(path.join(distDir, 'style.css'), result.css);
-            console.log("CSS built successfully.");
-        } catch (e) {
-            console.error("CSS Build Error:", e);
-            throw e;
-        }
-    })();
+        await fs.writeFile(path.join(distDir, 'style.css'), result.css);
+        console.log("CSS built successfully.");
+    } catch (e) {
+        console.error("CSS Build Error:", e);
+        throw e;
+    }
 
     // Pagination Logic
     const pageSize = config.pagination?.pageSize || 15;
@@ -616,7 +614,7 @@ async function build() {
 
 
 
-    const postBuilds = posts.map(async (post, index) => {
+    const buildPost = async (post: any, index: number) => {
         const start = performance.now();
         const postUrl = safeSlug(post.abbrlink || post.slug);
 
@@ -736,9 +734,17 @@ async function build() {
         await writeHtml(path.join(postsDir, `${postUrl}.html`), createHtml(postContent));
         // const end = performance.now();
         // console.log(`Built page: ${postUrl} (${(end - start).toFixed(2)}ms)`);
-    });
+    };
 
-    await Promise.all(postBuilds);
+    // Execute in chunks to avoid OOM
+    const CHUNK_SIZE = 20;
+    for (let i = 0; i < posts.length; i += CHUNK_SIZE) {
+        const chunk = posts.slice(i, i + CHUNK_SIZE);
+        await Promise.all(chunk.map((post, idx) => buildPost(post, i + idx)));
+        // Optional: Force garbage collection if exposed, or just yield
+        if (global.gc) global.gc();
+    }
+
     console.timeEnd('postBuilds');
 
     // 4. Build Category Pages
@@ -1203,7 +1209,7 @@ async function build() {
     const sitemapBuild = fs.writeFile(path.join(distDir, 'sitemap.xml'), sitemapContent);
 
     // Wait for all tasks
-    const allBuilds = [indexBuild, ...postBuilds, ...categoryBuilds, ...tagBuilds, archiveBuild, categoriesListBuild, tagsListBuild, cssBuild];
+    const allBuilds = [indexBuild, ...categoryBuilds, ...tagBuilds, archiveBuild, categoriesListBuild, tagsListBuild];
     if (aboutBuild) allBuilds.push(aboutBuild);
     if (projectsBuild) allBuilds.push(projectsBuild);
     allBuilds.push(statsBuild);

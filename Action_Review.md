@@ -322,3 +322,13 @@
 
 ### Next Step
 - Verify the site in browser to ensure all articles render correctly.
+
+## 2025-12-27 (Part 2)
+
+### Fix Vercel CSS Build Error
+- **Objective**: Resolve "Worker stopped with exit code 1" error during CSS build on Vercel.
+- **Problem**: Vercel environment likely running out of memory or crashing due to parallel execution of CSS build and heavy post processing.
+- **Proposed Solution**:
+    - Move CSS build to be sequential (awaited) before post processing.
+    - Add explicit error handling for CSS build.
+    - Add concurrency limit for post processing to avoid future OOM.
