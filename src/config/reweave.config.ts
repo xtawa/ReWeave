@@ -40,7 +40,7 @@ export interface ReweaveConfig {
         title?: string;
         file: string;
     };
-    themeTransition?: 'default' | 'circle-clip';
+    themeTransition?: 'default' | 'circle-clip' | 'macos-loading';
 }
 
 export const reweaveConfig: ReweaveConfig = {
@@ -73,5 +73,5 @@ export const reweaveConfig: ReweaveConfig = {
         title: "项目",
         file: "projects.md",
     },
-    themeTransition: 'circle-clip',
+    themeTransition: 'macos-loading',
 };

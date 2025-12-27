@@ -68,6 +68,16 @@ export function Footer() {
                     }
                 ` }} />
             )}
+            {config.themeTransition === 'macos-loading' && (
+                <div id="theme-transition-overlay" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/60 dark:bg-black/60 backdrop-blur-xl opacity-0 pointer-events-none transition-opacity duration-300">
+                    <div class="text-2xl font-bold text-zinc-900 dark:text-white mb-8 transform scale-95 transition-all duration-500 opacity-0 translate-y-4" id="transition-title">
+                        {config.title}
+                    </div>
+                    <div class="w-48 h-1 bg-zinc-200/50 dark:bg-zinc-700/50 rounded-full overflow-hidden backdrop-blur-md">
+                        <div id="transition-bar" class="h-full bg-teal-500 w-0 rounded-full"></div>
+                    </div>
+                </div>
+            )}
             <script dangerouslySetInnerHTML={{
                 __html: `
                 (function() {
@@ -107,7 +117,43 @@ export function Footer() {
                     }
 
                     themeToggleBtn.addEventListener('click', function(event) {
-                        if (transitionStyle === 'circle-clip' && document.startViewTransition) {
+                        if (transitionStyle === 'macos-loading') {
+                            const overlay = document.getElementById('theme-transition-overlay');
+                            const bar = document.getElementById('transition-bar');
+                            const title = document.getElementById('transition-title');
+                            
+                            // 1. Show Overlay
+                            overlay.classList.remove('opacity-0', 'pointer-events-none');
+                            
+                            // 2. Animate Title
+                            setTimeout(() => {
+                                title.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+                            }, 100);
+
+                            // 3. Start Progress Bar
+                            setTimeout(() => {
+                                bar.style.transition = 'width 1.5s cubic-bezier(0.22, 1, 0.36, 1)';
+                                bar.style.width = '100%';
+                            }, 200);
+
+                            // 4. Toggle Theme (at ~50% time)
+                            setTimeout(() => {
+                                toggleTheme();
+                            }, 800);
+
+                            // 5. Finish
+                            setTimeout(() => {
+                                overlay.classList.add('opacity-0', 'pointer-events-none');
+                                title.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+                                
+                                // Reset bar after fade out
+                                setTimeout(() => {
+                                    bar.style.transition = 'none';
+                                    bar.style.width = '0';
+                                }, 300);
+                            }, 1800);
+
+                        } else if (transitionStyle === 'circle-clip' && document.startViewTransition) {
                              const x = event.clientX;
                              const y = event.clientY;
                              const endRadius = Math.hypot(
