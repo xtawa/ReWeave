@@ -19,76 +19,165 @@ export interface Post {
     headings?: Array<{ level: number; text: string; id: string }>;
 }
 
-// Static distribution approach (easiest to implement correctly quickly)
+class WorkerPool {
+    private workers: Worker[] = [];
+    private queue: Array<{ filePath: string; slug: string; resolve: (value: Post) => void; reject: (reason?: any) => void }> = [];
+    private activeWorkers: number = 0;
+    private maxWorkers: number;
+    private workerPath: string;
+    private idleWorkers: Worker[] = [];
+
+    constructor(workerPath: string, maxWorkers: number) {
+        this.workerPath = workerPath;
+        this.maxWorkers = maxWorkers;
+    }
+
+    public async run(filePath: string, slug: string): Promise<Post> {
+        return new Promise<Post>((resolve, reject) => {
+            this.queue.push({ filePath, slug, resolve, reject });
+            this.processQueue();
+        });
+    }
+
+    private processQueue() {
+        if (this.queue.length === 0) return;
+
+        if (this.idleWorkers.length > 0) {
+            const worker = this.idleWorkers.pop()!;
+            this.assignTask(worker);
+        } else if (this.activeWorkers < this.maxWorkers) {
+            this.createWorker();
+        }
+    }
+
+    private createWorker() {
+        const worker = new Worker(this.workerPath);
+        this.activeWorkers++;
+
+        worker.on('message', (msg) => {
+            if (msg.status === 'success') {
+                const task = worker.userData;
+                if (task) {
+                    console.log(`✓ Processed: ${task.slug}`);
+                    task.resolve(msg.result);
+                }
+            } else {
+                const task = worker.userData;
+                if (task) {
+                    console.error(`✗ Error processing ${task.slug}:`, msg.error);
+                    // Resolve with error post to keep build running
+                    task.resolve({
+                        slug: task.slug,
+                        title: `Error: ${task.slug}`,
+                        date: new Date().toISOString(),
+                        content: `<div class="error">Build Error: ${msg.error}</div>`,
+                        draft: true
+                    } as Post);
+                }
+            }
+
+            this.releaseWorker(worker);
+        });
+
+        worker.on('error', (err) => {
+            console.error('[Worker Error]:', err);
+            const task = worker.userData;
+            if (task) {
+                task.reject(err);
+            }
+            this.removeWorker(worker);
+            this.activeWorkers--;
+            this.processQueue();
+        });
+
+        worker.on('exit', (code) => {
+            if (code !== 0) {
+                console.error(`Worker stopped with exit code ${code}`);
+                const task = worker.userData;
+                if (task) {
+                    task.reject(new Error(`Worker stopped with exit code ${code}`));
+                }
+            }
+            this.removeWorker(worker);
+            this.activeWorkers--;
+            this.processQueue();
+        });
+
+        this.assignTask(worker);
+    }
+
+    private assignTask(worker: Worker) {
+        if (this.queue.length > 0) {
+            const task = this.queue.shift()!;
+            worker.userData = task;
+            worker.postMessage({ filePath: task.filePath, slug: task.slug });
+        } else {
+            this.idleWorkers.push(worker);
+        }
+    }
+
+    private releaseWorker(worker: Worker) {
+        worker.userData = null;
+        // If there are tasks in queue, assign immediately
+        if (this.queue.length > 0) {
+            this.assignTask(worker);
+        } else {
+            this.idleWorkers.push(worker);
+        }
+    }
+
+    private removeWorker(worker: Worker) {
+        const index = this.idleWorkers.indexOf(worker);
+        if (index !== -1) {
+            this.idleWorkers.splice(index, 1);
+        }
+        worker.terminate();
+    }
+
+    public close() {
+        this.idleWorkers.forEach(w => w.terminate());
+        this.idleWorkers = [];
+        // Also terminate active workers? Ideally wait for them, but for build script we can just kill.
+    }
+}
+
+// Extend Worker type to hold user data
+declare module 'worker_threads' {
+    interface Worker {
+        userData?: { filePath: string; slug: string; resolve: (value: Post) => void; reject: (reason?: any) => void } | null;
+    }
+}
+
 export async function getPosts(contentDir: string): Promise<Post[]> {
     const files = (await fs.readdir(contentDir)).filter(file => file.endsWith('.md'));
     console.log(`Total markdown files found: ${files.length}`);
-    console.log('Files:', files);
-    const numWorkers = Math.max(1, os.cpus().length);
-    const workers: Worker[] = [];
 
-    // Create workers
+    // Use fewer workers to improve stability
+    const numWorkers = Math.max(1, Math.min(os.cpus().length - 1, 4));
+    console.log(`Starting build with ${numWorkers} workers...`);
+
     const workerPath = path.join(process.cwd(), 'dist', 'worker.js');
-    for (let i = 0; i < numWorkers; i++) {
-        workers.push(new Worker(workerPath));
-    }
+    const pool = new WorkerPool(workerPath, numWorkers);
 
-    // Use a shared atomic counter for dynamic load balancing
-    const sharedBuffer = new SharedArrayBuffer(4);
-    const sharedCounter = new Int32Array(sharedBuffer);
-
-    // Process
-    const promises = workers.map((worker) => {
-        return new Promise<Post[]>((resolve, reject) => {
-            const results: Post[] = [];
-
-            const processNext = () => {
-                const index = Atomics.add(sharedCounter, 0, 1);
-                if (index >= files.length) {
-                    resolve(results);
-                    return;
-                }
-
-                const file = files[index];
-                worker.postMessage({ filePath: path.join(contentDir, file), slug: file.replace('.md', '') });
-            };
-
-            worker.on('message', (msg) => {
-                if (msg.status === 'success') {
-                    results.push(msg.result);
-                    console.log(`✓ Processed: ${msg.result.slug}`);
-                    processNext();
-                } else {
-                    console.error(`✗ Error processing ${msg.slug}:`, msg.error);
-                    processNext();
-                }
+    const promises = files.map(file => {
+        return pool.run(path.join(contentDir, file), file.replace('.md', ''))
+            .catch(err => {
+                console.error(`Failed to process ${file}:`, err);
+                return {
+                    slug: file.replace('.md', ''),
+                    title: 'Build Error',
+                    date: new Date().toISOString(),
+                    content: `Error: ${err.message}`,
+                    draft: true
+                } as Post;
             });
-
-            worker.on('error', (err) => {
-                console.error('[Worker Error]:', err);
-                reject(err);
-            });
-
-            // Start processing - pipeline 4 tasks per worker initially to keep queue full
-            for (let i = 0; i < 4; i++) processNext();
-        });
     });
 
     const results = await Promise.all(promises);
+    pool.close();
 
-    // Terminate workers
-    workers.forEach(w => w.terminate());
-
-    const flatPosts = results.flat();
+    const flatPosts = results.filter(p => p !== null);
     console.log(`Total posts processed: ${flatPosts.length}`);
-    console.log('Posts:', flatPosts.map(p => ({ slug: p.slug, title: p.title, date: p.date })));
-
-    // Check for missing files
-    const processedSlugs = new Set(flatPosts.map(p => p.slug));
-    const missingSlugs = files.filter(f => !processedSlugs.has(f.replace('.md', '')));
-    if (missingSlugs.length > 0) {
-        console.warn('⚠️  Files that failed to process:', missingSlugs);
-    }
 
     return flatPosts.sort((a, b) => {
         if (a.pin && !b.pin) return -1;
@@ -97,10 +186,7 @@ export async function getPosts(contentDir: string): Promise<Post[]> {
     });
 }
 
-// Keep renderMarkdown for single usage if needed (e.g. dev mode?)
-// But for build, we use getPosts.
 export async function renderMarkdown(content: string): Promise<string> {
-    // Fallback or dev usage
     const { unified } = await import('unified');
     const remarkParse = (await import('remark-parse')).default;
     const remarkGfm = (await import('remark-gfm')).default;

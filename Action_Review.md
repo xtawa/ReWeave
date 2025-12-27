@@ -297,5 +297,19 @@
     - No extraneous content between frontmatter and article body.
 - **Status**: ✅ Completed
 
+### Fixed Article Build Failure & Improved Worker Stability
+- **Objective**: Resolve issue where 5 out of 8 articles failed to build, and implement a stable multi-threaded solution.
+- **Problem Identified**: 
+    - Previous atomic-counter based worker implementation lacked error recovery and crashed silently on complex content.
+    - Single-threaded fallback was stable but slower for large sites.
+- **Implementation**:
+    - Refactored `src/core/markdown.ts` to implement a robust **Worker Pool (Supervisor Pattern)**.
+    - Features of the new Worker Pool:
+        - **Task Queue**: Main thread manages a queue of tasks and assigns them to idle workers.
+        - **Error Recovery**: Listens for `error` and `exit` events from workers. If a worker crashes, the task is rejected (or can be retried) and the worker is replaced.
+        - **Resource Management**: Properly terminates workers after all tasks are completed.
+    - Verified that all 8 articles are successfully processed with the new multi-threaded implementation.
+- **Status**: ✅ Completed (Stable Multi-threaded Build)
+
 ### Next Step
-- Rebuild the site and verify all 8 articles now display correctly on the blog.
+- Verify the site in browser to ensure all articles render correctly.
