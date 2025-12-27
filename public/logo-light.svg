@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8fafc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e2e8f0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background - Light Slate -->
+  <rect width="512" height="512" rx="64" fill="url(#grad1)"/>
+  
+  <!-- Abstract W / Weave pattern - Dark Teal -->
+  <g transform="translate(64, 100)">
+    <path d="M48 40 L48 280 L120 320 L120 80 Z" fill="#0f766e" opacity="0.95"/>
+    <path d="M140 100 L140 280 L192 200 L192 40 Z" fill="#0d9488" opacity="0.90"/>
+    <path d="M192 40 L192 200 L244 280 L244 100 Z" fill="#0d9488" opacity="0.90"/>
+    <path d="M264 80 L264 320 L336 280 L336 40 Z" fill="#0f766e" opacity="0.95"/>
+    <path d="M48 160 Q192 120, 336 160" stroke="#14b8a6" stroke-width="8" fill="none" opacity="0.6"/>
+    <path d="M48 200 Q192 240, 336 200" stroke="#14b8a6" stroke-width="8" fill="none" opacity="0.6"/>
+  </g>
+</svg>

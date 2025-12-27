@@ -48,8 +48,8 @@ export function Layout({ title, description, image, children, contentWidth }: La
                 <meta property="og:title" content={pageTitle} />
                 <meta property="og:description" content={pageDescription} />
                 {/* Favicon */}
-                <link rel="icon" type="image/png" href={config.logo?.path ? (config.logo.path.startsWith('http') ? config.logo.path : `/${config.logo.path}`) : '/logo.png'} />
-                <link rel="apple-touch-icon" href={config.logo?.path ? (config.logo.path.startsWith('http') ? config.logo.path : `/${config.logo.path}`) : '/logo.png'} />
+                <link rel="icon" type="image/png" href="/favicon.png" />
+                <link rel="apple-touch-icon" href="/favicon-48.png" />
                 <link rel="stylesheet" href="/style.css" />
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />

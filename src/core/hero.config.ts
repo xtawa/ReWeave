@@ -25,13 +25,13 @@ export const heroConfig: HeroConfig = {
     name: "Co1sini",
     role: "UI/UX Designer & Frontend",
     description: "An independent developer coding with love.",
-    avatar: "logo.png", // Default to logo.png
+    avatar: "avatar.png", // Hero avatar image
     social: {
         github: "https://github.com/xtawa",
         twitter: "https://twitter.com/Coisini_Luo",
         email: "mailto:zeromostia@gmail.com",
-//        bilibili: "https://space.bilibili.com/26578164",
-//        netease: "https://music.163.com/#/user/home?id=63035382",
+        //        bilibili: "https://space.bilibili.com/26578164",
+        //        netease: "https://music.163.com/#/user/home?id=63035382",
         telegram: "https://t.me/Yanluokeke",
         rss: true,
     },

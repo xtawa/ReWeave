@@ -40,7 +40,7 @@ export const projectsConfig: Project[] = [
         techStack: ["TypeScript", "Preact", "SSG", "TailwindCSS"],
         link: "https://demo.reweave.xtyin.com",
         github: "https://github.com/xtawa/ReWeave",
-        image: "/images/projects/reweave.png",
+        image: "/logo.png",
         featured: true,
     },
 ];
