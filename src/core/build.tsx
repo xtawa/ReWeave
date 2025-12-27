@@ -312,7 +312,7 @@ async function build() {
 
     // Dynamic Theme Import
     // Dynamic Theme Import
-    let Layout: any, Header: any, Hero: any, Pagination: any, Comments: any, PostList: any, Archive: any, Post: any, CategoryList: any, TagList: any, Page: any;
+    let Layout: any, Header: any, Hero: any, Pagination: any, Comments: any, PostList: any, Archive: any, Post: any, CategoryList: any, TagList: any, Page: any, ProjectsTemplate: any;
 
     try {
         const themePath = `../themes/${config.themeName}`;
@@ -340,6 +340,7 @@ async function build() {
         CategoryList = (await import(`${themePath}/templates/CategoryList`).catch(() => ({ CategoryList: null }))).CategoryList;
         TagList = (await import(`${themePath}/templates/TagList`).catch(() => ({ TagList: null }))).TagList;
         Page = (await import(`${themePath}/templates/Page`).catch(() => ({ Page: null }))).Page;
+        ProjectsTemplate = (await import(`${themePath}/templates/Projects`).catch(() => ({ Projects: null }))).Projects;
 
     } catch (e) {
         console.warn(`Theme '${config.themeName}' not found or failed to load. Using default layout. Error:`, e);
@@ -1012,33 +1013,48 @@ async function build() {
     // 10. Build Projects Page
     let projectsBuild: Promise<void> | null = null;
     if (config.projects) {
-        const { unified } = await import('unified');
-        const remarkParse = (await import('remark-parse')).default;
-        const remarkRehype = (await import('remark-rehype')).default;
-        const rehypeStringify = (await import('rehype-stringify')).default;
-
-        const pagesDir = path.join(process.cwd(), 'src', 'pages');
-        const projectsFilePath = path.join(pagesDir, config.projects.file);
-        const projectsMarkdown = await fs.readFile(projectsFilePath, 'utf-8');
-
-        const processedProjects = await unified()
-            .use(remarkParse)
-            .use(remarkRehype)
-            .use(rehypeStringify)
-            .process(projectsMarkdown);
-
         let projectsContent;
-        if (Page) {
-            projectsContent = <Page title={config.projects.title || t('projects', config.language)} content={processedProjects.toString()} slug="projects" />;
-        } else {
-            projectsContent = (
-                <Layout title={config.projects.title || t('projects', config.language)}>
-                    <Header />
-                    <main>
-                        <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedProjects.toString() }} />
-                    </main>
-                </Layout>
-            );
+
+        // Try to use Projects template with structured data
+        if (ProjectsTemplate) {
+            try {
+                const { projectsConfig } = await import('../config/projects.config');
+                projectsContent = <ProjectsTemplate projects={projectsConfig} title={config.projects.title || t('projects', config.language)} />;
+            } catch (e) {
+                console.warn('Projects config not found, falling back to markdown. Error:', e);
+                ProjectsTemplate = null;
+            }
+        }
+
+        // Fallback to markdown-based rendering
+        if (!ProjectsTemplate) {
+            const { unified } = await import('unified');
+            const remarkParse = (await import('remark-parse')).default;
+            const remarkRehype = (await import('remark-rehype')).default;
+            const rehypeStringify = (await import('rehype-stringify')).default;
+
+            const pagesDir = path.join(process.cwd(), 'src', 'pages');
+            const projectsFilePath = path.join(pagesDir, config.projects.file);
+            const projectsMarkdown = await fs.readFile(projectsFilePath, 'utf-8');
+
+            const processedProjects = await unified()
+                .use(remarkParse)
+                .use(remarkRehype)
+                .use(rehypeStringify)
+                .process(projectsMarkdown);
+
+            if (Page) {
+                projectsContent = <Page title={config.projects.title || t('projects', config.language)} content={processedProjects.toString()} slug="projects" />;
+            } else {
+                projectsContent = (
+                    <Layout title={config.projects.title || t('projects', config.language)}>
+                        <Header />
+                        <main>
+                            <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedProjects.toString() }} />
+                        </main>
+                    </Layout>
+                );
+            }
         }
         projectsBuild = writeHtml(path.join(distDir, 'projects.html'), createHtml(projectsContent));
     }
