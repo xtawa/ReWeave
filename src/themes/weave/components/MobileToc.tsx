@@ -90,34 +90,22 @@ export function MobileToc() {
                         a.className = 'block text-zinc-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400 transition line-clamp-1';
                         a.textContent = h.innerText;
                         
-                        a.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            const rawTargetId = this.getAttribute('href').substring(1);
-                            let targetElement = document.getElementById(rawTargetId);
-                            
-                            // Try decoding if direct ID lookup fails (fixes CJK jumps)
-                            if (!targetElement) {
-                                try {
-                                    targetElement = document.getElementById(decodeURIComponent(rawTargetId));
-                                } catch (err) {}
-                            }
-                            
-                            if (targetElement) {
-                                closeToc();
-                                const headerOffset = 80; // Adjust for header height
-                                const elementPosition = targetElement.getBoundingClientRect().top;
-                                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                
-                                window.scrollTo({
-                                    top: offsetPosition,
-                                    behavior: "smooth"
-                                });
-                            }
-                        });
+                        // Use native jump with CSS smooth scrolling
+                        a.addEventListener('click', closeToc);
                         
                         li.appendChild(a);
                         list.appendChild(li);
                     });
+
+                    // Inject CSS for smooth scrolling and header offset
+                    const style = document.createElement('style');
+                    style.textContent = \`
+                        html {
+                            scroll-behavior: smooth;
+                            scroll-padding-top: 80px; /* Offset for fixed header */
+                        }
+                    \`;
+                    document.head.appendChild(style);
 
                     // 3. Interaction Logic
                     function openToc() {
