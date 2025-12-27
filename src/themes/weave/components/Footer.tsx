@@ -1,5 +1,5 @@
 /** @jsx h */
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
 import { config } from '../../../config/theme/weave.config';
 import { t } from '../../../core/i18n';
 

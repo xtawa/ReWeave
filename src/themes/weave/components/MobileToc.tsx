@@ -134,8 +134,13 @@ export function MobileToc() {
                     // 4. Scroll Tracking & Progress
                     function updateProgress() {
                         const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-                        const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
-                        const clientHeight = document.documentElement.clientHeight || window.innerHeight;
+                        // More robust scroll height calculation
+                        const scrollHeight = Math.max(
+                            document.body.scrollHeight, document.documentElement.scrollHeight,
+                            document.body.offsetHeight, document.documentElement.offsetHeight,
+                            document.body.clientHeight, document.documentElement.clientHeight
+                        );
+                        const clientHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
                         const docHeight = scrollHeight - clientHeight;
                         
                         let percent = 0;
@@ -147,11 +152,13 @@ export function MobileToc() {
                         if (progressEl) progressEl.style.width = percent + '%';
 
                         // Highlight active link
-                        const scrollPos = scrollTop + 100;
+                        const scrollPos = scrollTop + 150; // Offset for better UX
                         let currentHeading = null;
 
                         for (let i = 0; i < headings.length; i++) {
-                            if (headings[i] && headings[i].offsetTop <= scrollPos) {
+                            // Use getBoundingClientRect for better accuracy
+                            const top = headings[i].getBoundingClientRect().top + window.pageYOffset;
+                            if (top <= scrollPos) {
                                 currentHeading = headings[i];
                             } else {
                                 break;
