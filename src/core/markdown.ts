@@ -22,6 +22,8 @@ export interface Post {
 // Static distribution approach (easiest to implement correctly quickly)
 export async function getPosts(contentDir: string): Promise<Post[]> {
     const files = (await fs.readdir(contentDir)).filter(file => file.endsWith('.md'));
+    console.log(`Total markdown files found: ${files.length}`);
+    console.log('Files:', files);
     const numWorkers = Math.max(1, os.cpus().length);
     const workers: Worker[] = [];
 
@@ -54,14 +56,18 @@ export async function getPosts(contentDir: string): Promise<Post[]> {
             worker.on('message', (msg) => {
                 if (msg.status === 'success') {
                     results.push(msg.result);
+                    console.log(`✓ Processed: ${msg.result.slug}`);
                     processNext();
                 } else {
-                    console.error(`Error processing ${msg.slug}:`, msg.error);
+                    console.error(`✗ Error processing ${msg.slug}:`, msg.error);
                     processNext();
                 }
             });
 
-            worker.on('error', (err) => reject(err));
+            worker.on('error', (err) => {
+                console.error('[Worker Error]:', err);
+                reject(err);
+            });
 
             // Start processing - pipeline 4 tasks per worker initially to keep queue full
             for (let i = 0; i < 4; i++) processNext();
@@ -74,6 +80,15 @@ export async function getPosts(contentDir: string): Promise<Post[]> {
     workers.forEach(w => w.terminate());
 
     const flatPosts = results.flat();
+    console.log(`Total posts processed: ${flatPosts.length}`);
+    console.log('Posts:', flatPosts.map(p => ({ slug: p.slug, title: p.title, date: p.date })));
+
+    // Check for missing files
+    const processedSlugs = new Set(flatPosts.map(p => p.slug));
+    const missingSlugs = files.filter(f => !processedSlugs.has(f.replace('.md', '')));
+    if (missingSlugs.length > 0) {
+        console.warn('⚠️  Files that failed to process:', missingSlugs);
+    }
 
     return flatPosts.sort((a, b) => {
         if (a.pin && !b.pin) return -1;

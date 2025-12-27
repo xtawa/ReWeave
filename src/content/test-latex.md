@@ -1,8 +1,11 @@
 ---
-title: LaTeX Test
+title: LaTeX 数学公式测试
 date: 2025-12-24
+excerpt: 演示 ReWeave 对 LaTeX 数学公式的完整支持，包括行内公式和块级公式。
+category: 演示
+tags: [LaTeX, Math, 数学公式]
 ---
-Sample Article
+
 # LaTeX Test
 
 Here is an inline equation: $E = mc^2$.

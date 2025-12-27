@@ -63,10 +63,16 @@ if (parentPort) {
 
             const headings: any[] = [];
             const processor = createProcessor(headings);
-            const processed = await processor.process(content);
-            const html = processed.toString();
 
-            // const headings = extractHeadings(html);
+            let html = '';
+            try {
+                const processed = await processor.process(content);
+                html = processed.toString();
+            } catch (renderError: any) {
+                console.error(`[Worker] Render error in ${slug}:`, renderError.message);
+                // Fallback: return plain text if rendering fails
+                html = `<div class="error"><p>Error rendering content: ${renderError.message}</p><pre>${content}</pre></div>`;
+            }
 
             parentPort!.postMessage({
                 status: 'success',
@@ -87,6 +93,7 @@ if (parentPort) {
                 }
             });
         } catch (error: any) {
+            console.error(`[Worker] Fatal error processing ${task.slug}:`, error);
             parentPort!.postMessage({ status: 'error', error: error.message, slug: task.slug });
         }
     });

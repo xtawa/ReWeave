@@ -6,7 +6,7 @@ category: 教程
 tags: [配置, 指南, ReWeave]
 abbrlink: config-guide
 ---
-Sample Article
+
 # ReWeave 配置指南
 
 本指南涵盖了 ReWeave 中所有可用的配置选项。

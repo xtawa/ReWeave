@@ -5,7 +5,7 @@ excerpt: 演示 ReWeave 支持的语法高亮、Mermaid 图表、GFM 表格以�
 category: 教程
 tags: [Markdown, 功能, 演示]
 ---
-Sample Article
+
 # 富文本功能演示
 
 ReWeave 提供了丰富的 Markdown 扩展功能，让你的内容表达更加生动。

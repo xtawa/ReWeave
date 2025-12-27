@@ -271,3 +271,31 @@
     - Checked `dist/posts` count: 1009 files.
     - Build completed successfully.
 - **Status**: ✅ Completed
+
+## 2025-12-27
+
+### Fixed Article Frontmatter Issues
+- **Objective**: Fix articles not displaying in the blog by completing missing frontmatter and removing invalid content.
+- **Problem Identified**:
+    - `test-latex.md` was missing `excerpt`, `category`, and `tags` fields.
+    - All 8 article files had "Sample Article" text between frontmatter and content body, which could interfere with parsing.
+- **Implementation**:
+    - Modified `src/content/test-latex.md`: 
+        - Updated title to "LaTeX 数学公式测试".
+        - Added `excerpt`, `category`, and `tags` fields.
+    - Removed "Sample Article" line from all 8 content files:
+        - `theme-development-tutorial.md`
+        - `test-latex.md`
+        - `rich-text-demo.md`
+        - `performance-report.md`
+        - `hello-world.md`
+        - `future-static.md`
+        - `configuration-guide.md`
+        - `complex-sample.md`
+- **Verification**:
+    - All frontmatter fields are now complete and properly formatted.
+    - No extraneous content between frontmatter and article body.
+- **Status**: ✅ Completed
+
+### Next Step
+- Rebuild the site and verify all 8 articles now display correctly on the blog.

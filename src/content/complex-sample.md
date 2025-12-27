@@ -3,7 +3,7 @@ title: Complex Benchmark Sample
 date: 2025-01-01
 excerpt: This is a sample of the complex content used in our benchmarks.
 ---
-Sample Article
+
 # Complex Benchmark Sample
 
 ## Introduction
