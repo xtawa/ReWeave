@@ -178,8 +178,12 @@ function ProjectCard({ project, featured, delay }: ProjectCardProps) {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                            {project.name.charAt(0)}
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
+                            {project.image ? (
+                                <img src={project.image} alt={project.name} className="w-full h-full object-cover" data-project-icon={project.image} />
+                            ) : (
+                                project.name.charAt(0)
+                            )}
                         </div>
                         <h3 className="text-xl font-bold text-zinc-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                             {project.name}

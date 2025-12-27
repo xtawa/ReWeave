@@ -92,12 +92,24 @@ export function Layout({ title, description, image, children, contentWidth }: La
                         }
                     });
 
+                    });
+
                     // Update background images (for projects) based on time
                     document.querySelectorAll('[data-bg-image]').forEach(function(el) {
                         if (window.__reweaveIsDay) {
                             var bgImage = el.getAttribute('data-bg-image');
                             if (bgImage && bgImage.includes('logo.png')) {
                                 el.style.backgroundImage = 'url(' + bgImage.replace('logo.png', 'logo-light.png') + ')';
+                            }
+                        }
+                    });
+
+                    // Update project icons based on time
+                    document.querySelectorAll('img[data-project-icon]').forEach(function(img) {
+                        if (window.__reweaveIsDay) {
+                            var src = img.getAttribute('data-project-icon');
+                            if (src && src.includes('logo.png')) {
+                                img.src = src.replace('logo.png', 'logo-light.png');
                             }
                         }
                     });
