@@ -92,8 +92,15 @@ export function MobileToc() {
                         
                         a.addEventListener('click', function(e) {
                             e.preventDefault();
-                            const targetId = this.getAttribute('href').substring(1);
-                            const targetElement = document.getElementById(targetId);
+                            const rawTargetId = this.getAttribute('href').substring(1);
+                            let targetElement = document.getElementById(rawTargetId);
+                            
+                            // Try decoding if direct ID lookup fails (fixes CJK jumps)
+                            if (!targetElement) {
+                                try {
+                                    targetElement = document.getElementById(decodeURIComponent(rawTargetId));
+                                } catch (err) {}
+                            }
                             
                             if (targetElement) {
                                 closeToc();
