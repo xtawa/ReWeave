@@ -4,6 +4,7 @@ import { config } from '../../../config/theme/weave.config';
 import { t } from '../../../core/i18n';
 
 export function MobileToc() {
+    // Mobile Table of Contents Component
     // Only render if TOC is enabled globally
     if (!config.toc?.enabled) return null;
 
