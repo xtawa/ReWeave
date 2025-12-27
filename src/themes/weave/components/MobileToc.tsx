@@ -89,7 +89,23 @@ export function MobileToc() {
                         a.className = 'block text-zinc-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400 transition line-clamp-1';
                         a.textContent = h.innerText;
                         
-                        a.addEventListener('click', closeToc);
+                        a.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const targetId = this.getAttribute('href').substring(1);
+                            const targetElement = document.getElementById(targetId);
+                            
+                            if (targetElement) {
+                                closeToc();
+                                const headerOffset = 80; // Adjust for header height
+                                const elementPosition = targetElement.getBoundingClientRect().top;
+                                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                                window.scrollTo({
+                                    top: offsetPosition,
+                                    behavior: "smooth"
+                                });
+                            }
+                        });
                         
                         li.appendChild(a);
                         list.appendChild(li);
