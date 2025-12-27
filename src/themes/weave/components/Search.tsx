@@ -99,26 +99,14 @@ export function Search({ posts }: SearchProps) {
                 <script dangerouslySetInnerHTML={{
                     __html: `
                     (function() {
-                        const posts = ${postsJson};
-                        const input = document.getElementById('search-input');
-                        const results = document.getElementById('search-results');
-                        const noResults = document.getElementById('no-results');
-                        const initialPosts = document.getElementById('initial-posts');
-                        const clearBtn = document.getElementById('search-clear');
-                        const lang = '${config.language}';
-                        const searchResultsFor = '${t('searchResultsFor', config.language)}';
+                        var posts = ${postsJson};
+                        var input = document.getElementById('search-input');
+                        var results = document.getElementById('search-results');
+                        var noResults = document.getElementById('no-results');
+                        var initialPosts = document.getElementById('initial-posts');
+                        var clearBtn = document.getElementById('search-clear');
 
-                        function safeSlug(str) {
-                            return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-                        }
-
-                        function highlightText(text, query) {
-                            if (!query) return text;
-                            const regex = new RegExp('(' + query.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&') + ')', 'gi');
-                            return text.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-600/50 text-inherit rounded px-0.5">$1</mark>');
-                        }
-
-                        function renderResults(filteredPosts, query) {
+                        function renderResults(filteredPosts) {
                             if (filteredPosts.length === 0) {
                                 results.innerHTML = '';
                                 noResults.classList.remove('hidden');
@@ -126,26 +114,24 @@ export function Search({ posts }: SearchProps) {
                             }
 
                             noResults.classList.add('hidden');
-                            results.innerHTML = filteredPosts.map(post => {
-                                const dateStr = new Date(post.date).toLocaleDateString();
-                                const highlightedTitle = highlightText(post.title, query);
-                                const highlightedExcerpt = post.excerpt ? highlightText(post.excerpt, query) : '';
-                                const tagsHtml = post.tags.slice(0, 3).map(tag => 
-                                    '<span class="text-xs px-2 py-1 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-300 rounded-full">#' + tag + '</span>'
-                                ).join('');
+                            results.innerHTML = filteredPosts.map(function(post) {
+                                var dateStr = new Date(post.date).toLocaleDateString();
+                                var tagsHtml = (post.tags || []).slice(0, 3).map(function(tag) {
+                                    return '<span class="text-xs px-2 py-1 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-300 rounded-full">#' + tag + '</span>';
+                                }).join('');
 
                                 return '<article class="group relative flex flex-col items-start p-4 -mx-4 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition animate-fade-in">' +
                                     '<h2 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">' +
                                         '<a href="/posts/' + post.slug + '">' +
                                             '<span class="absolute inset-0 z-0"></span>' +
-                                            highlightedTitle +
+                                            post.title +
                                         '</a>' +
                                     '</h2>' +
                                     '<time class="relative z-10 order-first mb-2 flex items-center text-sm text-zinc-400" datetime="' + post.date + '">' +
                                         '<span class="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-700 mr-3"></span>' +
                                         dateStr +
                                     '</time>' +
-                                    (highlightedExcerpt ? '<p class="relative z-10 mt-2 text-sm text-zinc-600 dark:text-zinc-300 line-clamp-2">' + highlightedExcerpt + '</p>' : '') +
+                                    (post.excerpt ? '<p class="relative z-10 mt-2 text-sm text-zinc-600 dark:text-zinc-300 line-clamp-2">' + post.excerpt + '</p>' : '') +
                                     (tagsHtml ? '<div class="relative z-10 mt-3 flex flex-wrap gap-2">' + tagsHtml + '</div>' : '') +
                                 '</article>';
                             }).join('');
@@ -165,29 +151,24 @@ export function Search({ posts }: SearchProps) {
                             clearBtn.classList.remove('hidden');
                             initialPosts.classList.add('hidden');
 
-                            const filtered = posts.filter(post => {
-                                const titleMatch = post.title.toLowerCase().includes(query);
-                                const excerptMatch = post.excerpt && post.excerpt.toLowerCase().includes(query);
-                                const tagsMatch = post.tags && post.tags.some(tag => tag.toLowerCase().includes(query));
-                                const categoryMatch = post.category && post.category.toLowerCase().includes(query);
+                            var filtered = posts.filter(function(post) {
+                                var titleMatch = post.title.toLowerCase().indexOf(query) !== -1;
+                                var excerptMatch = post.excerpt && post.excerpt.toLowerCase().indexOf(query) !== -1;
+                                var tagsMatch = post.tags && post.tags.some(function(tag) { return tag.toLowerCase().indexOf(query) !== -1; });
+                                var categoryMatch = post.category && post.category.toLowerCase().indexOf(query) !== -1;
                                 return titleMatch || excerptMatch || tagsMatch || categoryMatch;
                             });
 
-                            renderResults(filtered, query);
+                            renderResults(filtered);
                         }
 
-                        // Debounce helper
-                        let timeout;
-                        function debounce(fn, delay) {
-                            return function() {
-                                clearTimeout(timeout);
-                                timeout = setTimeout(fn, delay);
-                            };
-                        }
-
-                        input.addEventListener('input', debounce(function() {
-                            search(input.value);
-                        }, 200));
+                        var timeout;
+                        input.addEventListener('input', function() {
+                            clearTimeout(timeout);
+                            timeout = setTimeout(function() {
+                                search(input.value);
+                            }, 200);
+                        });
 
                         clearBtn.addEventListener('click', function() {
                             input.value = '';
@@ -195,25 +176,12 @@ export function Search({ posts }: SearchProps) {
                             input.focus();
                         });
 
-                        // Check for query param on load
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const q = urlParams.get('q');
+                        var urlParams = new URLSearchParams(window.location.search);
+                        var q = urlParams.get('q');
                         if (q) {
                             input.value = q;
                             search(q);
                         }
-
-                        // Update URL on search
-                        input.addEventListener('input', debounce(function() {
-                            const query = input.value.trim();
-                            const url = new URL(window.location);
-                            if (query) {
-                                url.searchParams.set('q', query);
-                            } else {
-                                url.searchParams.delete('q');
-                            }
-                            history.replaceState({}, '', url);
-                        }, 300));
                     })();
                 `}} />
             </main>
