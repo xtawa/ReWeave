@@ -58,7 +58,7 @@ abbrlink: config-guide
 
 ## 2. 个人名片页配置 (Hero)
 
-名片页配置已独立到 `src/core/hero.config.ts`，方便管理个人信息。
+名片页配置已独立到 `src/config/hero.config.ts`，方便管理个人信息。
 
 ```typescript
 export const heroConfig: HeroConfig = {

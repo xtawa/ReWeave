@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from 'preact';
-import { config } from '../../../config/weave.config';
+import { config } from '../../../config/theme/weave.config';
 import { t } from '../../../core/i18n';
 import { Layout } from '../layouts/Layout';
 import { Header } from './Header';

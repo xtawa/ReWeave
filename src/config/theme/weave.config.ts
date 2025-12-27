@@ -1,5 +1,5 @@
-import { reweaveConfig, ReweaveConfig } from './reweave.config';
-import { HeroConfig, heroConfig } from '../core/hero.config';
+import { reweaveConfig, ReweaveConfig } from '../reweave.config';
+import { HeroConfig, heroConfig } from '../hero.config';
 
 export interface ThemeConfig extends ReweaveConfig {
     logo?: {
@@ -31,6 +31,12 @@ export interface ThemeConfig extends ReweaveConfig {
                 label?: string;
             }>;
         }>;
+    };
+    projectsPage?: {
+        showProjects?: boolean;
+        showContributors?: boolean;
+        showSponsors?: boolean;
+        sponsorLink?: string;
     };
 }
 
@@ -67,5 +73,11 @@ export const config: ThemeConfig = {
             { key: 'projects', href: '/projects' },
             { key: 'about', href: '/about' },
         ],
+    },
+    projectsPage: {
+        showProjects: true,
+        showContributors: true,
+        showSponsors: false,
+        sponsorLink: 'https://github.com/sponsors/yourusername',
     },
 };

@@ -1023,7 +1023,7 @@ async function build() {
                 // Try to load theme config for section visibility
                 let themeConfig: any = {};
                 try {
-                    const themeModule = await import(`../config/${config.themeName}.config`);
+                    const themeModule = await import(`../config/theme/${config.themeName}.config`);
                     themeConfig = themeModule.config || {};
                 } catch {
                     // Theme config not found, use defaults

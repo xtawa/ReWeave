@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from 'preact';
-import { config } from '../../../config/landing.config';
+import { config } from '../../../config/theme/landing.config';
 
 import { Post } from '../../../core/markdown';
 

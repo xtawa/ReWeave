@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h, ComponentChildren } from 'preact';
-import { config } from '../../../config/weave.config';
+import { config } from '../../../config/theme/weave.config';
 import { Footer } from '../components/Footer';
 import { MobileToc } from '../components/MobileToc';
 import { SnowEffect } from '../../../core/components/SnowEffect';
@@ -47,9 +47,9 @@ export function Layout({ title, description, image, children, contentWidth }: La
                 {image && <meta property="og:image" content={image} />}
                 <meta property="og:title" content={pageTitle} />
                 <meta property="og:description" content={pageDescription} />
-                {/* Favicon */}
-                <link rel="icon" type="image/png" href="/favicon.png" />
-                <link rel="apple-touch-icon" href="/favicon-48.png" />
+                {/* Favicon - will be dynamically updated based on time */}
+                <link id="favicon" rel="icon" type="image/png" href="/favicon.png" />
+                <link id="apple-touch-icon" rel="apple-touch-icon" href="/favicon-48.png" />
                 <link rel="stylesheet" href="/style.css" />
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -63,11 +63,34 @@ export function Layout({ title, description, image, children, contentWidth }: La
                     } else {
                         document.documentElement.classList.remove('dark')
                     }
+                    
+                    // Time-based favicon and avatar switching (8:00-19:00 = light, else = dark)
+                    (function() {
+                        var hour = new Date().getHours();
+                        var isDay = hour >= 8 && hour < 19;
+                        var faviconSuffix = isDay ? '-light' : '';
+                        
+                        // Update favicon
+                        var favicon = document.getElementById('favicon');
+                        var appleTouchIcon = document.getElementById('apple-touch-icon');
+                        if (favicon) favicon.href = '/favicon' + (isDay ? '-light' : '') + '.png';
+                        if (appleTouchIcon) appleTouchIcon.href = '/favicon-48' + (isDay ? '-light' : '') + '.png';
+                        
+                        // Store for avatar usage
+                        window.__reweaveIsDay = isDay;
+                    })();
                 `}} />
                 <script type="module" dangerouslySetInnerHTML={{
                     __html: `
                     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
                     mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+                    
+                    // Update avatar images based on time
+                    document.querySelectorAll('img[data-avatar]').forEach(function(img) {
+                        if (window.__reweaveIsDay) {
+                            img.src = img.src.replace('avatar.png', 'avatar-light.png');
+                        }
+                    });
                 `}} />
             </head>
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden">

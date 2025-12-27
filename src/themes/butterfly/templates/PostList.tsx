@@ -4,7 +4,7 @@ import { Layout } from '../layouts/Layout';
 import { Header } from '../components/Header';
 import { Hero } from '../components/Hero';
 import { Pagination } from '../components/Pagination';
-import { config } from '../../../config/butterfly.config';
+import { config } from '../../../config/theme/butterfly.config';
 
 interface Post {
     title: string;

@@ -18,13 +18,14 @@ export interface HeroConfig {
         telegram?: string;
         rss?: boolean;
     };
+    showDeveloperTag?: boolean;
 }
 
 export const heroConfig: HeroConfig = {
     enabled: true,
-    name: "Co1sini",
-    role: "UI/UX Designer & Frontend",
-    description: "An independent developer coding with love.",
+    name: "ReWeave",
+    role: "Powered By ReWeave Labs",
+    description: "Next-generation blogging framework",
     avatar: "avatar.png", // Hero avatar image
     social: {
         github: "https://github.com/xtawa",
@@ -35,4 +36,5 @@ export const heroConfig: HeroConfig = {
         telegram: "https://t.me/Yanluokeke",
         rss: true,
     },
+    showDeveloperTag: false,
 };

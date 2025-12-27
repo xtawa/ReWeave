@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h, ComponentChildren } from 'preact';
-import { config } from '../../../config/butterfly.config';
+import { config } from '../../../config/theme/butterfly.config';
 import { Footer } from '../components/Footer';
 import { SnowEffect } from '../../../core/components/SnowEffect';
 

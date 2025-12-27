@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from 'preact';
-import { config } from '../../../config/weave.config';
+import { config } from '../../../config/theme/weave.config';
 
 import { ChristmasHat } from '../../../core/components/ChristmasHat';
 
@@ -17,7 +17,7 @@ export function Hero() {
                     Hi, I'm <span class="text-zinc-900 dark:text-zinc-100">{name}</span> <span class="animate-wave inline-block origin-[70%_70%]">👋</span>。
                 </h1>
                 <h2 class="text-3xl md:text-5xl font-medium text-zinc-800 dark:text-zinc-200">
-                    A {role} <span class="font-mono text-zinc-500 dark:text-zinc-400">&lt;Developer /&gt;</span>
+                    A {role} {config.hero.showDeveloperTag !== false && <span class="font-mono text-zinc-500 dark:text-zinc-400">&lt;Developer /&gt;</span>}
                 </h2>
                 <p class="text-xl text-zinc-600 dark:text-zinc-400 max-w-lg">
                     {description}
@@ -75,6 +75,7 @@ export function Hero() {
                     <img
                         src={avatar.startsWith('http') ? avatar : `/${avatar}`}
                         alt={name}
+                        data-avatar="true"
                         class="relative w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-white dark:border-zinc-800 shadow-2xl transition transform group-hover:scale-105 duration-500"
                     />
                 </ChristmasHat>

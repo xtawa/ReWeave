@@ -29,9 +29,23 @@
     - Hover effects for better interactivity
 - **Status**: ✅ Completed and verified
 
-### Next Step
-- Consider adding project images support
-- Add more projects to configuration
+### Config Refactoring & Logo Updates
+- **Objective**: Reorganize configuration files and update project branding.
+- **Implementation**:
+    - **Config Reorganization**:
+        - Moved `src/core/hero.config.ts` to `src/config/hero.config.ts`.
+        - Created `src/config/theme/` directory.
+        - Moved theme-specific configs (`weave.config.ts`, `butterfly.config.ts`, etc.) to `src/config/theme/`.
+        - Updated all import paths in the codebase using a batch script.
+    - **Logo & Branding**:
+        - Created new SVG logo (abstract "W" weave pattern) in dark and light variants.
+        - Generated PNG assets (logo, favicon, avatar) in multiple sizes.
+        - Implemented time-based auto-switching for favicon and avatar (Light mode: 8:00-19:00).
+    - **Projects Page Enhancements**:
+        - Added Contributors and Sponsors sections to `Projects.tsx`.
+        - Added configuration options in `weave.config.ts` to toggle these sections.
+        - Updated `projects.config.ts` with real data and new logo image.
+- **Status**: ✅ Completed and verified
 
 ## 2025-12-21
 

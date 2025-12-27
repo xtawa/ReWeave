@@ -52,7 +52,7 @@ export function Layout({ title, children }: { title?: string, children: Componen
 ### Hero (个人名片)
 Hero 组件是 ReWeave 的一大特色，它允许你创建一个极具个性化的首页。
 
-- **配置驱动**：通过 `src/core/hero.config.ts` 进行配置。
+- **配置驱动**：通过 `src/config/hero.config.ts` 进行配置。
 - **动画支持**：利用 TailwindCSS 或原生 CSS 添加动画（如 `animate-wave`）。
 
 ## 3. 样式系统

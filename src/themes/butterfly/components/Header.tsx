@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from 'preact';
-import { config } from '../../../config/butterfly.config';
+import { config } from '../../../config/theme/butterfly.config';
 import { t } from '../../../core/i18n';
 
 import { ChristmasHat } from '../../../core/components/ChristmasHat';
