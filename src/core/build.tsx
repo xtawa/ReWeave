@@ -1138,6 +1138,85 @@ async function build() {
     );
     const statsBuild = writeHtml(path.join(distDir, 'stats.html'), createHtml(statsContent));
 
+    // 10.5 Build Search Page
+    let Search: any = null;
+    try {
+        const SearchModule = await import(`../themes/${config.themeName}/components/Search`);
+        Search = SearchModule.Search;
+    } catch (e) {
+        // Search component not available in theme
+    }
+
+    let searchContent;
+    if (Search) {
+        searchContent = <Search posts={posts.map(p => ({
+            title: p.title,
+            slug: p.slug,
+            abbrlink: p.abbrlink,
+            date: p.date,
+            excerpt: p.excerpt,
+            category: p.category,
+            tags: p.tags
+        }))} />;
+    } else {
+        // Fallback basic search page
+        const postsJson = JSON.stringify(posts.map(p => ({
+            title: p.title,
+            slug: safeSlug(p.abbrlink || p.slug),
+            date: p.date,
+            excerpt: p.excerpt || '',
+            category: p.category || '',
+            tags: p.tags || []
+        })));
+        searchContent = (
+            <Layout title={t('search', config.language)}>
+                <Header />
+                <main class="max-w-4xl mx-auto">
+                    <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('search', config.language)}</h1>
+                    <div class="relative mb-8">
+                        <input
+                            type="text"
+                            id="search-input"
+                            placeholder={t('searchPlaceholder', config.language)}
+                            class="w-full pl-12 pr-4 py-4 text-lg rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100"
+                        />
+                    </div>
+                    <div id="search-results" class="space-y-6"></div>
+                    <script dangerouslySetInnerHTML={{
+                        __html: `
+                        (function() {
+                            const posts = ${postsJson};
+                            const input = document.getElementById('search-input');
+                            const results = document.getElementById('search-results');
+                            
+                            function search(query) {
+                                query = query.toLowerCase().trim();
+                                if (!query) { results.innerHTML = ''; return; }
+                                const filtered = posts.filter(p => 
+                                    p.title.toLowerCase().includes(query) ||
+                                    (p.excerpt && p.excerpt.toLowerCase().includes(query)) ||
+                                    (p.tags && p.tags.some(t => t.toLowerCase().includes(query)))
+                                );
+                                results.innerHTML = filtered.map(p => 
+                                    '<article class="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-xl">' +
+                                        '<a href="/posts/' + p.slug + '" class="text-xl font-semibold text-zinc-900 dark:text-zinc-100">' + p.title + '</a>' +
+                                        '<p class="text-sm text-zinc-500 mt-1">' + new Date(p.date).toLocaleDateString() + '</p>' +
+                                    '</article>'
+                                ).join('');
+                            }
+                            let timeout;
+                            input.addEventListener('input', () => {
+                                clearTimeout(timeout);
+                                timeout = setTimeout(() => search(input.value), 200);
+                            });
+                        })();
+                    `}} />
+                </main>
+            </Layout>
+        );
+    }
+    const searchBuild = writeHtml(path.join(distDir, 'search.html'), createHtml(searchContent));
+
     // 11. Generate RSS Feed
     const rssContent = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -1186,6 +1265,11 @@ async function build() {
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
+    <url>
+        <loc>${config.siteUrl}/search</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
     ${config.about ? `
     <url>
         <loc>${config.siteUrl}/about</loc>
@@ -1213,6 +1297,7 @@ async function build() {
     if (aboutBuild) allBuilds.push(aboutBuild);
     if (projectsBuild) allBuilds.push(projectsBuild);
     allBuilds.push(statsBuild);
+    allBuilds.push(searchBuild);
     allBuilds.push(rssBuild);
     allBuilds.push(sitemapBuild);
     allBuilds.push(articlesBuild);
@@ -1231,7 +1316,7 @@ async function build() {
 
     await Promise.all(allBuilds);
 
-    const pageCount = posts.length + 1 + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0) + 1 + 2 + 1; // +2 for RSS/Sitemap, +1 for Articles
+    const pageCount = posts.length + 1 + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0) + 1 + 2 + 1 + 1; // +2 for RSS/Sitemap, +1 for Articles, +1 for Search
     console.log(`Build complete! Generated ${pageCount} pages.`);
     console.log("Thanks for using ReWeave!ヾ(≧▽≦*)o -Powered By ReWeave Labs");
     console.log(`Content Version ${version}. Feel free to start an issue on Github!( •̀ ω •́ )✧ (https://github.com/xtawa/ReWeave)`);

@@ -64,8 +64,29 @@ export function Header() {
                             </ul>
                         </nav>
 
+                        {/* Search Button */}
+                        <a
+                            href="/search"
+                            class="pointer-events-auto hidden md:flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur transition hover:ring-teal-500/50 dark:bg-zinc-800/90 dark:ring-white/10 dark:hover:ring-teal-400/50 ml-3"
+                            aria-label="Search"
+                        >
+                            <svg class="h-5 w-5 text-zinc-500 dark:text-zinc-400 transition group-hover:text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </a>
+
                         {/* Mobile Menu Button */}
-                        <div class="pointer-events-auto md:hidden">
+                        <div class="pointer-events-auto flex md:hidden gap-2">
+                            {/* Mobile Search Button */}
+                            <a
+                                href="/search"
+                                class="group flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur transition dark:bg-zinc-800/90 dark:ring-white/10 dark:hover:ring-white/20"
+                                aria-label="Search"
+                            >
+                                <svg class="h-5 w-5 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </a>
                             <button
                                 id="mobile-menu-btn"
                                 class="group flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg shadow-zinc-800/5 ring-1 ring-zinc-900/5 backdrop-blur transition dark:bg-zinc-800/90 dark:ring-white/10 dark:hover:ring-white/20"
