@@ -2,6 +2,21 @@
 
 ## 2025-12-27 (Part 3)
 
+### Page Transition Effect
+- **Objective**: Add a premium "Zoom & Fade" transition effect for page switches.
+- **Implementation**:
+    - Modified `src/themes/weave/layouts/Layout.tsx`:
+        - **Overlay**: Solid background (`bg-zinc-50 dark:bg-black`) that fades in/out to hide logo switches.
+        - **Content**: Added `#main-content` wrapper with `transition-all duration-500 ease-out`.
+        - **Animation**:
+            - **Enter**: Content scales up (98% -> 100%) and fades in. Overlay fades out.
+            - **Exit**: Content scales down (100% -> 98%). Overlay fades in.
+        - **Accessibility**: Added `<noscript>` styles to ensure content is visible if JS is disabled.
+- **Verification**:
+    - Verified smooth "breathing" effect during navigation.
+    - Verified logo switch is completely hidden by the overlay.
+- **Status**: ✅ Completed
+
 ### Projects Page Card Display
 - **Objective**: Add card display format for projects on the projects page.
 - **Implementation**:

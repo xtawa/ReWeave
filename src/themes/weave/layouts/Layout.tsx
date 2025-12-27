@@ -64,8 +64,20 @@ export function Layout({ title, description, image, children, contentWidth }: La
                         document.documentElement.classList.remove('dark')
                     }
                     
-                    // Dark mode based favicon and avatar switching
+                    // Dark mode based favicon and avatar switching & Page Transition
                     (function() {
+                        function hideOverlay() {
+                            var overlay = document.getElementById('page-transition-overlay');
+                            var content = document.getElementById('main-content');
+                            if (overlay) {
+                                overlay.classList.add('opacity-0', 'pointer-events-none');
+                                overlay.classList.remove('pointer-events-auto');
+                            }
+                            if (content) {
+                                content.classList.remove('opacity-0', 'scale-[0.98]');
+                            }
+                        }
+
                         function updateImages() {
                             var isDark = document.documentElement.classList.contains('dark');
                             
@@ -106,6 +118,9 @@ export function Layout({ title, description, image, children, contentWidth }: La
                                     el.style.backgroundImage = 'url(' + newPath + ')';
                                 }
                             });
+
+                            // Hide overlay after images are updated
+                            setTimeout(hideOverlay, 10);
                         }
 
                         if (document.readyState === 'loading') {
@@ -122,8 +137,52 @@ export function Layout({ title, description, image, children, contentWidth }: La
                             });
                         });
                         observer.observe(document.documentElement, { attributes: true });
+
+                        // Page Transition: Intercept links
+                        document.addEventListener('click', function(e) {
+                            var link = e.target.closest('a');
+                            if (!link) return;
+                            
+                            var href = link.getAttribute('href');
+                            if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || link.target === '_blank') return;
+                            if (link.hostname && link.hostname !== window.location.hostname) return;
+                            
+                            // Don't intercept if modifier keys are pressed
+                            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+                            e.preventDefault();
+                            e.preventDefault();
+                            var overlay = document.getElementById('page-transition-overlay');
+                            var content = document.getElementById('main-content');
+                            
+                            if (overlay && content) {
+                                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                                overlay.classList.add('pointer-events-auto');
+                                content.classList.add('scale-[0.98]');
+                                
+                                setTimeout(function() {
+                                    window.location.href = href;
+                                }, 200);
+                            } else {
+                                window.location.href = href;
+                            }
+                        });
+
+                        // Handle bfcache
+                        window.addEventListener('pageshow', function(event) {
+                            if (event.persisted) {
+                                hideOverlay();
+                            }
+                        });
                     })();
                 `}} />
+                <noscript>
+                    <style dangerouslySetInnerHTML={{
+                        __html: `
+                        #page-transition-overlay { display: none; }
+                        #main-content { opacity: 1 !important; transform: none !important; }
+                    `}} />
+                </noscript>
                 <script type="module" dangerouslySetInnerHTML={{
                     __html: `
                     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
@@ -131,12 +190,13 @@ export function Layout({ title, description, image, children, contentWidth }: La
                 `}} />
             </head>
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden">
+                <div id="page-transition-overlay" class="fixed inset-0 z-[9999] bg-zinc-50 dark:bg-black transition-opacity duration-300 ease-in-out pointer-events-auto" aria-hidden="true"></div>
                 <div class={`fixed inset-0 flex justify-center ${outerPadding}`}>
                     <div class={`flex w-full ${outerMaxWidth} ${containerPadding}`}>
                         <div class="w-full bg-white ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-300/20" />
                     </div>
                 </div>
-                <div class="relative flex w-full flex-col min-h-screen overflow-x-hidden">
+                <div id="main-content" class="relative flex w-full flex-col min-h-screen overflow-x-hidden transition-all duration-500 ease-out opacity-0 scale-[0.98] origin-top">
                     <div class={`flex-1 flex flex-col ${outerPadding} ${verticalMargin}`}>
                         <div class={`flex-1 flex flex-col mx-auto w-full ${outerMaxWidth} ${containerPadding}`}>
                             <div class={`flex-1 flex flex-col relative ${contentPadding} overflow-hidden`}>
