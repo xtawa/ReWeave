@@ -11,7 +11,7 @@ export function MobileToc() {
     return (
         <div id="mobile-toc-wrapper" class="pointer-events-none fixed inset-0 z-[100]">
             {/* Floating Button Container - positioned absolute to wrapper */}
-            <div class="absolute bottom-6 right-6 pointer-events-auto">
+            <div class="absolute bottom-10 right-8 pointer-events-auto">
                 <button
                     id="mobile-toc-btn"
                     class="flex h-12 w-12 items-center justify-center rounded-full bg-teal-600 text-white shadow-lg shadow-teal-600/20 ring-1 ring-white/20 transition active:scale-95 dark:bg-teal-500 opacity-0 scale-90"
@@ -30,7 +30,7 @@ export function MobileToc() {
                 <div id="mobile-toc-backdrop" class="absolute inset-0 bg-black/20 backdrop-blur-sm dark:bg-black/40 transition-opacity opacity-0"></div>
 
                 {/* TOC Panel */}
-                <div class="toc-panel absolute bottom-24 right-6 w-64 max-h-[60vh] overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-zinc-900/5 dark:bg-zinc-900 dark:ring-white/10 transition-all duration-300 transform translate-y-4 opacity-0">
+                <div class="toc-panel absolute bottom-24 right-8 w-64 max-h-[60vh] overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-zinc-900/5 dark:bg-zinc-900 dark:ring-white/10 transition-all duration-300 transform translate-y-4 opacity-0">
                     <div class="mb-3 flex flex-col">
                         <div class="flex items-center justify-between">
                             <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{t('toc', config.language)}</h3>
