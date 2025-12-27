@@ -6,6 +6,7 @@
 export interface HeroConfig {
     enabled: boolean;
     name: string;
+    greeting?: string;
     role: string;
     description: string;
     avatar: string; // Path to avatar image (relative to public/ or absolute URL)
@@ -24,8 +25,9 @@ export interface HeroConfig {
 export const heroConfig: HeroConfig = {
     enabled: true,
     name: "ReWeave",
+    greeting: "Hi,",
     role: "Powered By ReWeave Labs",
-    description: "Next-generation blogging framework",
+    description: "A Next-generation blogging framework",
     avatar: "avatar.png", // Hero avatar image
     social: {
         github: "https://github.com/xtawa",

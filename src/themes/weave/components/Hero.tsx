@@ -14,10 +14,10 @@ export function Hero() {
             {/* Text Content */}
             <div class="flex-1 max-w-2xl space-y-8">
                 <h1 class="text-4xl md:text-6xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-                    Hi, I'm <span class="text-zinc-900 dark:text-zinc-100">{name}</span> <span class="animate-wave inline-block origin-[70%_70%]">👋</span>。
+                    {config.hero.greeting || "Hi, I'm"} <span class="text-zinc-900 dark:text-zinc-100">{name}</span> <span class="animate-wave inline-block origin-[70%_70%]">👋</span>。
                 </h1>
                 <h2 class="text-3xl md:text-5xl font-medium text-zinc-800 dark:text-zinc-200">
-                    A {role} {config.hero.showDeveloperTag !== false && <span class="font-mono text-zinc-500 dark:text-zinc-400">&lt;Developer /&gt;</span>}
+                    {config.hero.showDeveloperTag !== false && "A "}{role} {config.hero.showDeveloperTag !== false && <span class="font-mono text-zinc-500 dark:text-zinc-400">&lt;Developer /&gt;</span>}
                 </h2>
                 <p class="text-xl text-zinc-600 dark:text-zinc-400 max-w-lg">
                     {description}
