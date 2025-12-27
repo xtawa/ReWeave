@@ -64,10 +64,10 @@ export function Layout({ title, description, image, children, contentWidth }: La
                         document.documentElement.classList.remove('dark')
                     }
                     
-                    // Time-based favicon and avatar switching (8:00-19:00 = light, else = dark)
+                    // Time-based favicon and avatar switching (7:00-20:00 = light, else = dark)
                     (function() {
                         var hour = new Date().getHours();
-                        var isDay = hour >= 8 && hour < 19;
+                        var isDay = hour >= 7 && hour < 20;
                         var faviconSuffix = isDay ? '-light' : '';
                         
                         // Update favicon
