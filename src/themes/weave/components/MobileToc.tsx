@@ -135,7 +135,11 @@ export function MobileToc() {
                     function updateProgress() {
                         const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
                         const scrollTop = window.scrollY;
-                        const percent = Math.min(100, Math.max(0, Math.round((scrollTop / docHeight) * 100)));
+                        let percent = 0;
+                        
+                        if (docHeight > 0) {
+                            percent = Math.min(100, Math.max(0, Math.round((scrollTop / docHeight) * 100)));
+                        }
                         
                         if (percentEl) percentEl.textContent = percent + '%';
                         if (progressEl) progressEl.style.width = percent + '%';
