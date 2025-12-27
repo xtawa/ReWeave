@@ -19,6 +19,7 @@ export function Header() {
                                         src={config.logo.path.startsWith('http') ? config.logo.path : `/${config.logo.path}`}
                                         alt={config.logo.alt || config.title}
                                         class="h-8 w-8 rounded-full object-cover"
+                                        data-avatar="true"
                                     />
                                 ) : (
                                     <div class="h-8 w-8 rounded-full bg-gradient-to-br from-teal-400 to-blue-500" />
