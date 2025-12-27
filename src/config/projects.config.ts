@@ -39,7 +39,7 @@ export const projectsConfig: Project[] = [
         description: "一个使用 Preact 和 TypeScript 构建的高性能静态博客框架。支持多主题、多语言和丰富的自定义选项。",
         techStack: ["TypeScript", "Preact", "SSG", "TailwindCSS"],
         link: "https://demo.reweave.xtyin.com",
-        github: "https://github.com/yourusername/reweave",
+        github: "https://github.com/xtawa/ReWeave",
         image: "/images/projects/reweave.png",
         featured: true,
     },
