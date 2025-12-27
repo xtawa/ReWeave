@@ -2,7 +2,7 @@
 title: LaTeX Test
 date: 2025-12-24
 ---
-
+Sample Article
 # LaTeX Test
 
 Here is an inline equation: $E = mc^2$.

@@ -6,7 +6,7 @@ image: https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit
 category: 性能
 tags: [基准测试, SSG, 性能]
 ---
-
+Sample Article
 # ReWeave 性能报告
 
 在 ReWeave，我们非常看重性能。这不仅包括生成站点的运行性能（几乎是瞬间加载），还包括开发者的构建性能。

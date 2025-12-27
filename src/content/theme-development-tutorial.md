@@ -5,7 +5,7 @@ excerpt: 深入了解 ReWeave 的主题系统，学习如何从零开始构建�
 category: 教程
 tags: [ReWeave, 主题开发, TypeScript, Preact]
 ---
-
+Sample Article
 # ReWeave 主题开发教程
 
 ReWeave 是一个基于 **TypeScript + Preact + TailwindCSS** 构建的高性能静态博客框架。它的核心理念是“美学与速度并重”。本教程将带你深入了解 ReWeave 的主题架构，并教你如何开发自己的主题。
@@ -20,6 +20,7 @@ src/themes/weave/
 ├── layouts/          # 页面布局 (Layout.tsx)
 └── styles/           # 主题特有样式 (可选)
 ```
+注：主题配置文件需配置在 `src\config\ThemeName.config.ts` 中。
 
 ## 2. 核心组件开发
 
