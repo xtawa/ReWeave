@@ -167,6 +167,7 @@ function ProjectCard({ project, featured, delay }: ProjectCardProps) {
                 <div
                     className="absolute inset-0 bg-cover bg-center opacity-10 group-hover:opacity-20 transition-opacity"
                     style={{ backgroundImage: `url(${project.image})` }}
+                    data-bg-image={project.image}
                 />
             ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />

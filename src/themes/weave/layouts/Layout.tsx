@@ -91,6 +91,16 @@ export function Layout({ title, description, image, children, contentWidth }: La
                             img.src = img.src.replace('avatar.png', 'avatar-light.png');
                         }
                     });
+
+                    // Update background images (for projects) based on time
+                    document.querySelectorAll('[data-bg-image]').forEach(function(el) {
+                        if (window.__reweaveIsDay) {
+                            var bgImage = el.getAttribute('data-bg-image');
+                            if (bgImage && bgImage.includes('logo.png')) {
+                                el.style.backgroundImage = 'url(' + bgImage.replace('logo.png', 'logo-light.png') + ')';
+                            }
+                        }
+                    });
                 `}} />
             </head>
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden">
