@@ -69,14 +69,26 @@ export function Footer() {
                 ` }} />
             )}
             {config.themeTransition === 'macos-loading' && (
-                <div id="theme-transition-overlay" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/60 dark:bg-black/60 backdrop-blur-xl opacity-0 pointer-events-none transition-opacity duration-300">
-                    <div class="text-2xl font-bold text-zinc-900 dark:text-white mb-8 transform scale-95 transition-all duration-500 opacity-0 translate-y-4" id="transition-title">
-                        {config.title}
+                <>
+                    <style dangerouslySetInnerHTML={{
+                        __html: `
+                        .theme-transition,
+                        .theme-transition *,
+                        .theme-transition *:before,
+                        .theme-transition *:after {
+                            transition: all 0.5s ease-in-out !important;
+                            transition-delay: 0 !important;
+                        }
+                    ` }} />
+                    <div id="theme-transition-overlay" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/60 dark:bg-black/60 backdrop-blur-xl opacity-0 pointer-events-none transition-all duration-500">
+                        <div class="text-2xl font-bold text-zinc-900 dark:text-white mb-8 transform scale-95 transition-all duration-500 opacity-0 translate-y-4" id="transition-title">
+                            {config.title}
+                        </div>
+                        <div class="w-48 h-1 bg-zinc-200/50 dark:bg-zinc-700/50 rounded-full overflow-hidden backdrop-blur-md">
+                            <div id="transition-bar" class="h-full bg-teal-500 w-0 rounded-full"></div>
+                        </div>
                     </div>
-                    <div class="w-48 h-1 bg-zinc-200/50 dark:bg-zinc-700/50 rounded-full overflow-hidden backdrop-blur-md">
-                        <div id="transition-bar" class="h-full bg-teal-500 w-0 rounded-full"></div>
-                    </div>
-                </div>
+                </>
             )}
             <script dangerouslySetInnerHTML={{
                 __html: `
@@ -130,8 +142,9 @@ export function Footer() {
                                 title.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
                             }, 100);
 
-                            // 3. Start Progress Bar
+                            // 3. Start Progress Bar & Enable Transition
                             setTimeout(() => {
+                                document.documentElement.classList.add('theme-transition');
                                 bar.style.transition = 'width 1.5s cubic-bezier(0.22, 1, 0.36, 1)';
                                 bar.style.width = '100%';
                             }, 200);
@@ -146,11 +159,12 @@ export function Footer() {
                                 overlay.classList.add('opacity-0', 'pointer-events-none');
                                 title.classList.add('opacity-0', 'translate-y-4', 'scale-95');
                                 
-                                // Reset bar after fade out
+                                // Reset bar and remove transition class
                                 setTimeout(() => {
+                                    document.documentElement.classList.remove('theme-transition');
                                     bar.style.transition = 'none';
                                     bar.style.width = '0';
-                                }, 300);
+                                }, 500); // Wait for overlay fade out
                             }, 1800);
 
                         } else if (transitionStyle === 'circle-clip' && document.startViewTransition) {
