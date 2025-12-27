@@ -1,5 +1,8 @@
 # 我的项目
 
+此配置项已被弃用，在 src/config/weave.config.ts 集成新内容
+
+
 这里展示了我参与的一些项目。
 
 ## ReWeave

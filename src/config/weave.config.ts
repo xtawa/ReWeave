@@ -77,7 +77,7 @@ export const config: ThemeConfig = {
     projectsPage: {
         showProjects: true,
         showContributors: true,
-        showSponsors: true,
+        showSponsors: false,
         sponsorLink: 'https://github.com/sponsors/yourusername',
     },
 };
