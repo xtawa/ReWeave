@@ -104,12 +104,7 @@ export function Layout({ title, description, image, children, contentWidth, hasC
                                 if (href !== newHref) appleTouchIcon.setAttribute('href', newHref);
                             }
 
-                            // Update avatars and project icons
-                            document.querySelectorAll('img[data-avatar], img[data-project-icon]').forEach(function(img) {
-                                var src = img.getAttribute('src');
-                                var newSrc = switchSrc(src);
-                                if (src !== newSrc) img.setAttribute('src', newSrc);
-                            });
+
 
                             // Update background images
                             document.querySelectorAll('[data-bg-image]').forEach(function(el) {

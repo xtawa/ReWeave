@@ -72,12 +72,20 @@ export function Hero() {
                     rotate="-rotate-6"
                     imageSrc="/christmas-hat.svg"
                 >
-                    <img
-                        src={avatar.startsWith('http') ? avatar : `/${avatar}`}
-                        alt={name}
-                        data-avatar="true"
-                        class="relative w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-white dark:border-zinc-800 shadow-2xl transition transform group-hover:scale-105 duration-500"
-                    />
+                    {(() => {
+                        const avatarSrc = avatar.startsWith('http') ? avatar : `/${avatar}`;
+                        const lightAvatarSrc = avatarSrc.replace(/(\.[a-z0-9]+)$/i, '-light$1');
+                        return (
+                            <picture>
+                                <source srcset={lightAvatarSrc} media="(prefers-color-scheme: light)" />
+                                <img
+                                    src={avatarSrc}
+                                    alt={name}
+                                    class="relative w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-white dark:border-zinc-800 shadow-2xl transition transform group-hover:scale-105 duration-500"
+                                />
+                            </picture>
+                        );
+                    })()}
                 </ChristmasHat>
             </div>
         </div>

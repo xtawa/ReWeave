@@ -179,9 +179,15 @@ function ProjectCard({ project, featured, delay }: ProjectCardProps) {
                 <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
-                            {project.image ? (
-                                <img src={project.image} alt={project.name} className="w-full h-full object-cover" data-project-icon={project.image} />
-                            ) : (
+                            {project.image ? (() => {
+                                const lightImage = project.image!.replace(/(\.[a-z0-9]+)$/i, '-light$1');
+                                return (
+                                    <picture>
+                                        <source srcset={lightImage} media="(prefers-color-scheme: light)" />
+                                        <img src={project.image} alt={project.name} className="w-full h-full object-cover" />
+                                    </picture>
+                                );
+                            })() : (
                                 project.name.charAt(0)
                             )}
                         </div>
@@ -285,10 +291,10 @@ function ContributorCard({ contributor, delay }: ContributorCardProps) {
                         </h3>
                         {contributor.gender && (
                             <span className={`px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${contributor.gender === 'male'
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                                    : contributor.gender === 'female'
-                                        ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400'
-                                        : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
+                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                                : contributor.gender === 'female'
+                                    ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400'
+                                    : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400'
                                 }`}>
                                 {contributor.gender === 'male' ? 'He&Him' : contributor.gender === 'female' ? 'She&Her' : contributor.gender}
                             </span>
