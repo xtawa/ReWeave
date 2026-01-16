@@ -411,7 +411,7 @@ async function build() {
     const totalPages = Math.ceil(totalPosts / pageSize);
 
     // Helper to generate posts list page content
-    const generatePostsPage = (page: number) => {
+    const generatePostsPage = (page: number, urlOverride?: string) => {
         const start = (page - 1) * pageSize;
         const end = start + pageSize;
         const pagePosts = posts.slice(start, end);
@@ -421,8 +421,10 @@ async function build() {
             return <PostList posts={pagePosts} currentPage={page} totalPages={totalPages} baseUrl="/articles" />;
         }
 
+        const currentUrl = urlOverride || (page === 1 ? '/articles' : `/articles/${page}`);
+
         return (
-            <Layout contentWidth="normal" title={page === 1 && config.homePage === 'hero' ? t('articles', config.language) : (page === 1 ? undefined : `${t('articles', config.language)} - Page ${page}`)}>
+            <Layout contentWidth="normal" title={page === 1 && config.homePage === 'hero' ? t('articles', config.language) : (page === 1 ? undefined : `${t('articles', config.language)} - Page ${page}`)} url={currentUrl}>
                 <Header />
                 <main>
                     <div class="space-y-10 animate-fade-in-up">
@@ -464,7 +466,7 @@ async function build() {
     let indexContent;
     if (config.homePage === 'hero' && config.hero?.enabled) {
         indexContent = (
-            <Layout contentWidth="normal">
+            <Layout contentWidth="normal" url="/">
                 <Header />
                 <main>
                     <Hero posts={posts.slice(0, 3)} />
@@ -472,7 +474,7 @@ async function build() {
             </Layout>
         );
     } else {
-        indexContent = generatePostsPage(1);
+        indexContent = generatePostsPage(1, '/');
     }
     const indexBuild = writeHtml(path.join(distDir, 'index.html'), createHtml(indexContent));
 
@@ -683,6 +685,7 @@ async function build() {
                     hasCode={hasCode}
                     hasMath={hasMath}
                     hasMermaid={hasMermaid}
+                    url={`/posts/${postUrl}`}
                 >
                     <Header />
                     {/* Mobile TOC */}
@@ -771,7 +774,7 @@ async function build() {
             );
         } else {
             categoryContent = (
-                <Layout title={`${t('category', config.language)}: ${category}`}>
+                <Layout title={`${t('category', config.language)}: ${category}`} url={`/categories/${safeSlug(category)}`}>
                     <Header />
                     <main>
                         <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('category', config.language)}: {category}</h1>
@@ -832,7 +835,7 @@ async function build() {
             );
         } else {
             tagContent = (
-                <Layout title={`${t('tag', config.language)}: ${tag}`}>
+                <Layout title={`${t('tag', config.language)}: ${tag}`} url={`/tags/${safeSlug(tag)}`}>
                     <Header />
                     <main>
                         <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tag', config.language)}: {tag}</h1>
@@ -881,7 +884,7 @@ async function build() {
         archiveContent = <Archive posts={posts} categoriesCount={categories.size} tagsCount={tags.size} />;
     } else {
         archiveContent = (
-            <Layout title={t('archive', config.language)}>
+            <Layout title={t('archive', config.language)} url="/archive">
                 <Header />
                 <main>
                     <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('archive', config.language)}</h1>
@@ -929,7 +932,7 @@ async function build() {
         categoriesListContent = <CategoryList categories={categories} />;
     } else {
         categoriesListContent = (
-            <Layout title={t('categories', config.language)}>
+            <Layout title={t('categories', config.language)} url="/categories">
                 <Header />
                 <main>
                     <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('categories', config.language)}</h1>
@@ -953,7 +956,7 @@ async function build() {
         tagsListContent = <TagList tags={tags} />;
     } else {
         tagsListContent = (
-            <Layout title={t('tags', config.language)}>
+            <Layout title={t('tags', config.language)} url="/tags">
                 <Header />
                 <main>
                     <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tags', config.language)}</h1>
@@ -994,7 +997,7 @@ async function build() {
             aboutContent = <Page title={config.about.title || t('about', config.language)} content={processedAbout.toString()} slug="about" />;
         } else {
             aboutContent = (
-                <Layout title={config.about.title || t('about', config.language)}>
+                <Layout title={config.about.title || t('about', config.language)} url="/about">
                     <Header />
                     <main>
                         <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedAbout.toString() }} />
@@ -1062,7 +1065,7 @@ async function build() {
                 projectsContent = <Page title={config.projects.title || t('projects', config.language)} content={processedProjects.toString()} slug="projects" />;
             } else {
                 projectsContent = (
-                    <Layout title={config.projects.title || t('projects', config.language)}>
+                    <Layout title={config.projects.title || t('projects', config.language)} url="/projects">
                         <Header />
                         <main>
                             <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedProjects.toString() }} />
@@ -1104,7 +1107,7 @@ async function build() {
     const sortedTimeline = Array.from(timeline.entries()).sort((a, b) => b[0].localeCompare(a[0]));
 
     const statsContent = (
-        <Layout title={t('stats', config.language)}>
+        <Layout title={t('stats', config.language)} url="/stats">
             <Header />
             <main class="max-w-4xl mx-auto">
                 <h1 class="text-4xl font-bold text-zinc-800 dark:!text-white mb-8">{t('stats', config.language)}</h1>
@@ -1200,7 +1203,7 @@ async function build() {
             tags: p.tags || []
         })));
         searchContent = (
-            <Layout title={t('search', config.language)}>
+            <Layout title={t('search', config.language)} url="/search">
                 <Header />
                 <main class="max-w-4xl mx-auto">
                     <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('search', config.language)}</h1>
@@ -1335,7 +1338,7 @@ async function build() {
     allBuilds.push(...paginationBuilds);
     // 13. Generate 404 Page
     const notFoundContent = (
-        <Layout title="404 Not Found">
+        <Layout title="404 Not Found" url="/404">
             <Header />
             <main>
                 <NotFound />

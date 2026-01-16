@@ -28,7 +28,7 @@ export function Search({ posts }: SearchProps) {
     })));
 
     return (
-        <Layout title={t('search', config.language)}>
+        <Layout title={t('search', config.language)} url="/search">
             <Header />
             <main class="max-w-4xl mx-auto animate-fade-in-up">
                 <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:text-white">{t('search', config.language)}</h1>

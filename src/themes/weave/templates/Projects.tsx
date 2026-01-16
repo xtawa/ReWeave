@@ -25,7 +25,7 @@ export function Projects({ projects, contributors = [], sponsors = [], sponsorLi
     );
 
     return (
-        <Layout title={title || t('projects', reweaveConfig.language)} contentWidth="normal">
+        <Layout title={title || t('projects', reweaveConfig.language)} contentWidth="normal" url="/projects">
             <Header />
             <main className="py-8">
                 <div className="mb-10 text-center">

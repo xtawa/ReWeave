@@ -14,11 +14,23 @@ interface LayoutProps {
     hasCode?: boolean;
     hasMath?: boolean;
     hasMermaid?: boolean;
+    url?: string;
 }
 
-export function Layout({ title, description, image, children, contentWidth, hasCode, hasMath, hasMermaid }: LayoutProps) {
+export function Layout({ title, description, image, children, contentWidth, hasCode, hasMath, hasMermaid, url }: LayoutProps) {
     const pageTitle = title ? `${title} | ${config.title}` : config.title;
     const pageDescription = description || config.description;
+    const siteUrl = config.siteUrl || '';
+    const fullUrl = url ? (url.startsWith('http') ? url : `${siteUrl}${url}`) : siteUrl;
+
+    // Resolve image URL
+    let imageUrl = image;
+    if (!imageUrl && config.logo?.path) {
+        imageUrl = config.logo.path;
+    }
+    if (imageUrl && !imageUrl.startsWith('http')) {
+        imageUrl = `${siteUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    }
 
     const widthConfig = contentWidth || config.theme.contentWidth || 'normal';
 
@@ -47,9 +59,21 @@ export function Layout({ title, description, image, children, contentWidth, hasC
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <title>{pageTitle}</title>
                 <meta name="description" content={pageDescription} />
-                {image && <meta property="og:image" content={image} />}
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content={url?.includes('/posts/') ? 'article' : 'website'} />
+                <meta property="og:url" content={fullUrl} />
                 <meta property="og:title" content={pageTitle} />
                 <meta property="og:description" content={pageDescription} />
+                {imageUrl && <meta property="og:image" content={imageUrl} />}
+
+                {/* Twitter */}
+                <meta property="twitter:card" content="summary_large_image" />
+                <meta property="twitter:url" content={fullUrl} />
+                <meta property="twitter:title" content={pageTitle} />
+                <meta property="twitter:description" content={pageDescription} />
+                {imageUrl && <meta property="twitter:image" content={imageUrl} />}
+
                 {/* Favicon - will be dynamically updated based on time */}
                 <link id="favicon" rel="icon" type="image/png" href="/favicon.png" />
                 <link id="apple-touch-icon" rel="apple-touch-icon" href="/favicon-48.png" />
