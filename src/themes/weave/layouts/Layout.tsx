@@ -1,5 +1,5 @@
 /** @jsx h */
-import { h, ComponentChildren } from 'preact';
+import { h, ComponentChildren, Fragment } from 'preact';
 import { config } from '../../../config/theme/weave.config';
 import { Footer } from '../components/Footer';
 import { MobileToc } from '../components/MobileToc';
@@ -55,7 +55,45 @@ export function Layout({ title, description, image, children, contentWidth, hasC
                 <link id="apple-touch-icon" rel="apple-touch-icon" href="/favicon-48.png" />
                 <link rel="stylesheet" href="/style.css" />
                 <link rel="stylesheet" href="/fonts/fonts.css" />
-                {hasCode && <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />}
+                {hasCode && (
+                    <>
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+                        <script dangerouslySetInnerHTML={{
+                            __html: `
+                            document.addEventListener('DOMContentLoaded', function() {
+                                document.querySelectorAll('pre').forEach(function(pre) {
+                                    if (pre.parentNode.classList.contains('code-wrapper')) return;
+
+                                    var wrapper = document.createElement('div');
+                                    wrapper.className = 'relative group code-wrapper';
+                                    pre.parentNode.insertBefore(wrapper, pre);
+                                    wrapper.appendChild(pre);
+                                    
+                                    var button = document.createElement('button');
+                                    button.className = 'absolute top-2 right-2 p-2 rounded-md bg-zinc-700/50 hover:bg-zinc-600 text-zinc-400 hover:text-white transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 z-10';
+                                    button.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>';
+                                    button.setAttribute('aria-label', 'Copy code');
+                                    
+                                    button.addEventListener('click', function() {
+                                        var code = pre.querySelector('code');
+                                        var text = code ? code.innerText : pre.innerText;
+                                        
+                                        navigator.clipboard.writeText(text).then(function() {
+                                            button.innerHTML = '<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                                            setTimeout(function() {
+                                                button.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>';
+                                            }, 2000);
+                                        }).catch(function(err) {
+                                            console.error('Failed to copy:', err);
+                                        });
+                                    });
+                                    
+                                    wrapper.appendChild(button);
+                                });
+                            });
+                        `}} />
+                    </>
+                )}
                 {hasMath && <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous" />}
                 <script dangerouslySetInnerHTML={{
                     __html: `
@@ -104,7 +142,12 @@ export function Layout({ title, description, image, children, contentWidth, hasC
                                 if (href !== newHref) appleTouchIcon.setAttribute('href', newHref);
                             }
 
-
+                            // Update avatars and project icons
+                            document.querySelectorAll('img[data-avatar], img[data-project-icon]').forEach(function(img) {
+                                var src = img.getAttribute('src');
+                                var newSrc = switchSrc(src);
+                                if (src !== newSrc) img.setAttribute('src', newSrc);
+                            });
 
                             // Update background images
                             document.querySelectorAll('[data-bg-image]').forEach(function(el) {

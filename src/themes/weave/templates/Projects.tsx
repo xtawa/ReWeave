@@ -179,15 +179,9 @@ function ProjectCard({ project, featured, delay }: ProjectCardProps) {
                 <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg overflow-hidden">
-                            {project.image ? (() => {
-                                const lightImage = project.image!.replace(/(\.[a-z0-9]+)$/i, '-light$1');
-                                return (
-                                    <picture>
-                                        <source srcset={lightImage} media="(prefers-color-scheme: light)" />
-                                        <img src={project.image} alt={project.name} className="w-full h-full object-cover" />
-                                    </picture>
-                                );
-                            })() : (
+                            {project.image ? (
+                                <img src={project.image} alt={project.name} className="w-full h-full object-cover" data-project-icon={project.image} />
+                            ) : (
                                 project.name.charAt(0)
                             )}
                         </div>
