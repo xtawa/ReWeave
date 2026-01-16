@@ -31,6 +31,7 @@ export function Footer() {
                             <a href={config.social.github} class="transition hover:text-teal-500">GitHub</a>
                         )}
                     </div>
+
                     <button
                         id="theme-toggle"
                         type="button"
@@ -93,6 +94,7 @@ export function Footer() {
             <script dangerouslySetInnerHTML={{
                 __html: `
                 (function() {
+                    // Theme Toggle Logic
                     const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
                     const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
                     const themeToggleBtn = document.getElementById('theme-toggle');
@@ -128,82 +130,86 @@ export function Footer() {
                         }
                     }
 
-                    themeToggleBtn.addEventListener('click', function(event) {
-                        if (transitionStyle === 'macos-loading') {
-                            const overlay = document.getElementById('theme-transition-overlay');
-                            const bar = document.getElementById('transition-bar');
-                            const title = document.getElementById('transition-title');
-                            
-                            // 1. Show Overlay
-                            overlay.classList.remove('opacity-0', 'pointer-events-none');
-                            
-                            // 2. Animate Title
-                            setTimeout(() => {
-                                title.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
-                            }, 100);
-
-                            // 3. Start Progress Bar & Enable Transition
-                            setTimeout(() => {
-                                document.documentElement.classList.add('theme-transition');
-                                bar.style.transition = 'width 1.5s cubic-bezier(0.22, 1, 0.36, 1)';
-                                bar.style.width = '100%';
-                            }, 200);
-
-                            // 4. Toggle Theme (at ~50% time)
-                            setTimeout(() => {
-                                toggleTheme();
-                            }, 800);
-
-                            // 5. Finish
-                            setTimeout(() => {
-                                overlay.classList.add('opacity-0', 'pointer-events-none');
-                                title.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+                    if (themeToggleBtn) {
+                        themeToggleBtn.addEventListener('click', function(event) {
+                            if (transitionStyle === 'macos-loading') {
+                                const overlay = document.getElementById('theme-transition-overlay');
+                                const bar = document.getElementById('transition-bar');
+                                const title = document.getElementById('transition-title');
                                 
-                                // Reset bar and remove transition class
+                                // 1. Show Overlay
+                                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                                
+                                // 2. Animate Title
+                                setTimeout(() => {
+                                    title.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+                                }, 100);
+
+                                // 3. Start Progress Bar & Enable Transition
+                                setTimeout(() => {
+                                    document.documentElement.classList.add('theme-transition');
+                                    bar.style.transition = 'width 1.5s cubic-bezier(0.22, 1, 0.36, 1)';
+                                    bar.style.width = '100%';
+                                }, 200);
+
+                                // 4. Toggle Theme (at ~50% time)
+                                setTimeout(() => {
+                                    toggleTheme();
+                                }, 800);
+
+                                // 5. Finish
+                                setTimeout(() => {
+                                    overlay.classList.add('opacity-0', 'pointer-events-none');
+                                    title.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+                                    
+                                    // Reset bar and remove transition class
+                                    setTimeout(() => {
+                                        document.documentElement.classList.remove('theme-transition');
+                                        bar.style.transition = 'none';
+                                        bar.style.width = '0';
+                                    }, 500); // Wait for overlay fade out
+                                }, 1800);
+
+                            } else if (transitionStyle === 'circle-clip' && document.startViewTransition) {
+                                const x = event.clientX;
+                                const y = event.clientY;
+                                const endRadius = Math.hypot(
+                                    Math.max(x, innerWidth - x),
+                                    Math.max(y, innerHeight - y)
+                                );
+
+                                const transition = document.startViewTransition(() => {
+                                    toggleTheme();
+                                });
+
+                                transition.ready.then(() => {
+                                    const clipPath = [
+                                        \`circle(0px at \${x}px \${y}px)\`,
+                                        \`circle(\${endRadius}px at \${x}px \${y}px)\`
+                                    ];
+                                    document.documentElement.animate(
+                                        {
+                                            clipPath: document.documentElement.classList.contains('dark') ? clipPath : [...clipPath].reverse(),
+                                        },
+                                        {
+                                            duration: 500,
+                                            easing: 'ease-in',
+                                            pseudoElement: document.documentElement.classList.contains('dark') ? '::view-transition-new(root)' : '::view-transition-old(root)',
+                                        }
+                                    );
+                                });
+                            } else {
+                                // Default transition
+                                document.documentElement.classList.add('theme-transition');
+                                toggleTheme();
                                 setTimeout(() => {
                                     document.documentElement.classList.remove('theme-transition');
-                                    bar.style.transition = 'none';
-                                    bar.style.width = '0';
-                                }, 500); // Wait for overlay fade out
-                            }, 1800);
+                                }, 300);
+                            }
+                        });
+                    }
 
-                        } else if (transitionStyle === 'circle-clip' && document.startViewTransition) {
-                             const x = event.clientX;
-                             const y = event.clientY;
-                             const endRadius = Math.hypot(
-                                 Math.max(x, innerWidth - x),
-                                 Math.max(y, innerHeight - y)
-                             );
 
-                             const transition = document.startViewTransition(() => {
-                                 toggleTheme();
-                             });
-
-                             transition.ready.then(() => {
-                                 const clipPath = [
-                                     \`circle(0px at \${x}px \${y}px)\`,
-                                     \`circle(\${endRadius}px at \${x}px \${y}px)\`
-                                 ];
-                                 document.documentElement.animate(
-                                     {
-                                         clipPath: document.documentElement.classList.contains('dark') ? clipPath : [...clipPath].reverse(),
-                                     },
-                                     {
-                                         duration: 500,
-                                         easing: 'ease-in',
-                                         pseudoElement: document.documentElement.classList.contains('dark') ? '::view-transition-new(root)' : '::view-transition-old(root)',
-                                     }
-                                 );
-                             });
-                        } else {
-                            // Default transition
-                            document.documentElement.classList.add('theme-transition');
-                            toggleTheme();
-                            setTimeout(() => {
-                                document.documentElement.classList.remove('theme-transition');
-                            }, 300);
-                        }
-                    });
                 })();
             ` }}></script>
         </footer>

@@ -194,8 +194,9 @@ export function Layout({ title, description, image, children, contentWidth, hasC
                             var overlay = document.getElementById('page-transition-overlay');
                             var content = document.getElementById('main-content');
                             var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                            var isTransitionEnabled = ${config.enablePageTransition ? 'true' : 'false'};
                             
-                            if (overlay && content && !prefersReducedMotion) {
+                            if (overlay && content && !prefersReducedMotion && isTransitionEnabled) {
                                 overlay.classList.remove('opacity-0', 'pointer-events-none');
                                 overlay.classList.add('pointer-events-auto');
                                 content.classList.add('scale-[0.98]');
