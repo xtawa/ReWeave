@@ -652,6 +652,10 @@ async function build() {
             ? (post.headings || extractHeadings(post.content, maxDepth))
             : [];
 
+        const hasCode = post.content.includes('<pre') || post.content.includes('class="hljs');
+        const hasMath = post.content.includes('class="katex"');
+        const hasMermaid = post.content.includes('class="mermaid"');
+
         let postContent;
         if (Post) {
             const prevPost = index < posts.length - 1 ? { title: posts[index + 1].title, url: `/posts/${safeSlug(posts[index + 1].abbrlink || posts[index + 1].slug)}` } : undefined;
@@ -665,11 +669,21 @@ async function build() {
                     post={{ ...post, toc: tocHtml }}
                     prevPost={prevPost}
                     nextPost={nextPost}
+                    hasCode={hasCode}
+                    hasMath={hasMath}
+                    hasMermaid={hasMermaid}
                 />
             );
         } else {
             postContent = (
-                <Layout title={post.title} description={post.excerpt} image={post.image}>
+                <Layout
+                    title={post.title}
+                    description={post.excerpt}
+                    image={post.image}
+                    hasCode={hasCode}
+                    hasMath={hasMath}
+                    hasMermaid={hasMermaid}
+                >
                     <Header />
                     {/* Mobile TOC */}
 

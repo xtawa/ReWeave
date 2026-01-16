@@ -11,9 +11,12 @@ interface LayoutProps {
     image?: string;
     children: ComponentChildren;
     contentWidth?: 'normal' | 'wide' | 'full';
+    hasCode?: boolean;
+    hasMath?: boolean;
+    hasMermaid?: boolean;
 }
 
-export function Layout({ title, description, image, children, contentWidth }: LayoutProps) {
+export function Layout({ title, description, image, children, contentWidth, hasCode, hasMath, hasMermaid }: LayoutProps) {
     const pageTitle = title ? `${title} | ${config.title}` : config.title;
     const pageDescription = description || config.description;
 
@@ -51,11 +54,9 @@ export function Layout({ title, description, image, children, contentWidth }: La
                 <link id="favicon" rel="icon" type="image/png" href="/favicon.png" />
                 <link id="apple-touch-icon" rel="apple-touch-icon" href="/favicon-48.png" />
                 <link rel="stylesheet" href="/style.css" />
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-                <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous" />
+                <link rel="stylesheet" href="/fonts/fonts.css" />
+                {hasCode && <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />}
+                {hasMath && <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous" />}
                 <script dangerouslySetInnerHTML={{
                     __html: `
                     if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -85,7 +86,7 @@ export function Layout({ title, description, image, children, contentWidth }: La
                                 if (!src) return src;
                                 var base = src.replace('-light.', '.');
                                 if (isDark) return base;
-                                return base.replace(/(\.[a-z0-9]+)$/i, '-light$1');
+                                return base.replace(/(\\.[a-z0-9]+)$/i, '-light$1');
                             }
 
                             // Update favicon
@@ -151,11 +152,12 @@ export function Layout({ title, description, image, children, contentWidth }: La
                             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
                             e.preventDefault();
-                            e.preventDefault();
+                            
                             var overlay = document.getElementById('page-transition-overlay');
                             var content = document.getElementById('main-content');
+                            var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                             
-                            if (overlay && content) {
+                            if (overlay && content && !prefersReducedMotion) {
                                 overlay.classList.remove('opacity-0', 'pointer-events-none');
                                 overlay.classList.add('pointer-events-auto');
                                 content.classList.add('scale-[0.98]');
@@ -183,11 +185,11 @@ export function Layout({ title, description, image, children, contentWidth }: La
                         #main-content { opacity: 1 !important; transform: none !important; }
                     `}} />
                 </noscript>
-                <script type="module" dangerouslySetInnerHTML={{
+                {hasMermaid && <script type="module" dangerouslySetInnerHTML={{
                     __html: `
                     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
                     mermaid.initialize({ startOnLoad: true, theme: 'dark' });
-                `}} />
+                `}} />}
             </head>
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden">
                 <div id="page-transition-overlay" class="fixed inset-0 z-[9999] bg-zinc-50 dark:bg-black transition-opacity duration-300 ease-in-out pointer-events-auto" aria-hidden="true"></div>
