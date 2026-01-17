@@ -343,7 +343,9 @@ async function build() {
         ProjectsTemplate = (await import(`${themePath}/templates/Projects`).catch(() => ({ Projects: null }))).Projects;
 
     } catch (e) {
-        console.warn(`Theme '${config.themeName}' not found or failed to load. Using default layout. Error:`, e);
+        console.error(`CRITICAL: Theme '${config.themeName}' failed to load.`);
+        console.error(`Attempted path: ../themes/${config.themeName}/layouts/Layout`);
+        console.error(e);
         Layout = DefaultLayout;
         Header = () => null;
         Hero = () => null;
