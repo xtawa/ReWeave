@@ -981,35 +981,54 @@ async function build() {
     // 9. Build About Page
     let aboutBuild: Promise<void> | null = null;
     if (config.about) {
-        const { unified } = await import('unified');
-        const remarkParse = (await import('remark-parse')).default;
-        const remarkRehype = (await import('remark-rehype')).default;
-        const rehypeStringify = (await import('rehype-stringify')).default;
+        try {
+            console.log("Building About page...");
+            const { unified } = await import('unified');
+            const remarkParse = (await import('remark-parse')).default;
+            const remarkRehype = (await import('remark-rehype')).default;
+            const rehypeStringify = (await import('rehype-stringify')).default;
+            const remarkGfm = (await import('remark-gfm')).default;
 
-        const pagesDir = path.join(process.cwd(), 'src', 'pages');
-        const aboutFilePath = path.join(pagesDir, config.about.file);
-        const aboutMarkdown = await fs.readFile(aboutFilePath, 'utf-8');
+            const pagesDir = path.join(process.cwd(), 'src', 'pages');
+            const aboutFilePath = path.join(pagesDir, config.about.file);
+            console.log(`Reading about file from: ${aboutFilePath}`);
+            let aboutMarkdown = await fs.readFile(aboutFilePath, 'utf-8');
 
-        const processedAbout = await unified()
-            .use(remarkParse)
-            .use(remarkRehype)
-            .use(rehypeStringify)
-            .process(aboutMarkdown);
+            // Remove frontmatter if present
+            const frontmatterMatch = aboutMarkdown.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
+            if (frontmatterMatch) {
+                aboutMarkdown = aboutMarkdown.slice(frontmatterMatch[0].length);
+            }
 
-        let aboutContent;
-        if (Page) {
-            aboutContent = <Page title={config.about.title || t('about', config.language)} content={processedAbout.toString()} slug="about" />;
-        } else {
-            aboutContent = (
-                <Layout title={config.about.title || t('about', config.language)} url="/about">
-                    <Header />
-                    <main>
-                        <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedAbout.toString() }} />
-                    </main>
-                </Layout>
-            );
+            const processedAbout = await unified()
+                .use(remarkParse)
+                .use(remarkGfm)
+                .use(remarkRehype, { allowDangerousHtml: true })
+                .use(rehypeStringify, { allowDangerousHtml: true })
+                .process(aboutMarkdown);
+
+            let aboutContent;
+            if (Page) {
+                aboutContent = <Page title={config.about.title || t('about', config.language)} content={processedAbout.toString()} slug="about" />;
+            } else {
+                aboutContent = (
+                    <Layout title={config.about.title || t('about', config.language)} url="/about">
+                        <Header />
+                        <main>
+                            <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedAbout.toString() }} />
+                        </main>
+                    </Layout>
+                );
+            }
+
+            // Ensure about directory exists
+            const aboutDir = path.join(distDir, 'about');
+            await fs.mkdir(aboutDir, { recursive: true });
+            aboutBuild = writeHtml(path.join(aboutDir, 'index.html'), createHtml(aboutContent));
+            console.log("About page built successfully.");
+        } catch (error) {
+            console.error("Error building About page:", error);
         }
-        aboutBuild = writeHtml(path.join(distDir, 'about.html'), createHtml(aboutContent));
     }
 
     // 10. Build Projects Page

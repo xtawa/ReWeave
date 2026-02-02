@@ -42,6 +42,7 @@ export function Sidebar() {
                 <div class="glass-content text-sm prose">
                     <p class="mb-2">2026-01-27</p>
                     <p>本主题是一个 Frutiger Aero 风格的 Hexo 博客主题，灵感来自 Windows Vista。</p>
+                    </p>
                     <div class="text-right mt-2">
                         <a href="#" class="aero-btn px-3 py-1 text-xs rounded-full">Read More...</a>
                     </div>
