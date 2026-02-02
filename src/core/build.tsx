@@ -45,6 +45,21 @@ function createHtml(content: any) {
     return '<!DOCTYPE html>' + render(content);
 }
 
+// Recursive copy directory helper
+async function copyDir(src: string, dest: string) {
+    await fs.mkdir(dest, { recursive: true });
+    const entries = await fs.readdir(src, { withFileTypes: true });
+    await Promise.all(entries.map(async (entry) => {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        if (entry.isDirectory()) {
+            await copyDir(srcPath, destPath);
+        } else {
+            await fs.copyFile(srcPath, destPath);
+        }
+    }));
+}
+
 import { ensureDir } from './utils/fs-cache';
 
 // Helper to write file to folder/index.html structure
@@ -251,22 +266,17 @@ async function build() {
         // Ensure dist exists
         await fs.mkdir(distDir, { recursive: true });
 
-        // Copy public assets
+        // Copy public assets (recursively)
         const publicDir = path.join(process.cwd(), 'public');
         try {
             const publicExists = await fs.access(publicDir).then(() => true).catch(() => false);
             if (publicExists) {
-                const files = await fs.readdir(publicDir);
-                await Promise.all(files.map(async (file) => {
-                    const srcPath = path.join(publicDir, file);
-                    const destPath = path.join(distDir, file);
-                    const stat = await fs.stat(srcPath);
-                    if (stat.isFile()) {
-                        await fs.copyFile(srcPath, destPath);
-                    }
-                }));
+                await copyDir(publicDir, distDir);
+                console.log("Copied public assets (including subdirectories).");
             }
-        } catch (e) { }
+        } catch (e) {
+            console.error("Error copying public directory:", e);
+        }
 
         // Build CSS
         console.log("Building CSS...");
@@ -356,24 +366,16 @@ async function build() {
     // Ensure dist exists
     await fs.mkdir(distDir, { recursive: true });
 
-    // Copy public directory if it exists
+    // Copy public directory if it exists (recursively)
     const publicDir = path.join(process.cwd(), 'public');
     try {
         const publicExists = await fs.access(publicDir).then(() => true).catch(() => false);
         if (publicExists) {
-            const files = await fs.readdir(publicDir);
-            await Promise.all(files.map(async (file) => {
-                const srcPath = path.join(publicDir, file);
-                const destPath = path.join(distDir, file);
-                const stat = await fs.stat(srcPath);
-                if (stat.isFile()) {
-                    await fs.copyFile(srcPath, destPath);
-                }
-            }));
-            console.log("Copied public assets.");
+            await copyDir(publicDir, distDir);
+            console.log("Copied public assets (including subdirectories).");
         }
     } catch (e) {
-        // Public directory doesn't exist, skip
+        console.error("Error copying public directory:", e);
     }
 
     // 1. Get Posts (Parallel)
