@@ -48,8 +48,8 @@ export const reweaveConfig: ReweaveConfig = {
     description: "A high-performance static blog built with ReWeave.",
     language: "zh",
     siteUrl: "https://demo.reweave.xtyin.com",
-    themeName: "legal",
-    homePage: "hero",
+    themeName: "aero",
+    homePage: "posts",
     hero: heroConfig,
     pagination: {
         pageSize: 15,
