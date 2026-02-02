@@ -27,7 +27,9 @@ export function Page({ title, content, slug }: PageProps) {
                     </div>
                 </main>
                 <div class="w-full md:w-80 shrink-0">
-                    <Sidebar />
+                    <div class="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
+                        <Sidebar />
+                    </div>
                 </div>
             </div>
         </Layout>

@@ -60,19 +60,21 @@ export function Post({ post, prevPost, nextPost }: PostProps) {
                     {/* Comments placeholder or component if needed */}
                 </main>
 
-                <div class="w-full md:w-80 shrink-0 space-y-6">
-                    {post.toc && (
-                        <div class="glass-card p-4 sticky top-4">
-                            <div class="glass-header -mx-4 -mt-4 mb-2 rounded-t text-sm font-bold px-4 py-2">
-                                Contents
+                <div class="w-full md:w-80 shrink-0">
+                    <div class="sticky top-4 space-y-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
+                        {post.toc && (
+                            <div class="glass-card p-4">
+                                <div class="glass-header -mx-4 -mt-4 mb-2 rounded-t text-sm font-bold px-4 py-2">
+                                    目录
+                                </div>
+                                <div
+                                    class="text-sm space-y-1 max-h-[40vh] overflow-y-auto custom-scrollbar"
+                                    dangerouslySetInnerHTML={{ __html: post.toc }}
+                                />
                             </div>
-                            <div
-                                class="text-sm space-y-1 max-h-[70vh] overflow-y-auto custom-scrollbar"
-                                dangerouslySetInnerHTML={{ __html: post.toc }}
-                            />
-                        </div>
-                    )}
-                    <Sidebar />
+                        )}
+                        <Sidebar />
+                    </div>
                 </div>
             </div>
         </Layout>
