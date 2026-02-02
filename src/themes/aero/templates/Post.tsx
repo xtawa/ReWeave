@@ -21,7 +21,8 @@ export function Post({ post, prevPost, nextPost }: PostProps) {
         <Layout title={post.title} updatedDate={post.date}>
             <Header />
             <div class="flex flex-col md:flex-row gap-6">
-                <main class="flex-1 w-full min-w-0">
+                {/* Main scrollable content */}
+                <main class="flex-1 w-full min-w-0 md:mr-[340px]">
                     <article class="glass-card">
                         <div class="glass-header -mx-0 -mt-0 rounded-t-lg px-6 py-4 border-b border-white/50">
                             <div class="flex flex-col">
@@ -56,25 +57,27 @@ export function Post({ post, prevPost, nextPost }: PostProps) {
                             ) : <div></div>}
                         </div>
                     </article>
-
-                    {/* Comments placeholder or component if needed */}
                 </main>
 
-                <div class="w-full md:w-80 shrink-0">
-                    <div class="sticky top-4 space-y-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
-                        {post.toc && (
-                            <div class="glass-card p-4">
-                                <div class="glass-header -mx-4 -mt-4 mb-2 rounded-t text-sm font-bold px-4 py-2">
-                                    目录
-                                </div>
-                                <div
-                                    class="text-sm space-y-1 max-h-[40vh] overflow-y-auto custom-scrollbar"
-                                    dangerouslySetInnerHTML={{ __html: post.toc }}
-                                />
+                {/* Fixed sidebar - hidden on mobile, fixed on desktop */}
+                <div class="hidden md:block fixed right-4 top-20 w-80 space-y-4 max-h-[calc(100vh-6rem)] overflow-y-auto">
+                    {post.toc && (
+                        <div class="glass-card p-4">
+                            <div class="glass-header -mx-4 -mt-4 mb-2 rounded-t text-sm font-bold px-4 py-2">
+                                目录
                             </div>
-                        )}
-                        <Sidebar />
-                    </div>
+                            <div
+                                class="text-sm space-y-1 max-h-[35vh] overflow-y-auto custom-scrollbar"
+                                dangerouslySetInnerHTML={{ __html: post.toc }}
+                            />
+                        </div>
+                    )}
+                    <Sidebar />
+                </div>
+
+                {/* Mobile sidebar - shows at bottom on mobile */}
+                <div class="md:hidden w-full space-y-4">
+                    <Sidebar />
                 </div>
             </div>
         </Layout>

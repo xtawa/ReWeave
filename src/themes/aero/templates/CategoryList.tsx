@@ -27,7 +27,7 @@ export function CategoryList({ categories }: CategoryListProps) {
         <Layout title="分类">
             <Header />
             <div class="flex flex-col md:flex-row gap-6">
-                <main class="flex-1 w-full min-w-0">
+                <main class="flex-1 w-full min-w-0 md:mr-[340px]">
                     <div class="glass-card">
                         <div class="glass-header flex justify-between items-center">
                             <h1 class="text-2xl font-bold m-0">📁 分类</h1>
@@ -54,10 +54,15 @@ export function CategoryList({ categories }: CategoryListProps) {
                         </div>
                     </div>
                 </main>
-                <div class="w-full md:w-80 shrink-0">
-                    <div class="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
-                        <Sidebar />
-                    </div>
+
+                {/* Fixed sidebar */}
+                <div class="hidden md:block fixed right-4 top-20 w-80 max-h-[calc(100vh-6rem)] overflow-y-auto">
+                    <Sidebar />
+                </div>
+
+                {/* Mobile sidebar */}
+                <div class="md:hidden w-full">
+                    <Sidebar />
                 </div>
             </div>
         </Layout>

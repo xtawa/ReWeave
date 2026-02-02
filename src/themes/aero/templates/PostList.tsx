@@ -16,7 +16,7 @@ export function PostList({ posts, currentPage, totalPages, baseUrl }: PostListPr
         <Layout title="首页">
             <Header />
             <div class="flex flex-col md:flex-row gap-6">
-                <main class="flex-1 w-full min-w-0">
+                <main class="flex-1 w-full min-w-0 md:mr-[340px]">
                     <div class="flex flex-col gap-6">
                         {posts.map(post => (
                             <article class="glass-card">
@@ -55,10 +55,15 @@ export function PostList({ posts, currentPage, totalPages, baseUrl }: PostListPr
                         )}
                     </div>
                 </main>
-                <div class="w-full md:w-80 shrink-0">
-                    <div class="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
-                        <Sidebar />
-                    </div>
+
+                {/* Fixed sidebar - desktop only */}
+                <div class="hidden md:block fixed right-4 top-20 w-80 max-h-[calc(100vh-6rem)] overflow-y-auto">
+                    <Sidebar />
+                </div>
+
+                {/* Mobile sidebar */}
+                <div class="md:hidden w-full">
+                    <Sidebar />
                 </div>
             </div>
         </Layout>

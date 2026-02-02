@@ -15,7 +15,7 @@ export function Page({ title, content, slug }: PageProps) {
         <Layout title={title}>
             <Header />
             <div class="flex flex-col md:flex-row gap-6">
-                <main class="flex-1 w-full min-w-0">
+                <main class="flex-1 w-full min-w-0 md:mr-[340px]">
                     <div class="glass-card p-6 min-h-[500px]">
                         <div class="glass-header mb-4 -mx-6 -mt-6 rounded-t-lg px-6 py-3">
                             <h1 class="text-2xl font-bold m-0">{title}</h1>
@@ -26,10 +26,15 @@ export function Page({ title, content, slug }: PageProps) {
                         />
                     </div>
                 </main>
-                <div class="w-full md:w-80 shrink-0">
-                    <div class="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
-                        <Sidebar />
-                    </div>
+
+                {/* Fixed sidebar - desktop only */}
+                <div class="hidden md:block fixed right-4 top-20 w-80 max-h-[calc(100vh-6rem)] overflow-y-auto">
+                    <Sidebar />
+                </div>
+
+                {/* Mobile sidebar */}
+                <div class="md:hidden w-full">
+                    <Sidebar />
                 </div>
             </div>
         </Layout>

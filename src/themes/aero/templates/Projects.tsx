@@ -26,7 +26,7 @@ export function Projects({ projects, contributors = [], sponsors = [], sponsorLi
         <Layout title={title || "项目"}>
             <Header />
             <div class="flex flex-col md:flex-row gap-6">
-                <main class="flex-1 w-full min-w-0">
+                <main class="flex-1 w-full min-w-0 md:mr-[340px]">
                     {/* Header */}
                     <div class="glass-card mb-6">
                         <div class="glass-header">
@@ -105,10 +105,14 @@ export function Projects({ projects, contributors = [], sponsors = [], sponsorLi
                         </div>
                     )}
                 </main>
-                <div class="w-full md:w-80 shrink-0">
-                    <div class="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
-                        <Sidebar />
-                    </div>
+                {/* Fixed sidebar */}
+                <div class="hidden md:block fixed right-4 top-20 w-80 max-h-[calc(100vh-6rem)] overflow-y-auto">
+                    <Sidebar />
+                </div>
+
+                {/* Mobile sidebar */}
+                <div class="md:hidden w-full">
+                    <Sidebar />
                 </div>
             </div>
         </Layout>
