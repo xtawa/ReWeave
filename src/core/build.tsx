@@ -366,6 +366,32 @@ async function build() {
     // Ensure dist exists
     await fs.mkdir(distDir, { recursive: true });
 
+    // Start CSS Build (Parallel)
+    const cssBuildPromise = (async () => {
+        console.time('cssBuild');
+        console.log("Building CSS...");
+        try {
+            const postcss = (await import('postcss')).default;
+            const tailwindcss = (await import('tailwindcss')).default;
+            const autoprefixer = (await import('autoprefixer')).default;
+
+            const css = await fs.readFile(path.join(rootDir, 'src', 'style.css'), 'utf-8');
+
+            const result = await postcss([
+                tailwindcss({ config: path.join(rootDir, 'tailwind.config.js') }),
+                autoprefixer
+            ]).process(css, { from: path.join(rootDir, 'src', 'style.css'), to: path.join(distDir, 'style.css') });
+
+            await fs.writeFile(path.join(distDir, 'style.css'), result.css);
+            console.log("CSS built successfully.");
+        } catch (e) {
+            console.error("CSS Build Error:", e);
+            throw e;
+        } finally {
+            console.timeEnd('cssBuild');
+        }
+    })();
+
     // Copy public directory if it exists (recursively)
     const publicDir = path.join(process.cwd(), 'public');
     try {
@@ -387,27 +413,6 @@ async function build() {
     // Filter out draft and hidden posts
     const posts = allPosts.filter(post => !post.draft && !post.hide);
     console.log(`Processing ${posts.length} active posts.`);
-
-    // Start CSS Build (Sequential)
-    console.log("Building CSS...");
-    try {
-        const postcss = (await import('postcss')).default;
-        const tailwindcss = (await import('tailwindcss')).default;
-        const autoprefixer = (await import('autoprefixer')).default;
-
-        const css = await fs.readFile(path.join(rootDir, 'src', 'style.css'), 'utf-8');
-
-        const result = await postcss([
-            tailwindcss({ config: path.join(rootDir, 'tailwind.config.js') }),
-            autoprefixer
-        ]).process(css, { from: path.join(rootDir, 'src', 'style.css'), to: path.join(distDir, 'style.css') });
-
-        await fs.writeFile(path.join(distDir, 'style.css'), result.css);
-        console.log("CSS built successfully.");
-    } catch (e) {
-        console.error("CSS Build Error:", e);
-        throw e;
-    }
 
     // Pagination Logic
     const pageSize = config.pagination?.pageSize || 15;
@@ -1350,7 +1355,7 @@ async function build() {
     const sitemapBuild = fs.writeFile(path.join(distDir, 'sitemap.xml'), sitemapContent);
 
     // Wait for all tasks
-    const allBuilds = [indexBuild, ...categoryBuilds, ...tagBuilds, archiveBuild, categoriesListBuild, tagsListBuild];
+    const allBuilds = [indexBuild, ...categoryBuilds, ...tagBuilds, archiveBuild, categoriesListBuild, tagsListBuild, cssBuildPromise];
     if (aboutBuild) allBuilds.push(aboutBuild);
     if (projectsBuild) allBuilds.push(projectsBuild);
     allBuilds.push(statsBuild);
