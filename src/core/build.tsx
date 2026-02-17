@@ -14,10 +14,12 @@ import { NotFound } from './defaults/NotFound';
 
 const execAsync = promisify(exec);
 
+const SAFE_SLUG_RE = /^[a-zA-Z0-9-_]+$/;
+
 // Helper to generate safe filenames/URLs for non-ASCII strings
 function safeSlug(str: string): string {
     // If strictly ASCII alphanumeric (plus - and _), return as is
-    if (/^[a-zA-Z0-9-_]+$/.test(str)) {
+    if (SAFE_SLUG_RE.test(str)) {
         return str;
     }
     // Otherwise use hex encoding to ensure safe filename
