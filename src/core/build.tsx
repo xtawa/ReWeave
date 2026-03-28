@@ -61,6 +61,7 @@ async function copyDir(src: string, dest: string) {
 }
 
 import { ensureDir } from './utils/fs-cache';
+import { sanitizePostSlug } from './utils/sanitize';
 
 // Helper to write file to folder/index.html structure
 async function writeHtml(filePath: string, content: string) {
@@ -1242,24 +1243,37 @@ async function build() {
                     <script dangerouslySetInnerHTML={{
                         __html: `
                         (function() {
+                            const sanitizePostSlug = ${sanitizePostSlug.toString()};
                             const posts = ${postsJson};
                             const input = document.getElementById('search-input');
                             const results = document.getElementById('search-results');
                             
                             function search(query) {
                                 query = query.toLowerCase().trim();
-                                if (!query) { results.innerHTML = ''; return; }
+                                if (!query) { results.replaceChildren(); return; }
                                 const filtered = posts.filter(p => 
                                     p.title.toLowerCase().includes(query) ||
                                     (p.excerpt && p.excerpt.toLowerCase().includes(query)) ||
                                     (p.tags && p.tags.some(t => t.toLowerCase().includes(query)))
                                 );
-                                results.innerHTML = filtered.map(p => 
-                                    '<article class="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-xl">' +
-                                        '<a href="/posts/' + p.slug + '" class="text-xl font-semibold text-zinc-900 dark:text-zinc-100">' + p.title + '</a>' +
-                                        '<p class="text-sm text-zinc-500 mt-1">' + new Date(p.date).toLocaleDateString() + '</p>' +
-                                    '</article>'
-                                ).join('');
+                                results.replaceChildren();
+                                filtered.forEach(p => {
+                                    const article = document.createElement('article');
+                                    article.className = 'p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-xl';
+
+                                    const link = document.createElement('a');
+                                    link.href = '/posts/' + sanitizePostSlug(p.slug || '');
+                                    link.className = 'text-xl font-semibold text-zinc-900 dark:text-zinc-100';
+                                    link.textContent = p.title || '';
+                                    article.appendChild(link);
+
+                                    const date = document.createElement('p');
+                                    date.className = 'text-sm text-zinc-500 mt-1';
+                                    date.textContent = new Date(p.date).toLocaleDateString();
+                                    article.appendChild(date);
+
+                                    results.appendChild(article);
+                                });
                             }
                             let timeout;
                             input.addEventListener('input', () => {

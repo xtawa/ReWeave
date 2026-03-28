@@ -2,6 +2,7 @@
 import { h } from 'preact';
 import { config } from '../../../config/theme/weave.config';
 import { t } from '../../../core/i18n';
+import { sanitizePostSlug } from '../../../core/utils/sanitize';
 import { Layout } from '../layouts/Layout';
 import { Header } from './Header';
 
@@ -99,6 +100,7 @@ export function Search({ posts }: SearchProps) {
                 <script dangerouslySetInnerHTML={{
                     __html: `
                     (function() {
+                        const sanitizePostSlug = ${sanitizePostSlug.toString()};
                         var posts = ${postsJson};
                         var input = document.getElementById('search-input');
                         var results = document.getElementById('search-results');
@@ -107,41 +109,69 @@ export function Search({ posts }: SearchProps) {
                         var clearBtn = document.getElementById('search-clear');
 
                         function renderResults(filteredPosts) {
+                            results.replaceChildren();
+
                             if (filteredPosts.length === 0) {
-                                results.innerHTML = '';
                                 noResults.classList.remove('hidden');
                                 return;
                             }
 
                             noResults.classList.add('hidden');
-                            results.innerHTML = filteredPosts.map(function(post) {
+                            filteredPosts.forEach(function(post) {
                                 var dateStr = new Date(post.date).toLocaleDateString();
-                                var tagsHtml = (post.tags || []).slice(0, 3).map(function(tag) {
-                                    return '<span class="text-xs px-2 py-1 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-300 rounded-full">#' + tag + '</span>';
-                                }).join('');
+                                var article = document.createElement('article');
+                                article.className = 'group relative flex flex-col items-start p-4 -mx-4 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition animate-fade-in';
 
-                                return '<article class="group relative flex flex-col items-start p-4 -mx-4 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition animate-fade-in">' +
-                                    '<h2 class="text-xl font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">' +
-                                        '<a href="/posts/' + post.slug + '">' +
-                                            '<span class="absolute inset-0 z-0"></span>' +
-                                            post.title +
-                                        '</a>' +
-                                    '</h2>' +
-                                    '<time class="relative z-10 order-first mb-2 flex items-center text-sm text-zinc-400" datetime="' + post.date + '">' +
-                                        '<span class="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-700 mr-3"></span>' +
-                                        dateStr +
-                                    '</time>' +
-                                    (post.excerpt ? '<p class="relative z-10 mt-2 text-sm text-zinc-600 dark:text-zinc-300 line-clamp-2">' + post.excerpt + '</p>' : '') +
-                                    (tagsHtml ? '<div class="relative z-10 mt-3 flex flex-wrap gap-2">' + tagsHtml + '</div>' : '') +
-                                '</article>';
-                            }).join('');
+                                var title = document.createElement('h2');
+                                title.className = 'text-xl font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors';
+
+                                var link = document.createElement('a');
+                                link.href = '/posts/' + sanitizePostSlug(post.slug || '');
+                                var overlay = document.createElement('span');
+                                overlay.className = 'absolute inset-0 z-0';
+                                link.appendChild(overlay);
+                                link.appendChild(document.createTextNode(post.title || ''));
+                                title.appendChild(link);
+                                article.appendChild(title);
+
+                                var time = document.createElement('time');
+                                time.className = 'relative z-10 order-first mb-2 flex items-center text-sm text-zinc-400';
+                                time.dateTime = post.date || '';
+                                var bar = document.createElement('span');
+                                bar.className = 'h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-700 mr-3';
+                                time.appendChild(bar);
+                                time.appendChild(document.createTextNode(dateStr));
+                                article.appendChild(time);
+
+                                if (post.excerpt) {
+                                    var excerpt = document.createElement('p');
+                                    excerpt.className = 'relative z-10 mt-2 text-sm text-zinc-600 dark:text-zinc-300 line-clamp-2';
+                                    excerpt.textContent = post.excerpt;
+                                    article.appendChild(excerpt);
+                                }
+
+                                var tags = (post.tags || []).slice(0, 3);
+                                if (tags.length > 0) {
+                                    var tagsWrap = document.createElement('div');
+                                    tagsWrap.className = 'relative z-10 mt-3 flex flex-wrap gap-2';
+                                    tags.forEach(function(tag) {
+                                        var tagNode = document.createElement('span');
+                                        tagNode.className = 'text-xs px-2 py-1 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-300 rounded-full';
+                                        tagNode.textContent = '#' + tag;
+                                        tagsWrap.appendChild(tagNode);
+                                    });
+                                    article.appendChild(tagsWrap);
+                                }
+
+                                results.appendChild(article);
+                            });
                         }
 
                         function search(query) {
                             query = query.toLowerCase().trim();
                             
                             if (!query) {
-                                results.innerHTML = '';
+                                results.replaceChildren();
                                 noResults.classList.add('hidden');
                                 initialPosts.classList.remove('hidden');
                                 clearBtn.classList.add('hidden');
