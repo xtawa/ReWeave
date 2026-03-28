@@ -19,6 +19,23 @@ export interface Post {
     headings?: Array<{ level: number; text: string; id: string }>;
 }
 
+export async function collectMarkdownFiles(dir: string): Promise<string[]> {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    const files: string[] = [];
+
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+
+        if (entry.isDirectory()) {
+            files.push(...await collectMarkdownFiles(fullPath));
+        } else if (entry.isFile() && entry.name.endsWith('.md')) {
+            files.push(fullPath);
+        }
+    }
+
+    return files;
+}
+
 class WorkerPool {
     private workers: Worker[] = [];
     private queue: Array<{ filePath: string; slug: string; resolve: (value: Post) => void; reject: (reason?: any) => void }> = [];
@@ -149,7 +166,7 @@ declare module 'worker_threads' {
 }
 
 export async function getPosts(contentDir: string): Promise<Post[]> {
-    const files = (await fs.readdir(contentDir)).filter(file => file.endsWith('.md'));
+    const files = await collectMarkdownFiles(contentDir);
     console.log(`Total markdown files found: ${files.length}`);
 
     // Use fewer workers to improve stability
@@ -159,12 +176,15 @@ export async function getPosts(contentDir: string): Promise<Post[]> {
     const workerPath = path.join(process.cwd(), 'dist', 'worker.js');
     const pool = new WorkerPool(workerPath, numWorkers);
 
-    const promises = files.map(file => {
-        return pool.run(path.join(contentDir, file), file.replace('.md', ''))
+    const promises = files.map(filePath => {
+        const relativePath = path.relative(contentDir, filePath);
+        const slug = relativePath.replace(/\.md$/i, '').replace(/\\/g, '/');
+
+        return pool.run(filePath, slug)
             .catch(err => {
-                console.error(`Failed to process ${file}:`, err);
+                console.error(`Failed to process ${relativePath}:`, err);
                 return {
-                    slug: file.replace('.md', ''),
+                    slug,
                     title: 'Build Error',
                     date: new Date().toISOString(),
                     content: `Error: ${err.message}`,
