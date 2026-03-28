@@ -5,9 +5,13 @@ import chokidar from 'chokidar';
 console.log("Starting ReWeave Dev...");
 
 let isBuilding = false;
+let hasPendingBuild = false;
 
 async function runBuild() {
-    if (isBuilding) return;
+    if (isBuilding) {
+        hasPendingBuild = true;
+        return;
+    }
     isBuilding = true;
     console.log("Change detected. Rebuilding...");
 
@@ -19,6 +23,11 @@ async function runBuild() {
             console.log("Build successful.");
         } else {
             console.error("Build failed.");
+        }
+
+        if (hasPendingBuild) {
+            hasPendingBuild = false;
+            runBuild();
         }
     });
 }
