@@ -20,12 +20,13 @@ export interface Post {
 }
 
 class WorkerPool {
-    private workers: Worker[] = [];
     private queue: Array<{ filePath: string; slug: string; resolve: (value: Post) => void; reject: (reason?: any) => void }> = [];
     private activeWorkers: number = 0;
     private maxWorkers: number;
     private workerPath: string;
     private idleWorkers: Worker[] = [];
+    private allWorkers: Set<Worker> = new Set();
+    private closing: boolean = false;
 
     constructor(workerPath: string, maxWorkers: number) {
         this.workerPath = workerPath;
@@ -33,13 +34,22 @@ class WorkerPool {
     }
 
     public async run(filePath: string, slug: string): Promise<Post> {
+        if (this.closing) {
+            return Promise.reject(new Error('WorkerPool is closing and cannot accept new tasks.'));
+        }
+
         return new Promise<Post>((resolve, reject) => {
+            if (this.closing) {
+                reject(new Error('WorkerPool is closing and cannot accept new tasks.'));
+                return;
+            }
             this.queue.push({ filePath, slug, resolve, reject });
             this.processQueue();
         });
     }
 
     private processQueue() {
+        if (this.closing) return;
         if (this.queue.length === 0) return;
 
         if (this.idleWorkers.length > 0) {
@@ -52,6 +62,7 @@ class WorkerPool {
 
     private createWorker() {
         const worker = new Worker(this.workerPath);
+        this.allWorkers.add(worker);
         this.activeWorkers++;
 
         worker.on('message', (msg) => {
@@ -86,7 +97,6 @@ class WorkerPool {
                 task.reject(err);
             }
             this.removeWorker(worker);
-            this.activeWorkers--;
             this.processQueue();
         });
 
@@ -99,7 +109,6 @@ class WorkerPool {
                 }
             }
             this.removeWorker(worker);
-            this.activeWorkers--;
             this.processQueue();
         });
 
@@ -117,6 +126,10 @@ class WorkerPool {
     }
 
     private releaseWorker(worker: Worker) {
+        if (this.closing) {
+            this.removeWorker(worker);
+            return;
+        }
         worker.userData = null;
         // If there are tasks in queue, assign immediately
         if (this.queue.length > 0) {
@@ -131,13 +144,20 @@ class WorkerPool {
         if (index !== -1) {
             this.idleWorkers.splice(index, 1);
         }
-        worker.terminate();
+        if (this.allWorkers.delete(worker)) {
+            this.activeWorkers = Math.max(0, this.activeWorkers - 1);
+            worker.terminate();
+        }
     }
 
     public close() {
-        this.idleWorkers.forEach(w => w.terminate());
+        this.closing = true;
+        this.queue.forEach(task => task.reject(new Error('WorkerPool has been closed.')));
+        this.allWorkers.forEach(worker => worker.terminate());
+        this.queue = [];
         this.idleWorkers = [];
-        // Also terminate active workers? Ideally wait for them, but for build script we can just kill.
+        this.allWorkers.clear();
+        this.activeWorkers = 0;
     }
 }
 
