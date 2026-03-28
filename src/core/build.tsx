@@ -24,6 +24,14 @@ function safeSlug(str: string): string {
     return Buffer.from(str).toString('hex');
 }
 
+function safeSlugPath(slug: string): string {
+    return slug
+        .split('/')
+        .filter(Boolean)
+        .map(segment => safeSlug(segment))
+        .join('/');
+}
+
 // Helper to get Git version
 async function getVersion(): Promise<string> {
     // First try Vercel environment variable
@@ -434,7 +442,7 @@ async function build() {
                 <main>
                     <div class="space-y-10 animate-fade-in-up">
                         {pagePosts.map((post) => {
-                            const postUrl = safeSlug(post.abbrlink || post.slug);
+                            const postUrl = safeSlugPath(post.abbrlink || post.slug);
                             return (
                                 <article key={post.slug} class="group relative flex flex-col items-start">
                                     <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
@@ -647,7 +655,7 @@ async function build() {
 
     const buildPost = async (post: any, index: number) => {
         const start = performance.now();
-        const postUrl = safeSlug(post.abbrlink || post.slug);
+        const postUrl = safeSlugPath(post.abbrlink || post.slug);
 
         const tocEnabled = config.toc?.enabled ?? false;
         const maxDepth = config.toc?.maxDepth ?? 3;
@@ -665,8 +673,8 @@ async function build() {
 
         let postContent;
         if (Post) {
-            const prevPost = index < posts.length - 1 ? { title: posts[index + 1].title, url: `/posts/${safeSlug(posts[index + 1].abbrlink || posts[index + 1].slug)}` } : undefined;
-            const nextPost = index > 0 ? { title: posts[index - 1].title, url: `/posts/${safeSlug(posts[index - 1].abbrlink || posts[index - 1].slug)}` } : undefined;
+            const prevPost = index < posts.length - 1 ? { title: posts[index + 1].title, url: `/posts/${safeSlugPath(posts[index + 1].abbrlink || posts[index + 1].slug)}` } : undefined;
+            const nextPost = index > 0 ? { title: posts[index - 1].title, url: `/posts/${safeSlugPath(posts[index - 1].abbrlink || posts[index - 1].slug)}` } : undefined;
 
             const tocNode = headings.length > 0 ? renderToc(headings, 'left', false) : null;
             const tocHtml = tocNode ? render(tocNode) : '';
@@ -740,6 +748,17 @@ async function build() {
         // console.log(`Built page: ${postUrl} (${(end - start).toFixed(2)}ms)`);
     };
 
+    const postSlugOwners = new Map<string, string>();
+    for (const post of posts) {
+        const rawSlug = post.abbrlink || post.slug;
+        const postUrl = safeSlugPath(rawSlug);
+        const existed = postSlugOwners.get(postUrl);
+        if (existed && existed !== rawSlug) {
+            throw new Error(`Post slug conflict detected: "${existed}" and "${rawSlug}" both resolve to "/posts/${postUrl}"`);
+        }
+        postSlugOwners.set(postUrl, rawSlug);
+    }
+
     // Execute in chunks to avoid OOM
     const CHUNK_SIZE = 20;
     for (let i = 0; i < posts.length; i += CHUNK_SIZE) {
@@ -785,7 +804,7 @@ async function build() {
                         <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('category', config.language)}: {category}</h1>
                         <div class="space-y-10">
                             {categoryPosts.map((post) => {
-                                const postUrl = safeSlug(post.abbrlink || post.slug);
+                                const postUrl = safeSlugPath(post.abbrlink || post.slug);
                                 return (
                                     <article key={post.slug} class="group relative flex flex-col items-start">
                                         <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
@@ -846,7 +865,7 @@ async function build() {
                         <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tag', config.language)}: {tag}</h1>
                         <div class="space-y-10">
                             {tagPosts.map((post) => {
-                                const postUrl = safeSlug(post.abbrlink || post.slug);
+                                const postUrl = safeSlugPath(post.abbrlink || post.slug);
                                 return (
                                     <article key={post.slug} class="group relative flex flex-col items-start">
                                         <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
@@ -915,7 +934,7 @@ async function build() {
                                                 {new Date(post.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                             </time>
                                             <h3 class="text-lg font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
-                                                <a href={`/posts/${safeSlug(post.abbrlink || post.slug)}`}>
+                                                <a href={`/posts/${safeSlugPath(post.abbrlink || post.slug)}`}>
                                                     {post.title}
                                                 </a>
                                             </h3>
@@ -1173,7 +1192,7 @@ async function build() {
                                     <h3 class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-3">{monthName}</h3>
                                     <ul class="space-y-2">
                                         {monthPosts.map(post => {
-                                            const postUrl = safeSlug(post.abbrlink || post.slug);
+                                            const postUrl = safeSlugPath(post.abbrlink || post.slug);
                                             return (
                                                 <li>
                                                     <a href={`/posts/${postUrl}`} class="text-zinc-600 dark:text-zinc-400 hover:text-teal-500 dark:hover:text-teal-400 transition">
@@ -1209,7 +1228,7 @@ async function build() {
     if (Search) {
         searchContent = <Search posts={posts.map(p => ({
             title: p.title,
-            slug: p.slug,
+            slug: safeSlugPath(p.abbrlink || p.slug),
             abbrlink: p.abbrlink,
             date: p.date,
             excerpt: p.excerpt,
@@ -1220,7 +1239,7 @@ async function build() {
         // Fallback basic search page
         const postsJson = JSON.stringify(posts.map(p => ({
             title: p.title,
-            slug: safeSlug(p.abbrlink || p.slug),
+            slug: safeSlugPath(p.abbrlink || p.slug),
             date: p.date,
             excerpt: p.excerpt || '',
             category: p.category || '',
@@ -1298,7 +1317,7 @@ async function build() {
     <language>${config.language}</language>
     <atom:link href="${config.siteUrl}/rss.xml" rel="self" type="application/rss+xml" />
     ${posts.slice(0, 20).map(post => {
-        const postUrl = safeSlug(post.abbrlink || post.slug);
+        const postUrl = safeSlugPath(post.abbrlink || post.slug);
         const fullPostUrl = `${config.siteUrl}/posts/${postUrl}`;
         return `
     <item>
@@ -1355,7 +1374,7 @@ async function build() {
     </url>` : ''}
     ${posts.map(post => `
     <url>
-        <loc>${config.siteUrl}/posts/${safeSlug(post.abbrlink || post.slug)}</loc>
+        <loc>${config.siteUrl}/posts/${safeSlugPath(post.abbrlink || post.slug)}</loc>
         <lastmod>${new Date(post.date).toISOString()}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
