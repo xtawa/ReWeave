@@ -90,3 +90,39 @@ ReWeave 支持平滑的深色/浅色模式切换动画。通过在切换时临�
 - **语义化 HTML**：使用正确的 HTML5 标签以利于 SEO。
 
 通过本教程，你应该已经对 ReWeave 的主题开发有了全面的了解。现在，开始动手打造你的专属主题吧！
+
+## 7. `terminal` 主题示例（内置）
+
+ReWeave 现已提供 `terminal` 主题（`src/themes/terminal`），使用统一的终端视觉语义：
+
+- 背景：`bg-[#0b0f10]`
+- 主文本：`text-zinc-200`
+- 次级文本：`text-zinc-400`
+- 强调：`text-emerald-400` / `border-emerald-500/40`
+- 面板：`bg-black/40 border border-emerald-500/20 rounded-none`
+- 字体：`font-mono`
+- 交互：链接与分页在 hover 时切换为 `cyan/emerald`，并通过边框/下划线增强状态，不仅依赖颜色。
+
+`terminal` 主题支持：首页列表、文章页、独立页面、归档页、标签页、分类页、分页组件和评论容器。
+
+### 启用 terminal 主题
+
+在 `src/config/reweave.config.ts` 中设置：
+
+```ts
+export const reweaveConfig = {
+  // ...
+  themeName: 'terminal',
+};
+```
+
+### terminal 主题配置文件
+
+配置入口：`src/config/theme/terminal.config.ts`，推荐调整项：
+
+- `title` / `description`
+- `navbar.items`
+- `theme`（颜色语义、字体、面板）
+- `hero.title` / `hero.subtitle` / `hero.promptPrefix`
+
+预览特征：CRT scanline 轻纹理、终端式标题前缀（`$`, `>`, `~/`）、代码块深底细边框与绿色高亮。
