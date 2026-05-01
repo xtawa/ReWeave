@@ -49,7 +49,7 @@ export const reweaveConfig: ReweaveConfig = {
     language: "zh",
     siteUrl: "https://demo.reweave.xtyin.com",
     themeName: "weave",
-    homePage: "posts",
+    homePage: "hero",
     hero: heroConfig,
     pagination: {
         pageSize: 15,

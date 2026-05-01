@@ -15,6 +15,7 @@ interface ProjectsProps {
 }
 
 export function Projects({ projects, contributors = [], sponsors = [], sponsorLink, title }: ProjectsProps) {
+    const visibleContributors = contributors.filter(c => !c.hidden);
     const featuredProjects = projects.filter(p => p.featured);
     const otherProjects = projects.filter(p => !p.featured);
 
@@ -85,7 +86,7 @@ export function Projects({ projects, contributors = [], sponsors = [], sponsorLi
                 )}
 
                 {/* Contributors Section */}
-                {contributors.length > 0 && (
+                {visibleContributors.length > 0 && (
                     <div className="mb-16 pt-8 border-t border-zinc-200 dark:border-zinc-700">
                         <h2 className="text-2xl font-bold text-zinc-800 dark:text-zinc-200 mb-6 flex items-center gap-2 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                             <svg className="w-6 h-6 text-purple-500" fill="currentColor" viewBox="0 0 24 24">
@@ -94,7 +95,7 @@ export function Projects({ projects, contributors = [], sponsors = [], sponsorLi
                             贡献者
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {contributors.map((contributor, index) => (
+                            {visibleContributors.map((contributor, index) => (
                                 <ContributorCard
                                     key={contributor.name}
                                     contributor={contributor}

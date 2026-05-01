@@ -22,6 +22,7 @@ export interface Contributor {
     github?: string;
     website?: string;
     contributions?: string[];
+    hidden?: boolean;
 }
 
 export interface Sponsor {
@@ -63,6 +64,7 @@ export const contributorsConfig: Contributor[] = [
         bio: "//I don't know:(",
         role: "Idea fly",
         gender: "female",
+        hidden: true,
         //        github: "https://github.com/",
         contributions: ["灵感启发"],
     },
