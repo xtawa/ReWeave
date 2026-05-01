@@ -3,6 +3,8 @@ import chokidar from 'chokidar';
 
 console.log("Starting ReWeave Dev...");
 
+const isWindows = process.platform === 'win32';
+
 let isBuilding = false;
 let hasPendingBuild = false;
 
@@ -15,7 +17,7 @@ function runBuild(): Promise<void> {
     console.log("Change detected. Rebuilding...");
 
     return new Promise<void>((resolve) => {
-        const build = spawn('npx', ['tsx', 'src/core/build.tsx'], { stdio: 'inherit' });
+        const build = spawn('npx', ['tsx', 'src/core/build.tsx'], { stdio: 'inherit', shell: isWindows });
 
         build.on('close', (code) => {
             isBuilding = false;
@@ -44,7 +46,7 @@ function runBuild(): Promise<void> {
 console.log("Running initial build...");
 runBuild().then(() => {
     console.log("Starting Preview Server...");
-    spawn('npx', ['vite', 'preview', '--port', '3000'], { stdio: 'inherit' });
+    spawn('npx', ['vite', 'preview', '--port', '3000'], { stdio: 'inherit', shell: isWindows });
 });
 
 // Watcher

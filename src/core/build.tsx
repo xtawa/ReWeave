@@ -678,7 +678,7 @@ async function build() {
             const prevPost = index < posts.length - 1 ? { title: posts[index + 1].title, url: `/posts/${safeSlugPath(posts[index + 1].abbrlink || posts[index + 1].slug)}` } : undefined;
             const nextPost = index > 0 ? { title: posts[index - 1].title, url: `/posts/${safeSlugPath(posts[index - 1].abbrlink || posts[index - 1].slug)}` } : undefined;
 
-            const tocNode = headings.length > 0 ? renderToc(headings, 'left', false) : null;
+            const tocNode = headings.length > 0 ? renderToc(headings, tocPosition, tocCollapsible) : null;
             const tocHtml = tocNode ? render(tocNode) : '';
 
             postContent = (
@@ -732,7 +732,7 @@ async function build() {
                                         </div>
                                     )}
                                 </header>
-                                {tocEnabled && headings.length > 0 && tocPosition === 'top' && (
+                                {tocEnabled && headings.length > 0 && (
                                     <div class="mt-8">
                                         {renderToc(headings, tocPosition, tocCollapsible)}
                                     </div>
