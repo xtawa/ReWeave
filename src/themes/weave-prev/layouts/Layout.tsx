@@ -237,7 +237,7 @@ export function Layout({ title, description, image, children, contentWidth, hasC
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden">
                 <div id="page-transition-overlay" class="fixed inset-0 z-[9999] bg-zinc-50 dark:bg-black transition-opacity duration-300 ease-in-out pointer-events-auto" aria-hidden="true"></div>
                 <div id="main-content" class="relative flex w-full flex-col min-h-screen overflow-x-hidden">
-                    <div class="flex-1 flex flex-col w-full">
+                    <div class="flex-1 flex flex-col w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         {children}
                         <Footer />
                     </div>
