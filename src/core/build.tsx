@@ -11,25 +11,21 @@ import { t } from './i18n';
 import matter from 'gray-matter';
 import { DefaultLayout } from './defaults/DefaultLayout';
 import { NotFound } from './defaults/NotFound';
+import { safeSlug, sanitizePostSlug } from './utils/sanitize';
 
 const execAsync = promisify(exec);
 
-// Helper to generate safe filenames/URLs for non-ASCII strings
-function safeSlug(str: string): string {
-    // If strictly ASCII alphanumeric (plus - and _), return as is
-    if (/^[a-zA-Z0-9-_]+$/.test(str)) {
-        return str;
-    }
-    // Use encodeURIComponent for consistent, reversible encoding
-    return encodeURIComponent(str);
-}
-
-function safeSlugPath(slug: string): string {
-    return slug
-        .split('/')
-        .filter(Boolean)
-        .map(segment => safeSlug(segment))
-        .join('/');
+// Shared CSS build function
+async function buildCss(rootDir: string, distDir: string) {
+    const postcss = (await import('postcss')).default;
+    const tailwindcss = (await import('tailwindcss')).default;
+    const autoprefixer = (await import('autoprefixer')).default;
+    const css = await fs.readFile(path.join(rootDir, 'src', 'style.css'), 'utf-8');
+    const result = await postcss([
+        tailwindcss({ config: path.join(rootDir, 'tailwind.config.js') }),
+        autoprefixer
+    ]).process(css, { from: path.join(rootDir, 'src', 'style.css'), to: path.join(distDir, 'style.css') });
+    await fs.writeFile(path.join(distDir, 'style.css'), result.css);
 }
 
 // Helper to get Git version
@@ -69,7 +65,6 @@ async function copyDir(src: string, dest: string) {
 }
 
 import { ensureDir } from './utils/fs-cache';
-import { sanitizePostSlug } from './utils/sanitize';
 
 // Helper to write file to folder/index.html structure
 async function writeHtml(filePath: string, content: string) {
@@ -289,15 +284,7 @@ async function build() {
         // Build CSS
         console.log("Building CSS...");
         try {
-            const postcss = (await import('postcss')).default;
-            const tailwindcss = (await import('tailwindcss')).default;
-            const autoprefixer = (await import('autoprefixer')).default;
-            const css = await fs.readFile(path.join(rootDir, 'src', 'style.css'), 'utf-8');
-            const result = await postcss([
-                tailwindcss({ config: path.join(rootDir, 'tailwind.config.js') }),
-                autoprefixer
-            ]).process(css, { from: path.join(rootDir, 'src', 'style.css'), to: path.join(distDir, 'style.css') });
-            await fs.writeFile(path.join(distDir, 'style.css'), result.css);
+            await buildCss(rootDir, distDir);
         } catch (e) {
             console.error("CSS Build Error:", e);
         }
@@ -391,25 +378,22 @@ async function build() {
     console.timeEnd('getPosts');
     console.log(`Found ${allPosts.length} posts.`);
 
-    // Filter out draft and hidden posts
-    const posts = allPosts.filter(post => !post.draft && !post.hide);
+    // Filter out draft, hidden, and empty-slug posts
+    const posts = allPosts.filter(post => {
+        if (post.draft || post.hide) return false;
+        const slug = post.abbrlink || post.slug;
+        if (!slug || !slug.trim()) {
+            console.warn(`Warning: Post "${post.title}" has empty slug, skipping.`);
+            return false;
+        }
+        return true;
+    });
     console.log(`Processing ${posts.length} active posts.`);
 
     // Start CSS Build (Sequential)
     console.log("Building CSS...");
     try {
-        const postcss = (await import('postcss')).default;
-        const tailwindcss = (await import('tailwindcss')).default;
-        const autoprefixer = (await import('autoprefixer')).default;
-
-        const css = await fs.readFile(path.join(rootDir, 'src', 'style.css'), 'utf-8');
-
-        const result = await postcss([
-            tailwindcss({ config: path.join(rootDir, 'tailwind.config.js') }),
-            autoprefixer
-        ]).process(css, { from: path.join(rootDir, 'src', 'style.css'), to: path.join(distDir, 'style.css') });
-
-        await fs.writeFile(path.join(distDir, 'style.css'), result.css);
+        await buildCss(rootDir, distDir);
         console.log("CSS built successfully.");
     } catch (e) {
         console.error("CSS Build Error:", e);
@@ -440,7 +424,7 @@ async function build() {
                 <main>
                     <div class="space-y-10 animate-fade-in-up">
                         {pagePosts.map((post) => {
-                            const postUrl = safeSlugPath(post.abbrlink || post.slug);
+                            const postUrl = sanitizePostSlug(post.abbrlink || post.slug);
                             return (
                                 <article key={post.slug} class="group relative flex flex-col items-start">
                                     <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
@@ -645,7 +629,16 @@ async function build() {
                             });
                         }
 
-                        window.addEventListener('scroll', updateToc);
+                        let ticking = false;
+                        window.addEventListener('scroll', function() {
+                            if (!ticking) {
+                                requestAnimationFrame(function() {
+                                    updateToc();
+                                    ticking = false;
+                                });
+                                ticking = true;
+                            }
+                        });
                         updateToc();
                     })();
                 ` }}></script>
@@ -657,7 +650,7 @@ async function build() {
 
     const buildPost = async (post: any, index: number) => {
         const start = performance.now();
-        const postUrl = safeSlugPath(post.abbrlink || post.slug);
+        const postUrl = sanitizePostSlug(post.abbrlink || post.slug);
 
         const tocEnabled = config.toc?.enabled ?? false;
         const maxDepth = config.toc?.maxDepth ?? 3;
@@ -675,8 +668,8 @@ async function build() {
 
         let postContent;
         if (Post) {
-            const prevPost = index < posts.length - 1 ? { title: posts[index + 1].title, url: `/posts/${safeSlugPath(posts[index + 1].abbrlink || posts[index + 1].slug)}` } : undefined;
-            const nextPost = index > 0 ? { title: posts[index - 1].title, url: `/posts/${safeSlugPath(posts[index - 1].abbrlink || posts[index - 1].slug)}` } : undefined;
+            const prevPost = index < posts.length - 1 ? { title: posts[index + 1].title, url: `/posts/${sanitizePostSlug(posts[index + 1].abbrlink || posts[index + 1].slug)}` } : undefined;
+            const nextPost = index > 0 ? { title: posts[index - 1].title, url: `/posts/${sanitizePostSlug(posts[index - 1].abbrlink || posts[index - 1].slug)}` } : undefined;
 
             const tocNode = headings.length > 0 ? renderToc(headings, tocPosition, tocCollapsible) : null;
             const tocHtml = tocNode ? render(tocNode) : '';
@@ -753,7 +746,7 @@ async function build() {
     const postSlugOwners = new Map<string, string>();
     for (const post of posts) {
         const rawSlug = post.abbrlink || post.slug;
-        const postUrl = safeSlugPath(rawSlug);
+        const postUrl = sanitizePostSlug(rawSlug);
         const existed = postSlugOwners.get(postUrl);
         if (existed && existed !== rawSlug) {
             throw new Error(`Post slug conflict detected: "${existed}" and "${rawSlug}" both resolve to "/posts/${postUrl}"`);
@@ -806,7 +799,7 @@ async function build() {
                         <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('category', config.language)}: {category}</h1>
                         <div class="space-y-10">
                             {categoryPosts.map((post) => {
-                                const postUrl = safeSlugPath(post.abbrlink || post.slug);
+                                const postUrl = sanitizePostSlug(post.abbrlink || post.slug);
                                 return (
                                     <article key={post.slug} class="group relative flex flex-col items-start">
                                         <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
@@ -867,7 +860,7 @@ async function build() {
                         <h1 class="text-4xl font-bold mb-8 text-zinc-900 dark:!text-white">{t('tag', config.language)}: {tag}</h1>
                         <div class="space-y-10">
                             {tagPosts.map((post) => {
-                                const postUrl = safeSlugPath(post.abbrlink || post.slug);
+                                const postUrl = sanitizePostSlug(post.abbrlink || post.slug);
                                 return (
                                     <article key={post.slug} class="group relative flex flex-col items-start">
                                         <h2 class="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-300">
@@ -936,7 +929,7 @@ async function build() {
                                                 {new Date(post.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                             </time>
                                             <h3 class="text-lg font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition">
-                                                <a href={`/posts/${safeSlugPath(post.abbrlink || post.slug)}`}>
+                                                <a href={`/posts/${sanitizePostSlug(post.abbrlink || post.slug)}`}>
                                                     {post.title}
                                                 </a>
                                             </h3>
@@ -1108,7 +1101,12 @@ async function build() {
             .replace(/<[^>]*>/g, ' ')  // Remove HTML tags, replace with space
             .replace(/&[^;]+;/g, ' ')  // Replace HTML entities with space
             .trim();
-        return sum + (text ? text.split(/\s+/).length : 0);
+        if (!text) return sum;
+        // Count CJK characters individually + non-CJK words by whitespace
+        const cjkCount = (text.match(/[一-鿿㐀-䶿豈-﫿]/g) || []).length;
+        const nonCjkText = text.replace(/[一-鿿㐀-䶿豈-﫿]/g, ' ');
+        const wordCount = nonCjkText.split(/\s+/).filter(Boolean).length;
+        return sum + cjkCount + wordCount;
     }, 0);
 
     const tagCounts = new Map<string, number>();
@@ -1177,7 +1175,7 @@ async function build() {
                                     <h3 class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 mb-3">{monthName}</h3>
                                     <ul class="space-y-2">
                                         {monthPosts.map(post => {
-                                            const postUrl = safeSlugPath(post.abbrlink || post.slug);
+                                            const postUrl = sanitizePostSlug(post.abbrlink || post.slug);
                                             return (
                                                 <li>
                                                     <a href={`/posts/${postUrl}`} class="text-zinc-600 dark:text-zinc-400 hover:text-teal-500 dark:hover:text-teal-400 transition">
@@ -1213,7 +1211,7 @@ async function build() {
     if (Search) {
         searchContent = <Search posts={posts.map(p => ({
             title: p.title,
-            slug: safeSlugPath(p.abbrlink || p.slug),
+            slug: sanitizePostSlug(p.abbrlink || p.slug),
             abbrlink: p.abbrlink,
             date: p.date,
             excerpt: p.excerpt,
@@ -1224,7 +1222,7 @@ async function build() {
         // Fallback basic search page
         const postsJson = JSON.stringify(posts.map(p => ({
             title: p.title,
-            slug: safeSlugPath(p.abbrlink || p.slug),
+            slug: sanitizePostSlug(p.abbrlink || p.slug),
             date: p.date,
             excerpt: p.excerpt || '',
             category: p.category || '',
@@ -1304,7 +1302,7 @@ async function build() {
     <language>${config.language}</language>
     <atom:link href="${config.siteUrl}/rss.xml" rel="self" type="application/rss+xml" />
     ${posts.slice(0, 20).map(post => {
-        const postUrl = safeSlugPath(post.abbrlink || post.slug);
+        const postUrl = sanitizePostSlug(post.abbrlink || post.slug);
         const fullPostUrl = `${config.siteUrl}/posts/${postUrl}`;
         return `
     <item>
@@ -1361,7 +1359,7 @@ async function build() {
     </url>` : ''}
     ${posts.map(post => `
     <url>
-        <loc>${config.siteUrl}/posts/${safeSlugPath(post.abbrlink || post.slug)}</loc>
+        <loc>${config.siteUrl}/posts/${sanitizePostSlug(post.abbrlink || post.slug)}</loc>
         <lastmod>${new Date(post.date).toISOString()}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>

@@ -5,6 +5,7 @@ import { Header } from '../components/Header';
 import { Comments } from '../components/Comments';
 import { reweaveConfig } from '../../../config/reweave.config';
 import { t } from '../../../core/i18n';
+import { safeSlug } from '../../../core/utils/sanitize';
 
 interface PostProps {
     post: {
@@ -20,11 +21,6 @@ interface PostProps {
     hasCode?: boolean;
     hasMath?: boolean;
     hasMermaid?: boolean;
-}
-
-function safeSlug(str: string): string {
-    if (/^[a-zA-Z0-9-_]+$/.test(str)) return str;
-    return encodeURIComponent(str);
 }
 
 export function Post({ post, prevPost, nextPost, hasCode, hasMath, hasMermaid }: PostProps) {

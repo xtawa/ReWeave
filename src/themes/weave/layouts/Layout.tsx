@@ -127,6 +127,12 @@ export function Layout({ title, description, image, children, contentWidth, hasC
                         document.documentElement.classList.remove('dark')
                     }
                     
+                    // Set initial hidden state via JS (ensures content is visible without JS)
+                    (function() {
+                        var c = document.getElementById('main-content');
+                        if (c) { c.classList.add('opacity-0', 'scale-[0.98]'); }
+                    })();
+
                     // Dark mode based favicon and avatar switching & Page Transition
                     (function() {
                         function hideOverlay() {
@@ -251,7 +257,8 @@ export function Layout({ title, description, image, children, contentWidth, hasC
                 {hasMermaid && <script type="module" dangerouslySetInnerHTML={{
                     __html: `
                     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-                    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+                    var mermaidTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'default';
+                    mermaid.initialize({ startOnLoad: true, theme: mermaidTheme });
                 `}} />}
             </head>
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden">
@@ -261,7 +268,7 @@ export function Layout({ title, description, image, children, contentWidth, hasC
                         <div class="w-full bg-white ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-300/20" />
                     </div>
                 </div>
-                <div id="main-content" class="relative flex w-full flex-col min-h-screen overflow-x-hidden transition-all duration-500 ease-out opacity-0 scale-[0.98] origin-top">
+                <div id="main-content" class="relative flex w-full flex-col min-h-screen overflow-x-hidden transition-all duration-500 ease-out origin-top">
                     <div class={`flex-1 flex flex-col ${outerPadding} ${verticalMargin}`}>
                         <div class={`flex-1 flex flex-col mx-auto w-full ${outerMaxWidth} ${containerPadding}`}>
                             <div class={`flex-1 flex flex-col relative ${contentPadding} overflow-hidden`}>
