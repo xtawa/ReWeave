@@ -43,6 +43,7 @@ class WorkerPool {
     private workerPath: string;
     private idleWorkers: Worker[] = [];
     private allWorkers: Set<Worker> = new Set();
+    private inFlight: Set<Promise<void>> = new Set();
     private closing: boolean = false;
 
     constructor(workerPath: string, maxWorkers: number) {
@@ -55,7 +56,7 @@ class WorkerPool {
             return Promise.reject(new Error('WorkerPool is closing and cannot accept new tasks.'));
         }
 
-        return new Promise<Post>((resolve, reject) => {
+        const taskPromise = new Promise<Post>((resolve, reject) => {
             if (this.closing) {
                 reject(new Error('WorkerPool is closing and cannot accept new tasks.'));
                 return;
@@ -63,6 +64,13 @@ class WorkerPool {
             this.queue.push({ filePath, slug, resolve, reject });
             this.processQueue();
         });
+
+        this.inFlight.add(taskPromise);
+        taskPromise.finally(() => {
+            this.inFlight.delete(taskPromise);
+        });
+
+        return taskPromise;
     }
 
     private processQueue() {
@@ -167,14 +175,20 @@ class WorkerPool {
         }
     }
 
-    public close() {
+    public async close() {
         this.closing = true;
+        // Reject queued tasks that haven't started yet
         this.queue.forEach(task => task.reject(new Error('WorkerPool has been closed.')));
-        this.allWorkers.forEach(worker => worker.terminate());
         this.queue = [];
+        // Wait for in-flight tasks to settle, then terminate workers
+        if (this.inFlight.size > 0) {
+            await Promise.allSettled(this.inFlight);
+        }
+        this.allWorkers.forEach(worker => worker.terminate());
         this.idleWorkers = [];
         this.allWorkers.clear();
         this.activeWorkers = 0;
+        this.inFlight.clear();
     }
 }
 
@@ -214,7 +228,7 @@ export async function getPosts(contentDir: string): Promise<Post[]> {
     });
 
     const results = await Promise.all(promises);
-    pool.close();
+    await pool.close();
 
     const flatPosts = results.filter(p => p !== null);
     console.log(`Total posts processed: ${flatPosts.length}`);

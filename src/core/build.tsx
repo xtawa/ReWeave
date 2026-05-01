@@ -5,7 +5,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { render } from 'preact-render-to-string';
 import { h, Fragment } from 'preact';
-import { getPosts } from './markdown';
+import { getPosts, renderMarkdown as mdRender } from './markdown';
 import { reweaveConfig as config } from '../config/reweave.config';
 import { t } from './i18n';
 import matter from 'gray-matter';
@@ -20,8 +20,8 @@ function safeSlug(str: string): string {
     if (/^[a-zA-Z0-9-_]+$/.test(str)) {
         return str;
     }
-    // Otherwise use hex encoding to ensure safe filename
-    return Buffer.from(str).toString('hex');
+    // Use encodeURIComponent for consistent, reversible encoding
+    return encodeURIComponent(str);
 }
 
 function safeSlugPath(slug: string): string {
@@ -216,8 +216,7 @@ async function build() {
         console.log("Worker bundled.");
     } catch (e) {
         console.error("Worker bundle failed:", e);
-        // Fallback or exit?
-        // If worker bundle fails, getPosts will fail if it relies on it.
+        throw new Error(`Failed to bundle worker: ${e}`);
     }
 
     // Get Git version
@@ -329,7 +328,6 @@ async function build() {
         return;
     }
 
-    // Dynamic Theme Import
     // Dynamic Theme Import
     let Layout: any, Header: any, Hero: any, Pagination: any, Comments: any, PostList: any, Archive: any, Post: any, CategoryList: any, TagList: any, Page: any, ProjectsTemplate: any;
 
@@ -511,25 +509,28 @@ async function build() {
     // Helper function to extract headings from HTML content
     const extractHeadings = (html: string, maxDepth: number = 3): Array<{ level: number; text: string; id: string }> => {
         const headings: Array<{ level: number; text: string; id: string }> = [];
-        const regex = /<h([1-6])[^>]*id="([^"]*)"[^>]*>([^<]*)<\/h[1-6]>/gi;
+        // Use [\s\S]*? to match across multiple lines including inline HTML elements
+        const regex = /<h([1-6])[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/h[1-6]>/gi;
         let match;
         while ((match = regex.exec(html)) !== null) {
             const level = parseInt(match[1]);
             if (level <= maxDepth) {
+                // Strip inline HTML tags from heading text (e.g. <code>, <em>, <a>)
+                const text = match[3].replace(/<[^>]*>/g, '').trim();
                 headings.push({
                     level,
-                    text: match[3].trim(),
+                    text,
                     id: match[2]
                 });
             }
         }
         if (headings.length === 0) {
-            const simpleRegex = /<h([1-6])[^>]*>([^<]+)<\/h[1-6]>/gi;
+            const simpleRegex = /<h([1-6])[^>]*>([\s\S]*?)<\/h[1-6]>/gi;
             let simpleMatch;
             while ((simpleMatch = simpleRegex.exec(html)) !== null) {
                 const level = parseInt(simpleMatch[1]);
                 if (level <= maxDepth) {
-                    const text = simpleMatch[2].trim();
+                    const text = simpleMatch[2].replace(/<[^>]*>/g, '').trim();
                     const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
                     headings.push({ level, text, id });
                 }
@@ -539,12 +540,13 @@ async function build() {
     };
 
     // Helper function to render TOC
+    let tocCounter = 0;
     const renderToc = (headings: Array<{ level: number; text: string; id: string }>, position: string = 'top', collapsible: boolean = false) => {
         if (headings.length === 0) return null;
         const minLevel = Math.min(...headings.map(h => h.level));
 
-        const tocId = 'toc-' + Math.random().toString(36).substr(2, 9);
-        const contentId = 'toc-content-' + Math.random().toString(36).substr(2, 9);
+        const tocId = 'toc-' + (++tocCounter);
+        const contentId = 'toc-content-' + tocCounter;
 
         const positionClasses: Record<string, string> = {
             'top': 'mb-8 w-full',
@@ -1003,12 +1005,6 @@ async function build() {
     if (config.about) {
         try {
             console.log("Building About page...");
-            const { unified } = await import('unified');
-            const remarkParse = (await import('remark-parse')).default;
-            const remarkRehype = (await import('remark-rehype')).default;
-            const rehypeStringify = (await import('rehype-stringify')).default;
-            const remarkGfm = (await import('remark-gfm')).default;
-
             const pagesDir = path.join(process.cwd(), 'src', 'pages');
             const aboutFilePath = path.join(pagesDir, config.about.file);
             console.log(`Reading about file from: ${aboutFilePath}`);
@@ -1020,22 +1016,17 @@ async function build() {
                 aboutMarkdown = aboutMarkdown.slice(frontmatterMatch[0].length);
             }
 
-            const processedAbout = await unified()
-                .use(remarkParse)
-                .use(remarkGfm)
-                .use(remarkRehype, { allowDangerousHtml: true })
-                .use(rehypeStringify, { allowDangerousHtml: true })
-                .process(aboutMarkdown);
+            const processedAbout = await mdRender(aboutMarkdown);
 
             let aboutContent;
             if (Page) {
-                aboutContent = <Page title={config.about.title || t('about', config.language)} content={processedAbout.toString()} slug="about" />;
+                aboutContent = <Page title={config.about.title || t('about', config.language)} content={processedAbout} slug="about" />;
             } else {
                 aboutContent = (
                     <Layout title={config.about.title || t('about', config.language)} url="/about">
                         <Header />
                         <main>
-                            <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedAbout.toString() }} />
+                            <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedAbout }} />
                         </main>
                     </Layout>
                 );
@@ -1089,29 +1080,20 @@ async function build() {
 
         // Fallback to markdown-based rendering
         if (!ProjectsTemplate) {
-            const { unified } = await import('unified');
-            const remarkParse = (await import('remark-parse')).default;
-            const remarkRehype = (await import('remark-rehype')).default;
-            const rehypeStringify = (await import('rehype-stringify')).default;
-
             const pagesDir = path.join(process.cwd(), 'src', 'pages');
             const projectsFilePath = path.join(pagesDir, config.projects.file);
             const projectsMarkdown = await fs.readFile(projectsFilePath, 'utf-8');
 
-            const processedProjects = await unified()
-                .use(remarkParse)
-                .use(remarkRehype)
-                .use(rehypeStringify)
-                .process(projectsMarkdown);
+            const processedProjects = await mdRender(projectsMarkdown);
 
             if (Page) {
-                projectsContent = <Page title={config.projects.title || t('projects', config.language)} content={processedProjects.toString()} slug="projects" />;
+                projectsContent = <Page title={config.projects.title || t('projects', config.language)} content={processedProjects} slug="projects" />;
             } else {
                 projectsContent = (
                     <Layout title={config.projects.title || t('projects', config.language)} url="/projects">
                         <Header />
                         <main>
-                            <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedProjects.toString() }} />
+                            <div class="prose prose-zinc dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: processedProjects }} />
                         </main>
                     </Layout>
                 );
@@ -1122,8 +1104,11 @@ async function build() {
 
     // 10. Build Stats Page
     const totalWords = posts.reduce((sum, post) => {
-        const text = post.content.replace(/<[^>]*>/g, ''); // Remove HTML tags
-        return sum + text.length;
+        const text = post.content
+            .replace(/<[^>]*>/g, ' ')  // Remove HTML tags, replace with space
+            .replace(/&[^;]+;/g, ' ')  // Replace HTML entities with space
+            .trim();
+        return sum + (text ? text.split(/\s+/).length : 0);
     }, 0);
 
     const tagCounts = new Map<string, number>();
@@ -1259,11 +1244,13 @@ async function build() {
                         />
                     </div>
                     <div id="search-results" class="space-y-6"></div>
+                    <script type="application/json" id="search-data">{postsJson}</script>
                     <script dangerouslySetInnerHTML={{
                         __html: `
                         (function() {
                             const sanitizePostSlug = ${sanitizePostSlug.toString()};
-                            const posts = ${postsJson};
+                            const dataEl = document.getElementById('search-data');
+                            const posts = JSON.parse(dataEl.textContent || dataEl.innerText);
                             const input = document.getElementById('search-input');
                             const results = document.getElementById('search-results');
                             
@@ -1406,7 +1393,8 @@ async function build() {
 
     await Promise.all(allBuilds);
 
-    const pageCount = posts.length + 1 + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0) + 1 + 2 + 1 + 1; // +2 for RSS/Sitemap, +1 for Articles, +1 for Search
+    const paginationExtra = totalPages > 1 ? totalPages - 1 : 0;
+    const pageCount = posts.length + 1 + paginationExtra + categories.size + tags.size + 3 + (config.about ? 1 : 0) + (config.projects ? 1 : 0) + 1 + 2 + 1 + 1;
     console.log(`Build complete! Generated ${pageCount} pages.`);
     console.log("Thanks for using ReWeave!ヾ(≧▽≦*)o -Powered By ReWeave Labs");
     console.log(`Content Version ${version}. Feel free to start an issue on Github!( •̀ ω •́ )✧ (https://github.com/xtawa/ReWeave)`);

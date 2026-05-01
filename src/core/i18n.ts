@@ -34,7 +34,7 @@ export interface I18nConfig {
 }
 
 export const i18n: I18nConfig = {
-    locale: 'en',
+    locale: 'zh',
     translations: {
         en: {
             readMore: 'Read article',

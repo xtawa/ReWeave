@@ -1,5 +1,4 @@
 import { spawn } from 'child_process';
-import path from 'path';
 import chokidar from 'chokidar';
 
 console.log("Starting ReWeave Dev...");
@@ -7,33 +6,46 @@ console.log("Starting ReWeave Dev...");
 let isBuilding = false;
 let hasPendingBuild = false;
 
-async function runBuild() {
+function runBuild(): Promise<void> {
     if (isBuilding) {
         hasPendingBuild = true;
-        return;
+        return Promise.resolve();
     }
     isBuilding = true;
     console.log("Change detected. Rebuilding...");
 
-    const build = spawn('npx', ['tsx', 'src/core/build.tsx'], { stdio: 'inherit', shell: true });
+    return new Promise<void>((resolve) => {
+        const build = spawn('npx', ['tsx', 'src/core/build.tsx'], { stdio: 'inherit' });
 
-    build.on('close', (code) => {
-        isBuilding = false;
-        if (code === 0) {
-            console.log("Build successful.");
-        } else {
-            console.error("Build failed.");
-        }
+        build.on('close', (code) => {
+            isBuilding = false;
+            if (code === 0) {
+                console.log("Build successful.");
+            } else {
+                console.error("Build failed.");
+            }
 
-        if (hasPendingBuild) {
-            hasPendingBuild = false;
-            runBuild();
-        }
+            if (hasPendingBuild) {
+                hasPendingBuild = false;
+                runBuild();
+            }
+            resolve();
+        });
+
+        build.on('error', (err) => {
+            isBuilding = false;
+            console.error("Failed to start build process:", err.message);
+            resolve();
+        });
     });
 }
 
-// Initial build
-runBuild();
+// Initial build, then start preview server
+console.log("Running initial build...");
+runBuild().then(() => {
+    console.log("Starting Preview Server...");
+    spawn('npx', ['vite', 'preview', '--port', '3000'], { stdio: 'inherit' });
+});
 
 // Watcher
 const watcher = chokidar.watch('./src', {
@@ -45,7 +57,3 @@ const watcher = chokidar.watch('./src', {
 watcher.on('change', (path) => {
     runBuild();
 });
-
-// Start Preview Server
-console.log("Starting Preview Server...");
-spawn('npx', ['vite', 'preview', '--port', '3000'], { stdio: 'inherit', shell: true });
