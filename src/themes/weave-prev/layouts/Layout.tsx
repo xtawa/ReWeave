@@ -231,7 +231,8 @@ export function Layout({ title, description, image, children, contentWidth, hasC
                 {hasMermaid && <script type="module" dangerouslySetInnerHTML={{
                     __html: `
                     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-                    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+                    var mermaidTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'default';
+                    mermaid.initialize({ startOnLoad: true, theme: mermaidTheme });
                 `}} />}
             </head>
             <body class="flex h-full flex-col bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden">

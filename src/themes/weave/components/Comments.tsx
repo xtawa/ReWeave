@@ -20,9 +20,9 @@ export function Comments({ path }: { path: string }) {
                     import { init } from 'https://unpkg.com/@waline/client@v3/dist/waline.js';
                     init({
                         el: '#waline-comments',
-                        serverURL: '${serverURL}',
-                        path: '${path}',
-                        lang: '${config.language}',
+                        serverURL: ${JSON.stringify(serverURL)},
+                        path: ${JSON.stringify(path)},
+                        lang: ${JSON.stringify(config.language)},
                         dark: 'html.dark',
                     });
                     `
@@ -40,10 +40,10 @@ export function Comments({ path }: { path: string }) {
                 <script dangerouslySetInnerHTML={{
                     __html: `
                     twikoo.init({
-                        envId: '${envId}',
+                        envId: ${JSON.stringify(envId)},
                         el: '#tcomment',
-                        lang: '${config.language}',
-                        path: '${path}',
+                        lang: ${JSON.stringify(config.language)},
+                        path: ${JSON.stringify(path)},
                     });
                     `
                 }} />
@@ -61,12 +61,12 @@ export function Comments({ path }: { path: string }) {
                 <script dangerouslySetInnerHTML={{
                     __html: `
                     const gitalk = new Gitalk({
-                        clientID: '${gitalk.clientID}',
-                        clientSecret: '${gitalk.clientSecret}',
-                        repo: '${gitalk.repo}',
-                        owner: '${gitalk.owner}',
+                        clientID: ${JSON.stringify(gitalk.clientID)},
+                        clientSecret: ${JSON.stringify(gitalk.clientSecret)},
+                        repo: ${JSON.stringify(gitalk.repo)},
+                        owner: ${JSON.stringify(gitalk.owner)},
                         admin: ${JSON.stringify(gitalk.admin)},
-                        id: '${path}',
+                        id: ${JSON.stringify(path)},
                         distractionFreeMode: false
                     });
                     gitalk.render('gitalk-container');

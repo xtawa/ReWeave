@@ -50,7 +50,7 @@ runBuild().then(() => {
 });
 
 // Watcher
-const watcher = chokidar.watch('./src', {
+const watcher = chokidar.watch(['./src', './public'], {
     ignored: /(^|[\/\\])\../, // ignore dotfiles
     persistent: true,
     ignoreInitial: true

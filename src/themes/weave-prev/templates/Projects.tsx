@@ -4,7 +4,7 @@ import { Layout } from '../layouts/Layout';
 import { Header } from '../components/Header';
 import { Project, Contributor, Sponsor } from '../../../config/projects.config';
 import { t } from '../../../core/i18n';
-import { reweaveConfig } from '../../../config/reweave-prev.config';
+import { reweaveConfig } from '../../../config/reweave.config';
 
 interface ProjectsProps {
     projects: Project[];

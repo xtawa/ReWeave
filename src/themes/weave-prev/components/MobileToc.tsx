@@ -189,7 +189,16 @@ export function MobileToc() {
                         });
                     }
 
-                    window.addEventListener('scroll', updateProgress);
+                    let ticking = false;
+                    window.addEventListener('scroll', function() {
+                        if (!ticking) {
+                            requestAnimationFrame(function() {
+                                updateProgress();
+                                ticking = false;
+                            });
+                            ticking = true;
+                        }
+                    });
                     updateProgress();
                 })();
             ` }} />
